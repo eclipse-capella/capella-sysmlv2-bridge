@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.eclipse.capella.sysmlv2</groupId>
+    <artifactId>capella-sysmlv2-eclipse-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <tycho.version>4.0.9</tycho.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <modules>
+        <module>target-platform</module>
+        <module>plugins/org.eclipse.capella.sysmlv2.bridge.transformer</module>
+        <module>plugins/org.eclipse.capella.sysmlv2.bridge.application</module>
+        <module>features/org.eclipse.capella.sysmlv2.bridge.feature</module>
+        <module>features/org.eclipse.capella.sysmlv2.bridge.headless.feature</module>
+        <module>repository/org.eclipse.capella.sysmlv2.bridge.repository</module>
+        <module>product/org.eclipse.capella.sysmlv2.bridge.product</module>
+    </modules>
+
+    <repositories>
+        <repository>
+            <id>capella-7.0.1</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/capella/core/updates/releases/7.0.1/org.polarsys.capella.rcp.site/</url>
+        </repository>
+        <repository>
+            <id>eclipse-2023-03</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/releases/2023-03/</url>
+        </repository>
+        <repository>
+            <id>sirius-7.4.5</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/sirius/updates/releases/7.4.5/2023-03/</url>
+        </repository>
+        <repository>
+            <id>kitalpha-7.0.1</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/kitalpha/updates/releases/runtime/7.0.1/</url>
+        </repository>
+        <repository>
+            <id>diffmerge-0.15.0</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/diffmerge/releases/0.15.0/emf-diffmerge-site/</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-maven-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>target-platform-configuration</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <target>
+                        <artifact>
+                            <groupId>org.eclipse.capella.sysmlv2</groupId>
+                            <artifactId>capella-7.0.1-target</artifactId>
+                            <version>${project.version}</version>
+                        </artifact>
+                    </target>
+                    <environments>
+                        <environment>
+                            <os>linux</os>
+                            <ws>gtk</ws>
+                            <arch>x86_64</arch>
+                        </environment>
+                    </environments>
+                    <executionEnvironmentDefault>JavaSE-21</executionEnvironmentDefault>
+                    <dependency-resolution>
+                        <optionalDependencies>ignore</optionalDependencies>
+                    </dependency-resolution>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>capella-product-it</id>
+            <modules>
+                <module>official-product-it</module>
+            </modules>
+        </profile>
+    </profiles>
+</project>

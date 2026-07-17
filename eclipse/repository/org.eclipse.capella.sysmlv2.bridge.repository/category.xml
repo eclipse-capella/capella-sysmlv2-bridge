@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.eclipse.capella.sysmlv2.bridge.feature_0.1.0.qualifier.jar"
+         id="org.eclipse.capella.sysmlv2.bridge.feature" version="0.1.0.qualifier">
+      <category name="bridge"/>
+   </feature>
+   <category-def name="bridge" label="Capella SysML v2 Bridge"/>
+</site>

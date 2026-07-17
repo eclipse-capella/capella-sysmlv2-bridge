@@ -1,0 +1,16 @@
+package org.obeonetwork.capella.sysmlv2.transformer;
+
+import java.util.List;
+import java.util.Objects;
+
+import org.eclipse.emf.ecore.EObject;
+
+public record TransformationResult(List<EObject> generatedElements, List<TransformationDiagnostic> diagnostics,
+        Traceability traceability) {
+
+    public TransformationResult {
+        generatedElements = List.copyOf(Objects.requireNonNull(generatedElements, "generatedElements must not be null"));
+        diagnostics = List.copyOf(Objects.requireNonNull(diagnostics, "diagnostics must not be null"));
+        Objects.requireNonNull(traceability, "traceability must not be null");
+    }
+}
