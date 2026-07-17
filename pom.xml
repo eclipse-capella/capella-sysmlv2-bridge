@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.obeonetwork.capella.sysmlv2</groupId>
+    <artifactId>capella-sysmlv2-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>capella2sysmlv2</name>
+    <description>Standalone Capella to SysML v2 textual transformation.</description>
+
+    <modules>
+        <module>test-support</module>
+        <module>arcadia-library</module>
+        <module>capella-runtime</module>
+        <module>capella-loader</module>
+        <module>capella2sysmlv2-transformer</module>
+        <module>cli</module>
+        <module>integration-tests</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <assertj.version>3.27.3</assertj.version>
+        <junit.version>5.11.4</junit.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+        <picocli.version>4.7.6</picocli.version>
+        <syson.version>2026.7.0</syson.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>github-syson</id>
+            <url>https://maven.pkg.github.com/eclipse-syson/syson</url>
+        </repository>
+        <repository>
+            <id>github-sirius-web</id>
+            <url>https://maven.pkg.github.com/eclipse-sirius/sirius-web</url>
+        </repository>
+        <repository>
+            <id>github-sirius-emfjson</id>
+            <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.eclipse.syson</groupId>
+                <artifactId>syson-sysml-metamodel</artifactId>
+                <version>${syson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>info.picocli</groupId>
+                <artifactId>picocli</artifactId>
+                <version>${picocli.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.obeonetwork.capella.sysmlv2</groupId>
+                <artifactId>test-support</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <release>${java.version}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven-failsafe-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>capella-runtime</id>
+            <modules>
+                <module>eclipse</module>
+            </modules>
+        </profile>
+    </profiles>
+</project>

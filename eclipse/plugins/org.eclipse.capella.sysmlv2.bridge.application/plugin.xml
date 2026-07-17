@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="org.eclipse.capella.sysmlv2.bridge.application"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.eclipse.capella.sysmlv2.bridge.application.BridgeApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.polarsys.capella.common.platform.sirius.ted.semanticEditingDomainProviders">
+      <semanticEditingDomainProviders
+            class="org.eclipse.capella.sysmlv2.bridge.application.HeadlessSemanticEditingDomainProviders">
+      </semanticEditingDomainProviders>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="org.eclipse.capella.sysmlv2.bridge.application"
+            name="Capella SysML v2 Bridge">
+      </product>
+   </extension>
+</plugin>

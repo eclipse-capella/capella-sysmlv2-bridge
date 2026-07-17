@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Capella SysML v2 Bridge Transformer Adapter
+Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.transformer
+Bundle-Version: 0.1.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-ClassPath: .,
+ target/dependency/capella2sysmlv2-transformer-0.1.0-SNAPSHOT.jar,
+ target/dependency/syson-sysml-metamodel-2026.7.0.jar,
+ target/dependency/arcadia-library-0.0.3.jar,
+ target/dependency/org.eclipse.sirius.emfjson-2.5.3-SNAPSHOT.jar,
+ target/dependency/gson-2.13.1.jar,
+ target/dependency/java-uuid-generator-5.1.0.jar,
+ target/dependency/commons-text-1.10.0.jar,
+ target/dependency/commons-lang3-3.19.0.jar
+Require-Bundle: org.eclipse.emf.ecore,
+ org.eclipse.emf.ecore.xmi
+Import-Package: org.slf4j
+Export-Package: org.obeonetwork.capella.sysmlv2.transformer,
+ org.eclipse.capella.sysmlv2.bridge.transformer,
+ org.eclipse.syson.sysml,
+ org.eclipse.syson.sysml.impl

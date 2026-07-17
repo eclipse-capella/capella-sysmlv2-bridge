@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.eclipse.capella.sysmlv2</groupId>
+        <artifactId>capella-sysmlv2-eclipse-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <artifactId>org.eclipse.capella.sysmlv2.bridge.product.tests</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <capella.archive.name>capella-7.0.1.202503211540-linux-gtk-x86_64.tar.gz</capella.archive.name>
+        <capella.archive.url>https://download.eclipse.org/capella/core/products/releases/7.0.1/${capella.archive.name}</capella.archive.url>
+        <capella.archive.sha512>e7e1cc32639da6e4132176b36864037a0d7762d84d8db76a64329162fb9381d5075c50a3f626dd227af81352f05ac48c81b623177302b27532e4ed1ca4abde7d</capella.archive.sha512>
+        <capella.source.commit>8e92bb0cb4bfa90ab08bac68c36ab273702d64b7</capella.source.commit>
+        <capella.ife.base.url>https://raw.githubusercontent.com/eclipse-capella/capella/${capella.source.commit}/samples/In-Flight%20Entertainment%20System</capella.ife.base.url>
+        <maven.failsafe.version>3.5.2</maven.failsafe.version>
+        <capella.java.executable>${java.home}/bin/java</capella.java.executable>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>provision-capella-product</id>
+                        <phase>pre-integration-test</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/downloads"/>
+                                <mkdir dir="${project.build.directory}/ife/In-Flight Entertainment System"/>
+                                <get src="${capella.archive.url}"
+                                     dest="${project.build.directory}/downloads/${capella.archive.name}"
+                                     skipexisting="true" verbose="true"/>
+                                <checksum file="${project.build.directory}/downloads/${capella.archive.name}"
+                                          algorithm="SHA-512" property="capella.archive.actual.sha512"/>
+                                <condition property="capella.archive.valid">
+                                    <equals arg1="${capella.archive.actual.sha512}" arg2="${capella.archive.sha512}"/>
+                                </condition>
+                                <fail unless="capella.archive.valid" message="Capella 7.0.1 archive checksum mismatch"/>
+                                <delete dir="${project.build.directory}/capella-product" quiet="true"/>
+                                <delete dir="${project.build.directory}/runtime" quiet="true"/>
+                                <mkdir dir="${project.build.directory}/capella-product"/>
+                                <untar src="${project.build.directory}/downloads/${capella.archive.name}"
+                                       dest="${project.build.directory}/capella-product" compression="gzip"/>
+                                <get src="${capella.ife.base.url}/.project"
+                                     dest="${project.build.directory}/ife/In-Flight Entertainment System/.project"
+                                     skipexisting="true"/>
+                                <get src="${capella.ife.base.url}/In-Flight%20Entertainment%20System.afm"
+                                     dest="${project.build.directory}/ife/In-Flight Entertainment System/In-Flight Entertainment System.afm"
+                                     skipexisting="true"/>
+                                <get src="${capella.ife.base.url}/In-Flight%20Entertainment%20System.aird"
+                                     dest="${project.build.directory}/ife/In-Flight Entertainment System/In-Flight Entertainment System.aird"
+                                     skipexisting="true"/>
+                                <get src="${capella.ife.base.url}/In-Flight%20Entertainment%20System.capella"
+                                     dest="${project.build.directory}/ife/In-Flight Entertainment System/In-Flight Entertainment System.capella"
+                                     skipexisting="true"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven.failsafe.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <capella.product.directory>${project.build.directory}/capella-product</capella.product.directory>
+                        <bridge.repository>${project.parent.basedir}/repository/org.eclipse.capella.sysmlv2.bridge.repository/target/repository</bridge.repository>
+                        <runtime.test.output>${project.build.directory}/runtime</runtime.test.output>
+                        <capella.ife.project>${project.build.directory}/ife/In-Flight Entertainment System</capella.ife.project>
+                        <capella.java.executable>${capella.java.executable}</capella.java.executable>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
