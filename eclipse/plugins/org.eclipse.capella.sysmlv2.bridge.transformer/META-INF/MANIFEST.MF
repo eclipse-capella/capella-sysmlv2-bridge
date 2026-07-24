@@ -15,7 +15,6 @@ Bundle-ClassPath: .,
  target/dependency/commons-lang3-3.19.0.jar
 Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.emf.ecore.xmi
-Import-Package: org.slf4j
 Export-Package: org.obeonetwork.capella.sysmlv2.transformer,
  org.eclipse.capella.sysmlv2.bridge.transformer,
  org.eclipse.syson.sysml,

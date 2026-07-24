@@ -25,6 +25,10 @@
       <product
             application="org.eclipse.capella.sysmlv2.bridge.application"
             name="Capella SysML v2 Bridge">
+         <property
+               name="appName"
+               value="Capella SysML v2 Bridge">
+         </property>
       </product>
    </extension>
 </plugin>

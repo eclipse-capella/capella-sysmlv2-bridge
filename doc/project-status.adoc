@@ -348,6 +348,7 @@ The application command is:
 [source,bash]
 ----
 capella2sysmlv2 transform \
+  - data /path/to/workspace \
   --project /path/to/capella-project \
   --model model.capella \
   --arcadia-library /path/to/arcadia-library \
