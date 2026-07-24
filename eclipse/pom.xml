@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <tycho.version>4.0.9</tycho.version>
+        <tycho.version>4.0.12</tycho.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -71,6 +71,7 @@
                             <groupId>org.eclipse.capella.sysmlv2</groupId>
                             <artifactId>capella-7.0.1-target</artifactId>
                             <version>${project.version}</version>
+                            <classifier>capella-7.0.1</classifier>
                         </artifact>
                     </target>
                     <environments>

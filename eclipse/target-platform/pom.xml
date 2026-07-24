@@ -11,4 +11,5 @@
     </parent>
     <artifactId>capella-7.0.1-target</artifactId>
     <packaging>eclipse-target-definition</packaging>
+
 </project>
