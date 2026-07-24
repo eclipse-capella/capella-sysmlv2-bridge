@@ -50,7 +50,9 @@ public final class CapellaSessionLoader implements CapellaModelLoader {
 		IProject project = workspace.getRoot().getProject(description.getName());
 
 		if (!project.exists()) {
-			throw new IllegalStateException("Projet does not exists " + project.getLocationURI());
+			project.create(description, monitor);
+		} else if (project.getLocationURI() != null && !project.getLocationURI().equals(projectDirectory.toUri())) {
+			throw new IllegalStateException("Workspace project already exists at another location: " + project.getName());
 		}
 		if (!project.isOpen()) {
 			project.open(monitor);
