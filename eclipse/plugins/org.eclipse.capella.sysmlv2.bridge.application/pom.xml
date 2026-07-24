@@ -10,7 +10,6 @@
         <relativePath>../..</relativePath>
     </parent>
     <artifactId>org.eclipse.capella.sysmlv2.bridge.application</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
     <packaging>eclipse-plugin</packaging>
 
     <dependencies>
@@ -44,7 +43,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-runtime,capella-loader,cli,picocli</includeArtifactIds>
+                            <includeArtifactIds>capella-runtime,capella-loader,syson-sysml-metamodel,cli,picocli</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

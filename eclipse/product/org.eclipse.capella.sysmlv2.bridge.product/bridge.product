@@ -1,34 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
-<product
-      name="Capella SysML v2 Bridge"
-      uid="org.eclipse.capella.sysmlv2.bridge.product"
-      id="org.eclipse.capella.sysmlv2.bridge.application.product"
-      application="org.eclipse.capella.sysmlv2.bridge.application"
-      version="0.1.0.qualifier"
-      useFeatures="true"
-      includeLaunchers="true">
-   <configIni use="default"/>
+
+<product name="Capella SysML v2 Bridge" uid="org.eclipse.capella.sysmlv2.bridge.product" id="org.eclipse.capella.sysmlv2.bridge.application.product" application="org.eclipse.capella.sysmlv2.bridge.application" version="0.1.0.qualifier" type="features" includeLaunchers="true" autoIncludeRequirements="true">
+
+   <configIni use="default">
+   </configIni>
+
    <launcherArgs>
       <vmArgs>-Dosgi.requiredJavaVersion=21
 -Dosgi.dataAreaRequiresExplicitInit=true
 -Dpde.jreProfile=JavaSE-21
       </vmArgs>
    </launcherArgs>
-   <launcher name="capella2sysmlv2"/>
-   <plugins/>
+
+   <launcher name="capella2sysmlv2">
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+   <vm>
+   </vm>
+
+   <plugins>
+   </plugins>
+
    <features>
       <feature id="org.eclipse.capella.sysmlv2.bridge.headless.feature"/>
       <feature id="org.eclipse.equinox.executable"/>
    </features>
+
    <configurations>
-      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1"/>
-      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2"/>
-      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2"/>
-      <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="3"/>
-      <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="3"/>
-      <plugin id="org.eclipse.core.contenttype" autoStart="true" startLevel="4"/>
-      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="5"/>
-      <plugin id="org.eclipse.core.resources" autoStart="true" startLevel="6"/>
+      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.core.contenttype" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.core.resources" autoStart="true" startLevel="6" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="3" />
+      <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="3" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
    </configurations>
+
 </product>

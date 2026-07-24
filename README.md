@@ -36,12 +36,12 @@ See [Project Structure and Status](doc/project-status.adoc) for the detailed arc
 ### Maven Modules
 
 - `arcadia-library`: discovers and validates Arcadia SysML v2 library resources.
-- `capella-runtime`: defines the Capella runtime initialization and lifecycle boundary.
 - `capella-loader`: defines the headless Capella model loading API.
+- `capella-runtime`: defines the Capella runtime initialization and lifecycle boundary.
 - `capella2sysmlv2-transformer`: contains the transformation engine, traceability, diagnostics, target structure, and semantic mappings.
 - `cli`: contains the Picocli command model and runtime-independent service contract.
-- `test-support`: provides reusable test resources and golden-file assertions.
 - `integration-tests`: contains functional and integration-test scenarios.
+- `test-support`: provides reusable test resources and golden-file assertions.
 
 ### Runtime And Distribution
 
@@ -73,10 +73,10 @@ Shared TransformationContext
 SysON SysML v2 model
               |
               v
-Official SysON textual export             [not implemented]
+Official SysON textual export             [not implemented yet]
               |
               v
-SysML v2 parser/linker validation          [not implemented]
+SysML v2 parser/linker validation          [not implemented yet]
 ```
 
 The transformation engine is independent from Equinox startup, model loading, textual serialization, and parser implementations. Mappers access Arcadia concepts through `TransformationContext.libraryResolver()` and do not load the library directly.
@@ -99,6 +99,11 @@ mvn clean verify
 
 Build the Equinox bundles, p2 repository, and standalone product:
 
+Install the dependencies:
+
+- `arcadia-sysmlv2-lib:arcadia-library:jar:0.0.3` produced from the https://github.com/Obeo/arcadia-sysmlv2-lib repository content
+- `org.eclipse.syson:syson-sysml-metamodel:jar:2026.7.0` produced from the https://github.com/eclipse-syson/syson repository content
+
 ```bash
 mvn -Pcapella-runtime -DskipTests package
 ```
@@ -118,7 +123,7 @@ The standalone application exposes the `transform` command:
 capella2sysmlv2 transform \
   --project /path/to/capella-project \
   --model model.capella \
-  --arcadia-library /path/to/arcadia-library \
+  --arcadia-library /path/to/arcadia-library/folder \
   --workspace /path/to/workspace
 ```
 
