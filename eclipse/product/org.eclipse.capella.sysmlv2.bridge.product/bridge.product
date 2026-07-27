@@ -39,6 +39,8 @@
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="3" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="3" />
       <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
+      <plugin id="org.eclipse.capella.sysmlv2.bridge.application" autoStart="true" startLevel="5" />
+      <plugin id="org.eclipse.sirius" autoStart="true" startLevel="7" />
    </configurations>
 
 </product>

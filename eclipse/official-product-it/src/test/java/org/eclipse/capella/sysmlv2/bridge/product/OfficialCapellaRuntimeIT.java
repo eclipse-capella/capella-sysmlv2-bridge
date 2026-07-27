@@ -9,10 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ class OfficialCapellaRuntimeIT {
     private static final Duration PROCESS_TIMEOUT = Duration.ofMinutes(8);
 
     @Test
-    void opensIfeSessionAndEvaluatesDerivedFeatureWithoutWorkbench() throws Exception {
+    void transformsIfeArchiveWithoutWorkbench() throws Exception {
         Path productRoot = Path.of(System.getProperty("capella.product.directory"));
         Path executable = find(productRoot, "capella", Files::isRegularFile);
         assertTrue(executable.toFile().setExecutable(true) || Files.isExecutable(executable),
@@ -39,29 +40,22 @@ class OfficialCapellaRuntimeIT {
 
         Path sampleProject = Path.of(System.getProperty("capella.ife.project")).toAbsolutePath();
         assertTrue(Files.isRegularFile(sampleProject.resolve("In-Flight Entertainment System.capella")));
-        Path workspace = output.resolve("workspace");
         Path applicationOutput = output.resolve("application-output");
-        Files.createDirectories(workspace);
+        Path workspace = applicationOutput.resolve(".capella2sysmlv2/workspace");
+        Path sampleArchive = output.resolve("ife.zip");
+        zipProject(sampleProject, sampleArchive);
 
-        List<String> command = new ArrayList<>(List.of(
+        List<String> command = List.of(
                 executable.toString(), "-vm", javaExecutable().toString(), "--launcher.suppressErrors", "-nosplash",
                 "-consolelog", "-clean", "-data", workspace.toString(),
-                "-application", "org.eclipse.capella.sysmlv2.bridge.application", "--input-project",
-                sampleProject.toString(), "--aird", "In-Flight Entertainment System.aird", "--output",
-                applicationOutput.toString()));
+                "-application", "org.eclipse.capella.sysmlv2.bridge.application", sampleArchive.toString(),
+                applicationOutput.toString());
         ProcessResult execution = run(output.resolve("application.log"), command);
         assertEquals(0, execution.exitCode(), execution.output());
         assertFalse(execution.output().contains("PlatformUI.createAndRunWorkbench"), execution.output());
-
-        Path report = applicationOutput.resolve("capella-runtime-report.json");
-        assertTrue(Files.isRegularFile(report), "Missing runtime report\n" + execution.output());
-        String reportContent = Files.readString(report);
-        assertTrue(reportContent.contains("\"success\": true"), reportContent);
-        assertTrue(reportContent.contains("724d6db9-9175-450b-8f05-023fcffec79c"), reportContent);
-        assertTrue(reportContent.contains("ce1400b3-f97e-4c62-8187-562b72134923"), reportContent);
-        assertTrue(reportContent.contains("CrossReference"), reportContent);
-        assertTrue(reportContent.contains("\"targetMetaclass\": \"PartUsage\""), reportContent);
-        assertTrue(reportContent.contains("\"targetName\": \"IFE System\""), reportContent);
+        assertTrue(execution.output().contains("Source LogicalComponent count: 23"), execution.output());
+        assertTrue(execution.output().contains("Generated PartUsage count: 23"), execution.output());
+        assertTrue(execution.output().contains("Errors: 0"), execution.output());
     }
 
     private static ProcessResult run(Path logFile, List<String> command) throws Exception {
@@ -81,6 +75,18 @@ class OfficialCapellaRuntimeIT {
 
     private static Path javaExecutable() {
         return Path.of(System.getProperty("capella.java.executable"));
+    }
+
+    private static void zipProject(Path project, Path archive) throws IOException {
+        try (var output = new ZipOutputStream(Files.newOutputStream(archive));
+                var paths = Files.walk(project)) {
+            for (Path path : paths.filter(Files::isRegularFile).toList()) {
+                String entryName = project.getFileName() + "/" + project.relativize(path).toString().replace('\\', '/');
+                output.putNextEntry(new ZipEntry(entryName));
+                Files.copy(path, output);
+                output.closeEntry();
+            }
+        }
     }
 
     private static Path find(Path root, String fileName, PathPredicate predicate) throws IOException {
