@@ -2,7 +2,7 @@
 
 **capella-sysmlv2-bridge** is a standalone Java toolchain for transforming Capella/Arcadia models into SysML v2 models represented by the SysON EMF metamodel.
 
-The project supports pragmatic, incremental migration from Capella to SysML v2 while preserving semantic intent and reusing concepts from the [Arcadia SysML v2 library](https://github.com/eclipse-capella/arcadia-sysmlv2-lib).
+The project supports pragmatic, incremental migration from Capella to SysML v2 while preserving semantic intent and reusing concepts from the open-source [Arcadia SysML v2 library](https://github.com/eclipse-capella/arcadia-sysmlv2-lib).
 
 > **Project status:** This project is under active development at Proof of Concept (PoC) level.
 
@@ -15,7 +15,8 @@ The project currently provides:
 - direct loading of Capella `.capella` semantic models without opening a Sirius session or Eclipse workbench;
 - a SysON SysML v2 target model using SysON 2026.7.0;
 - resolution of the official `Arcadia::Component` library concept;
-- a standalone Linux product built with Tycho;
+- standalone Linux and Windows products built with Tycho;
+- intermediate SysML v2 XMI persistence with Arcadia library references;
 - the production mapping `LogicalComponent -> PartUsage : Arcadia::Component`.
 
 The standalone product has been manually validated without `DISPLAY` against the In-Flight Entertainment System model:
@@ -25,9 +26,10 @@ Transformation completed
 Source LogicalComponent count: 23
 Generated PartUsage count: 23
 Errors: 0
+XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
 ```
 
-Textual SysML export, parser/linker validation, automated UI-bundle activation checks, and additional mappings are not implemented yet.
+Official textual SysML export, parser/linker validation, automated UI-bundle activation checks, and additional mappings are not implemented yet.
 
 See [Project Structure and Status](doc/project-status.adoc) for the detailed architecture, current limitations, and roadmap.
 
@@ -73,6 +75,9 @@ Shared TransformationContext
 SysON SysML v2 model
               |
               v
+Intermediate XMI persistence              [implemented]
+              |
+              v
 Official SysON textual export             [not implemented yet]
               |
               v
@@ -85,7 +90,7 @@ The transformation engine is independent from Equinox startup, model loading, te
 
 - Java 21
 - Maven 3.9+
-- Linux `x86_64` for the currently configured standalone product
+- Linux or Windows `x86_64` for the standalone product
 
 SysON dependencies are retrieved from GitHub Packages. Maven credentials may be required depending on the repository access policy.
 
@@ -101,43 +106,75 @@ Build the Equinox bundles, p2 repository, and standalone product:
 
 Install the dependencies:
 
-- `arcadia-sysmlv2-lib:arcadia-library:jar:0.0.3` produced from the https://github.com/Obeo/arcadia-sysmlv2-lib repository content
+- `org.eclipse.arcadia:arcadia-library:jar:0.0.3` produced from the https://github.com/eclipse-capella/arcadia-sysmlv2-lib repository content
 - `org.eclipse.syson:syson-sysml-metamodel:jar:2026.7.0` produced from the https://github.com/eclipse-syson/syson repository content
 
 ```bash
 mvn -Pcapella-runtime -DskipTests package
 ```
 
-The Linux product is materialized under:
+The products are materialized under:
 
 ```text
 eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/
   target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product/win32/win32/x86_64/
 ```
+
+The corresponding archives are generated as a Linux `.tar.gz` and a Windows `.zip` in the module's `target/products/` directory.
+
+## Getting Started
+
+Build the standalone products as described above, then download the official Capella 7.0.1 In-Flight Entertainment System sample and run the product.
+
+### Linux
+
+```bash
+curl -L "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1" \
+  -o InFlightEntertainmentSystem.zip
+
+./capella2sysmlv2 InFlightEntertainmentSystem.zip output
+```
+
+### Windows PowerShell
+
+```powershell
+Invoke-WebRequest `
+  -Uri "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1" `
+  -OutFile "InFlightEntertainmentSystem.zip"
+
+.\capella2sysmlv2c.exe InFlightEntertainmentSystem.zip output
+```
+
+The Windows distribution also contains `capella2sysmlv2.exe`; `capella2sysmlv2c.exe` is the console launcher and displays command output in the current terminal.
+
+Both commands create:
+
+```text
+output/In-Flight Entertainment System.sysml.xmi
+```
+
+This XMI file is an intermediate serialization of the SysON model. It is reloaded and checked by the application after writing, including its `Arcadia::Component` references. It is not the final textual `.sysml` format.
 
 ## CLI
 
-The standalone application exposes the `transform` command:
+The standalone application takes a zipped Capella project and an output directory:
 
 ```bash
-capella2sysmlv2 transform \
-  --project /path/to/capella-project \
-  --model model.capella \
-  --arcadia-library /path/to/arcadia-library/folder \
-  --workspace /path/to/workspace
+capella2sysmlv2 INPUT_ZIP OUTPUT_DIRECTORY
 ```
 
-The command currently creates the SysON target model in memory and reports transformation counts and diagnostics. It does not write a `.sysml` file yet.
+The application extracts the archive, discovers its single Eclipse project and `.capella` model, and initializes an internal workspace under `OUTPUT_DIRECTORY/.capella2sysmlv2/workspace`. The Arcadia library is bundled in the product. The command writes `<CAPELLA_MODEL_NAME>.sysml.xmi` to the output directory and reports its path, transformation counts, and diagnostics. It does not write a textual `.sysml` file yet.
 
 ## Known Limitations
 
 - Only Capella `LogicalComponent` is mapped in production.
 - The official SysON textual exporter is not connected.
 - Generated SysML text cannot yet be parsed or linked for validation.
+- The Windows product is materialized by Tycho but has not been executed in a Windows environment yet.
 - SWT and Eclipse UI bundles are transitively installed because of Capella dependencies, although the validated execution does not create a workbench or require `DISPLAY`.
 - UI bundle non-activation is not yet asserted by an automated product test.
 - The standalone product still needs qualification with a real JDK 21 runtime; the latest manual product validation used Java 25.
-- `--arcadia-library` is validated as a directory, while the production Arcadia library model currently comes from the bundled official artifact.
 
 ## Next Steps
 
@@ -145,9 +182,10 @@ The command currently creates the SysON target model in memory and reports trans
 2. Verify that SWT, Eclipse UI, and E4 UI bundles remain inactive.
 3. Qualify the complete build and product with Java 21.
 4. Integrate the official SysON textual exporter.
-5. Add an output option and generate a `.sysml` file.
+5. Replace the intermediate XMI output with the generated textual `.sysml` file.
 6. Validate generated text with SysON parser and linker services.
-7. Extend mapping coverage incrementally with focused tests.
+7. Execute and qualify the materialized product on Windows.
+8. Extend mapping coverage incrementally with focused tests.
 
 ## Contributing
 
