@@ -19,7 +19,7 @@ class Capella2SysMLV2CommandTest {
         var request = new AtomicReference<TransformationRequest>();
         var commandLine = new CommandLine(new Capella2SysMLV2Command(value -> {
             request.set(value);
-            return new TransformationSummary(3, 3, 0);
+            return new TransformationSummary(3, 3, 0, Path.of("output/model.sysml.xmi"));
         }));
         commandLine.setOut(new PrintWriter(output));
 
@@ -29,7 +29,8 @@ class Capella2SysMLV2CommandTest {
         assertThat(request.get()).isEqualTo(new TransformationRequest(Path.of("project.zip"), Path.of("output")));
         assertThat(output.toString()).contains("Source LogicalComponent count: 3")
                 .contains("Generated PartUsage count: 3")
-                .contains("Errors: 0");
+                .contains("Errors: 0")
+                .contains("XMI model: output/model.sysml.xmi");
     }
 
     @Test
