@@ -42,6 +42,9 @@ Shared TransformationContext
 SysON SysML v2 model
               |
               v
+Intermediate XMI persistence              [implemented]
+              |
+              v
 Official SysON textual export             [not implemented yet]
               |
               v
@@ -89,7 +92,7 @@ Defines the Capella 7.0.1, Eclipse, Sirius, and Kitalpha target platform used by
 Adapts the regular Maven transformation code to the Equinox runtime and loads the bundled Arcadia library model.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
-Provides the Equinox `IApplication`, the concrete runtime and loader implementations, Picocli wiring, and end-to-end transformation orchestration.
+Provides the Equinox `IApplication`, the concrete runtime and loader implementations, Picocli wiring, XMI persistence, and end-to-end transformation orchestration.
 
 `eclipse/features/org.eclipse.capella.sysmlv2.bridge.headless.feature`::
 Defines the feature used by the standalone product. It includes the bridge application and transformer bundles and relies on p2 dependency resolution for their runtime closure.
@@ -101,16 +104,16 @@ Defines the feature installable into an existing Capella product. This feature i
 Builds the p2 repository containing the bridge features and bundles.
 
 `eclipse/product/org.eclipse.capella.sysmlv2.bridge.product`::
-Defines and materializes the standalone Equinox product. The generated Linux executable is named `capella2sysmlv2`.
+Defines and materializes the standalone Equinox product for Linux and Windows. The Linux executable is named `capella2sysmlv2`; the Windows distribution provides `capella2sysmlv2.exe` and the console launcher `capella2sysmlv2c.exe`.
 
 `eclipse/official-product-it`::
-Contains integration infrastructure for testing bridge compatibility with an official Capella distribution. Some of this test code predates the current direct `.capella` loading flow and still needs to be aligned with the standalone product scenario.
+Contains an automated IFE integration scenario against an official Capella distribution. It installs the bridge feature, launches without `DISPLAY`, checks the transformation summary, and checks the generated XMI file.
 
 == Runtime Responsibilities
 
 === Runtime Initialization
 
-`EquinoxCapellaRuntime` obtains the Eclipse workspace initialized by the launcher and verifies that its location matches the CLI `--workspace` argument. Closing the runtime saves the workspace and is idempotent.
+The application derives the Eclipse workspace from the output directory and initializes the Equinox instance location before Eclipse Resources starts. `EquinoxCapellaRuntime` then verifies the initialized workspace. Closing the runtime saves the workspace and is idempotent.
 
 The product explicitly starts the Equinox infrastructure required before the workspace:
 
@@ -128,9 +131,10 @@ This ordering is required because the Content Type manager is a Declarative Serv
 
 The current production loader is `CapellaSessionLoader`. Its name is historical: it no longer opens a Sirius session.
 
-The loader performs the following operations:
+The archive extractor and loader perform the following operations:
 
-. Validate that the input directory contains a `.project` file.
+. Securely extract the input zip archive into the internal working directory.
+. Require exactly one `.project` file and one `.capella` model.
 . Import the project description into the Eclipse workspace at its external location.
 . Open and refresh the workspace project.
 . Resolve the requested `.capella` file relative to that project.
@@ -148,12 +152,16 @@ The `SemanticEditingDomain` and its cross-reference adapter remain necessary bec
 
 `EquinoxTransformationService` controls one complete execution:
 
+. create the output and internal working directories;
+. extract the Capella project and discover its semantic model;
 . initialize the runtime;
 . load the Capella model;
 . find all Capella `LogicalComponent` instances;
 . load and resolve the Arcadia SysML v2 library;
 . invoke `TransformationEngine.transformAll(...)` with one shared context;
 . resolve deferred references once;
+. write `<CAPELLA_MODEL_NAME>.sysml.xmi` atomically;
+. reload the XMI and verify its generated `PartUsage` elements and Arcadia type references;
 . report source, target, and diagnostic counts;
 . close the loaded model and runtime.
 
@@ -182,7 +190,7 @@ Mappers are stateless and do not instantiate or locate other mappers.
 
 == Arcadia SysML v2 Library
 
-Generated models must reference concepts from the Arcadia SysML v2 library published by the `eclipse-capella/arcadia-sysmlv2-lib` project.
+Generated models must reference concepts from the open-source Arcadia SysML v2 library published by the `eclipse-capella/arcadia-sysmlv2-lib` project.
 
 The current Equinox transformer uses the official artifact:
 
@@ -193,7 +201,7 @@ org.eclipse.arcadia:arcadia-library:0.0.3
 
 It loads the bundled `arcadia/library/arcadia.json` resource with Sirius EMF JSON and resolves the real `Arcadia::Component` element. Mappers access this model only through `TransformationContext.libraryResolver()`.
 
-The CLI currently validates `--arcadia-library` as a directory, but the production Arcadia library model used by the transformer comes from the bundled official artifact. Aligning this option with the actual loading strategy remains future work.
+The production Arcadia library model comes from the bundled official artifact. Users do not need to locate or configure the library.
 
 == Current Mapping Coverage
 
@@ -245,15 +253,19 @@ The following table distinguishes completed implementation from remaining work.
 
 |Standalone product
 |Implemented
-|Tycho materializes an executable Linux Equinox product and a compressed distribution archive.
+|Tycho materializes executable Linux and Windows Equinox products and compressed distribution archives. The Windows product has not yet been executed on Windows.
 
 |IFE execution
 |Manually verified
 |The standalone product loaded the real IFE model and transformed 23 source components into 23 `PartUsage` elements with zero transformation errors.
 
 |No-display execution
-|Manually verified
-|The IFE run completed with `DISPLAY` removed from the process environment.
+|Verified
+|The IFE run completed with `DISPLAY` removed from the process environment, both manually and in the official-product integration test.
+
+|Intermediate XMI persistence
+|Implemented
+|The application writes and reloads `<CAPELLA_MODEL_NAME>.sysml.xmi`, then verifies all generated `PartUsage` elements and external Arcadia type references.
 
 |UI bundle activation check
 |Not automated
@@ -265,7 +277,7 @@ The following table distinguishes completed implementation from remaining work.
 
 |Textual SysML export
 |Not implemented
-|The in-memory SysON SysML v2 model is not yet exported. Export must use official SysON tooling.
+|The intermediate XMI is not textual SysML. Final `.sysml` export must use official SysON tooling.
 
 |Parser and linker validation
 |Not implemented
@@ -286,11 +298,12 @@ Transformation completed
 Source LogicalComponent count: 23
 Generated PartUsage count: 23
 Errors: 0
+XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
 ----
 
-This proves that the minimal product can initialize Equinox Resources, import a project, load a Capella model, evaluate the Capella cross-reference behavior required by the mapping, resolve `Arcadia::Component`, and create the target SysON SysML v2 model.
+This proves that the minimal product can initialize Equinox Resources, import a project, load a Capella model, evaluate the Capella cross-reference behavior required by the mapping, resolve `Arcadia::Component`, create the target SysON SysML v2 model, and persist and reload it as XMI while retaining Arcadia references.
 
-It does not yet prove textual export, parser/linker validity, Java 21 compatibility, or the absence of activated UI bundles.
+It does not yet prove textual `.sysml` export, parser/linker validity, Java 21 compatibility, Windows execution, or the absence of activated UI bundles.
 
 == Headless Runtime Constraint
 
@@ -329,15 +342,16 @@ The Equinox bundles, p2 repository, and standalone product are built with:
 mvn -Pcapella-runtime -DskipTests package
 ----
 
-The Linux product is materialized under:
+The products are materialized under:
 
 [source,text]
 ----
 eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/
   target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product/win32/win32/x86_64/
 ----
 
-The product archive is generated under the same module's `target/products/` directory.
+Linux `.tar.gz` and Windows `.zip` product archives are generated under the same module's `target/products/` directory.
 
 The Tycho build currently emits `Misconfigured toolchain` messages in the available Java 25 environment but completes successfully. The intended resolution is to configure and qualify a real Java 21 toolchain rather than suppress those messages.
 
@@ -347,15 +361,12 @@ The application command is:
 
 [source,bash]
 ----
-capella2sysmlv2 transform \
-  - data /path/to/workspace \
-  --project /path/to/capella-project \
-  --model model.capella \
-  --arcadia-library /path/to/arcadia-library \
-  --workspace /path/to/workspace
+capella2sysmlv2 INPUT_ZIP OUTPUT_DIRECTORY
 ----
 
-At present the command reports transformation counts and diagnostics but does not write a `.sysml` file.
+The application automatically extracts the project and creates its workspace under `OUTPUT_DIRECTORY/.capella2sysmlv2/workspace`. It writes `<CAPELLA_MODEL_NAME>.sysml.xmi` to the output directory and reports the file path, transformation counts, and diagnostics. This XMI is an intermediate persistence format, not textual SysML.
+
+On Windows, use `capella2sysmlv2c.exe` from PowerShell or `cmd.exe` to keep command output attached to the current console.
 
 == Testing Strategy
 
@@ -375,19 +386,19 @@ The next product test should:
 
 . build or consume the materialized standalone product;
 . launch it with `DISPLAY` removed;
-. use a fresh workspace;
-. transform the IFE project;
+. use the zipped IFE project and a fresh output directory;
 . assert exit code zero;
 . assert 23 source `LogicalComponent` instances;
 . assert 23 generated `PartUsage` instances;
 . assert zero transformation errors;
+. assert that the XMI model exists and retains its Arcadia library references;
 . inspect Equinox state and logs to reject activated SWT, Eclipse UI, E4 UI, and workbench bundles.
 
 == Next Steps
 
 === 1. Automate Standalone Headless Qualification
 
-Update the product integration test to launch the standalone `capella2sysmlv2` executable with the current `transform` arguments. Record or inspect bundle states after transformation and fail when a forbidden UI bundle is active.
+Update the product integration test to launch the standalone `capella2sysmlv2` executable with the zipped IFE project and an output directory. Record or inspect bundle states after transformation and fail when a forbidden UI bundle is active.
 
 This is the immediate priority because it turns the successful manual IFE run into a reproducible acceptance test.
 
@@ -414,16 +425,16 @@ The implementation must not:
 * couple mappers to parser or exporter implementations;
 * duplicate EMF in the Equinox product.
 
-=== 4. Add an Output Contract to the CLI
+=== 4. Replace Intermediate XMI with Textual Output
 
-Add an output argument, for example:
+Use the output directory already provided to the application for the final textual model:
 
 [source,bash]
 ----
---output /path/to/model.sysml
+capella2sysmlv2 IFE.zip output/
 ----
 
-Define overwrite behavior, parent-directory validation, diagnostics, and a dedicated non-zero exit code for export failures.
+The current XMI persistence already writes atomically and validates its output by reloading it. Preserve those properties when introducing official textual export, and define a dedicated non-zero exit code for exporter failures.
 
 === 5. Validate Generated SysML
 
@@ -448,10 +459,6 @@ Add each new Capella concept using the existing TDD sequence:
 . validate exported text once export support exists.
 
 Potential mappings must be prioritized explicitly. The presence of placeholder functional scenarios does not define their implementation order.
-
-=== 7. Reconcile Arcadia Library Configuration
-
-Decide whether `--arcadia-library` should select an external validated checkout or be removed in favor of the bundled official artifact. The CLI contract and the Arcadia library model actually used at runtime must describe the same behavior.
 
 == Definition of Done for the Current Milestone
 
