@@ -3,7 +3,6 @@ package org.eclipse.capella.sysmlv2.bridge.application;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.obeonetwork.capella.sysmlv2.cli.Capella2SysMLV2Command;
-import org.obeonetwork.capella.sysmlv2.cli.GenerateSysMLCommand;
 
 import picocli.CommandLine;
 
@@ -17,8 +16,7 @@ public final class BridgeApplication implements IApplication {
         if (stopping) {
             return 2;
         }
-        var commandLine = new CommandLine(new Capella2SysMLV2Command());
-        commandLine.addSubcommand(new GenerateSysMLCommand(new EquinoxTransformationService()));
+        var commandLine = new CommandLine(new Capella2SysMLV2Command(new EquinoxTransformationService()));
         return commandLine.execute(arguments);
     }
 

@@ -1,6 +1,8 @@
 package org.eclipse.capella.sysmlv2.bridge.application;
 
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,8 @@ import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationService;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
+import org.obeonetwork.capella.sysmlv2.loader.CapellaProjectArchiveExtractor;
+import org.obeonetwork.capella.sysmlv2.loader.ExtractedCapellaProject;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.obeonetwork.capella.sysmlv2.runtime.CapellaRuntimeContext;
 import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
@@ -25,9 +29,10 @@ public final class EquinoxTransformationService implements TransformationService
 
     @Override
     public TransformationSummary transform(TransformationRequest request) {
-        validateArcadiaLibraryPath(request);
-        try (var runtime = initializeRuntime(request);
-                var model = loadModel(runtime, request)) {
+        Path outputDirectory = prepareOutputDirectory(request.outputDirectory());
+        ExtractedCapellaProject extractedProject = extractProject(request.inputZip(), outputDirectory);
+        try (var runtime = initializeRuntime(outputDirectory);
+                var model = loadModel(runtime, extractedProject)) {
             List<EObject> logicalComponents = findLogicalComponents(model.root());
             if (logicalComponents.isEmpty()) {
                 return new TransformationSummary(0, 0, 0);
@@ -37,7 +42,7 @@ public final class EquinoxTransformationService implements TransformationService
             var mapper = new LogicalComponentMapper(MetaclassId.of(logicalComponents.get(0).eClass()));
             var engine = new TransformationEngine(
                     new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))), resolver);
-            String modelName = modelName(request.modelPath().getFileName().toString());
+            String modelName = modelName(extractedProject.modelPath().getFileName().toString());
             var result = engine.transformAll(logicalComponents,
                     new TransformationOptions(false, false, false, modelName, modelName));
             int generatedPartUsages = (int) logicalComponents.stream()
@@ -55,11 +60,39 @@ public final class EquinoxTransformationService implements TransformationService
         }
     }
 
-    private static org.obeonetwork.capella.sysmlv2.runtime.InitializedCapellaRuntime initializeRuntime(
-            TransformationRequest request) {
+    private static Path prepareOutputDirectory(Path outputDirectory) {
         try {
-            return new EquinoxCapellaRuntime().initialize(
-                    new CapellaRuntimeContext(request.workspaceDirectory(), Map.of("mode", "headless")));
+            Path normalized = outputDirectory.toAbsolutePath().normalize();
+            Files.createDirectories(normalized);
+            return normalized;
+        } catch (IOException exception) {
+            throw new TransformationCommandException(2,
+                    "Cannot create output directory: " + outputDirectory, exception);
+        }
+    }
+
+    private static ExtractedCapellaProject extractProject(Path inputZip, Path outputDirectory) {
+        try {
+            Path normalizedInputZip = inputZip.toAbsolutePath().normalize();
+            Path inputRoot = ApplicationWorkspace.prepareInputDirectory(outputDirectory);
+            if (normalizedInputZip.startsWith(inputRoot)) {
+                throw new IllegalArgumentException("Input archive must be outside the internal working directory: "
+                        + normalizedInputZip);
+            }
+            Path extractionDirectory = inputRoot.resolve("project");
+            ApplicationWorkspace.resetInternalDirectory(extractionDirectory);
+            return new CapellaProjectArchiveExtractor().extract(normalizedInputZip, extractionDirectory);
+        } catch (IOException | RuntimeException exception) {
+            throw new TransformationCommandException(2,
+                    "Cannot prepare Capella project: " + exception.getMessage(), exception);
+        }
+    }
+
+    private static org.obeonetwork.capella.sysmlv2.runtime.InitializedCapellaRuntime initializeRuntime(
+            Path outputDirectory) {
+        try {
+            return new EquinoxCapellaRuntime().initialize(new CapellaRuntimeContext(
+                    ApplicationWorkspace.forOutput(outputDirectory), Map.of("mode", "headless")));
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(3, "Cannot initialize Capella runtime: " + exception.getMessage(),
                     exception);
@@ -68,10 +101,10 @@ public final class EquinoxTransformationService implements TransformationService
 
     private static org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel loadModel(
             org.obeonetwork.capella.sysmlv2.runtime.InitializedCapellaRuntime runtime,
-            TransformationRequest request) {
+            ExtractedCapellaProject extractedProject) {
         try {
             return new CapellaSessionLoader().load(runtime,
-                    new ModelLoadRequest(request.projectDirectory(), request.modelPath()));
+                    new ModelLoadRequest(extractedProject.projectDirectory(), extractedProject.modelPath()));
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(4, "Cannot load Capella model: " + exception.getMessage(),
                     exception);
@@ -84,13 +117,6 @@ public final class EquinoxTransformationService implements TransformationService
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(5, "Cannot load Arcadia library: " + exception.getMessage(),
                     exception);
-        }
-    }
-
-    private static void validateArcadiaLibraryPath(TransformationRequest request) {
-        if (!Files.isDirectory(request.arcadiaLibraryDirectory())) {
-            throw new TransformationCommandException(5,
-                    "Arcadia library directory does not exist: " + request.arcadiaLibraryDirectory(), null);
         }
     }
 

@@ -27,6 +27,22 @@
 
     <repositories>
         <repository>
+            <id>github-syson</id>
+            <url>https://maven.pkg.github.com/eclipse-syson/syson</url>
+        </repository>
+        <repository>
+            <id>github-sirius-web</id>
+            <url>https://maven.pkg.github.com/eclipse-sirius/sirius-web</url>
+        </repository>
+        <repository>
+            <id>github-sirius-emfjson</id>
+            <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
+        </repository>
+        <repository>
+            <id>github-arcadia</id>
+            <url>https://maven.pkg.github.com/eclipse-capella/arcadia-sysmlv2-lib</url>
+        </repository>
+        <repository>
             <id>capella-7.0.1</id>
             <layout>p2</layout>
             <url>https://download.eclipse.org/capella/core/updates/releases/7.0.1/org.polarsys.capella.rcp.site/</url>

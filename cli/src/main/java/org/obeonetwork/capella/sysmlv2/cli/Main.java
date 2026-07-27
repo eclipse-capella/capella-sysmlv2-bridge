@@ -8,10 +8,9 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        var commandLine = new CommandLine(new Capella2SysMLV2Command());
-        commandLine.addSubcommand(new GenerateSysMLCommand(request -> {
+        var commandLine = new CommandLine(new Capella2SysMLV2Command(request -> {
             throw new TransformationCommandException(3,
-                    "The transform command must run inside the Equinox application", null);
+                    "capella2sysmlv2 must run from the Equinox product", null);
         }));
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
