@@ -40,6 +40,7 @@ public final class Capella2SysMLV2Command implements Callable<Integer> {
             out.println("Source LogicalComponent count: " + result.sourceLogicalComponentCount());
             out.println("Generated PartUsage count: " + result.generatedPartUsageCount());
             out.println("Errors: " + result.errorCount());
+            out.println("XMI model: " + result.outputModel());
             return result.errorCount() == 0 ? 0 : 6;
         } catch (TransformationCommandException exception) {
             spec.commandLine().getErr().println(exception.getMessage());

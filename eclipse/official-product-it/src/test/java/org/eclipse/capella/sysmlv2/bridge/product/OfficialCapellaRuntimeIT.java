@@ -56,6 +56,12 @@ class OfficialCapellaRuntimeIT {
         assertTrue(execution.output().contains("Source LogicalComponent count: 23"), execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 23"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
+        Path xmiModel = applicationOutput.resolve("In-Flight Entertainment System.sysml.xmi");
+        assertTrue(Files.isRegularFile(xmiModel), "Missing generated model: " + xmiModel);
+        String xmi = Files.readString(xmiModel, StandardCharsets.UTF_8);
+        assertTrue(xmi.contains("OccurrenceDefinition"), xmi);
+        assertTrue(xmi.contains("PartUsage"), xmi);
+        assertTrue(xmi.contains("arcadialibrary:/arcadia.json"), xmi);
     }
 
     private static ProcessResult run(Path logFile, List<String> command) throws Exception {
