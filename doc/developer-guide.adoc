@@ -195,7 +195,12 @@ Run the complete build and official Capella IFE integration test with:
 mvn -Pcapella-runtime,capella-product-it verify
 ----
 
-This test downloads an official Capella product, installs the bridge feature, launches without `DISPLAY`, transforms the IFE model, and checks the generated XMI model.
+This profile runs two product tests:
+
+* the materialized standalone product is launched without `DISPLAY` and must not activate graphical SWT, Eclipse UI, or E4 renderer bundles;
+* an official Capella product receives the installable bridge feature and executes the same transformation for compatibility.
+
+Both tests transform IFE, check the generated XMI model, and read the runtime qualification report.
 
 === Manual Linux Test
 
@@ -223,7 +228,8 @@ The expected transformation result is 23 source `LogicalComponent` elements, 23 
 
 == Release Automation
 
-The `.github/workflows/release.yml` workflow is triggered by tags matching `v*` and accepts strict `vMAJOR.MINOR.PATCH` tags.
+The `.github/workflows/release.yml` workflow qualifies pull requests, pushes to `main`, manual runs, and release tags.
+Release tags must follow strict `vMAJOR.MINOR.PATCH` syntax.
 
 === Repository Secrets
 
@@ -241,14 +247,28 @@ The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when p
 
 The workflow performs the following operations:
 
-. validates the semantic-version tag;
-. builds and tests the regular Maven modules with Java 21;
-. materializes the Linux and Windows products with Tycho;
+. validates semantic-version tags and their ancestry from `main`;
+. executes the complete Maven, Tycho, standalone, and official-product build with Java 21;
+. materializes the Linux and Windows products;
 . renames the archives to stable public asset names;
 . runs the IFE scenario from the Linux archive without `DISPLAY`;
 . runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary and Arcadia references in both generated XMI files;
-. creates the GitHub Release only after every preceding job succeeds.
+. verifies the `23/23/0` summary, Arcadia references, Java 21 runtime, and absence of graphical UI activation;
+. uploads qualification reports and logs, including after failures;
+. creates the GitHub Release for tags only and only after every preceding job succeeds.
+
+The complete Java 21 qualification command used by the workflow is:
+
+[source,bash]
+----
+mvn --settings .github/maven-settings.xml \
+  -Pcapella-runtime,capella-product-it \
+  -Dcapella.expected.java.feature=21 \
+  clean verify
+----
+
+The application writes `runtime-qualification.properties` before Equinox shutdown.
+The standalone acceptance test permits the E4 model, DI, and workbench infrastructure needed by Capella, but rejects actual activation of SWT, Eclipse UI, and E4 graphical renderer bundles.
 
 Create a release from an up-to-date `main` branch with:
 

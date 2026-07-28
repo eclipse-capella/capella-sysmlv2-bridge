@@ -14,6 +14,7 @@ public class Activator extends Plugin {
 	private static Activator plugin;
 
 	public ServiceTracker<IWorkspace, IWorkspace> workspaceTracker;
+	private BundleLifecycleAudit bundleLifecycleAudit;
 
 	/**
 	 * The constructor
@@ -27,6 +28,8 @@ public class Activator extends Plugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		bundleLifecycleAudit = new BundleLifecycleAudit(context);
+		bundleLifecycleAudit.start();
 		ApplicationWorkspace.initialize(org.eclipse.core.runtime.Platform.getApplicationArgs());
 		workspaceTracker = new ServiceTracker<>(context, IWorkspace.class, null);
 		workspaceTracker.open();
@@ -36,8 +39,20 @@ public class Activator extends Plugin {
 	 * {@inheritDoc}
 	 */
 	public void stop(BundleContext context) throws Exception {
+		if (bundleLifecycleAudit != null) {
+			bundleLifecycleAudit.close();
+			bundleLifecycleAudit = null;
+		}
+		if (workspaceTracker != null) {
+			workspaceTracker.close();
+			workspaceTracker = null;
+		}
 		plugin = null;
 		super.stop(context);
+	}
+
+	BundleLifecycleAudit.Report finishBundleLifecycleAudit() {
+		return bundleLifecycleAudit.finish();
 	}
 
 	/**

@@ -155,6 +155,8 @@ OUTPUT_DIRECTORY/.capella2sysmlv2/
 This is an internal working directory containing the extracted project and private Eclipse workspace.
 Do not place user files inside it.
 
+It also contains `runtime-qualification.properties`, which records the Java runtime and verifies that no graphical SWT, Eclipse UI, or E4 renderer bundle was launched.
+
 [IMPORTANT]
 ====
 The `.sysml.xmi` file is an intermediate serialization of the SysON model.
