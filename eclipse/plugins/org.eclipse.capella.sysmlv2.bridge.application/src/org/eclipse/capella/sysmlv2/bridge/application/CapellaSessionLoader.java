@@ -51,8 +51,10 @@ public final class CapellaSessionLoader implements CapellaModelLoader {
 
 		if (!project.exists()) {
 			project.create(description, monitor);
-		} else if (project.getLocationURI() != null && !project.getLocationURI().equals(projectDirectory.toUri())) {
-			throw new IllegalStateException("Workspace project already exists at another location: " + project.getName());
+		} else if (project.getLocationURI() != null && !Path.of(project.getLocationURI()).toAbsolutePath().normalize()
+				.equals(projectDirectory.toAbsolutePath().normalize())) {
+			project.delete(false, true, monitor);
+			project.create(description, monitor);
 		}
 		if (!project.isOpen()) {
 			project.open(monitor);

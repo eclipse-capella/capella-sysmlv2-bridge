@@ -1,0 +1,190 @@
+= capella2sysmlv2
+:toc: left
+:toclevels: 2
+
+`capella2sysmlv2` is a standalone command-line tool that transforms a zipped Capella project into a SysML v2 model represented by the SysON metamodel.
+
+The generated model reuses concepts from the open-source https://github.com/eclipse-capella/arcadia-sysmlv2-lib[Arcadia SysML v2 library].
+
+[NOTE]
+====
+The project is currently a proof of concept.
+Only Capella `LogicalComponent` elements are transformed in production.
+====
+
+== Download
+
+Download the product for your operating system from the https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest[latest GitHub release]:
+
+* https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-linux-x86_64.tar.gz[Linux x86_64]
+* https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-windows-x86_64.zip[Windows x86_64]
+
+Binary distributions are published automatically after their Linux and Windows acceptance tests succeed.
+
+[NOTE]
+====
+If the release page does not contain these assets yet, the project has not published its first binary distribution.
+Contributors can build the products by following the link:doc/developer-guide.adoc[Developer Guide].
+====
+
+== Requirements
+
+* A 64-bit Linux or Windows system
+* A Java 21 runtime available from `PATH` or `JAVA_HOME`
+* A zip archive containing one Capella project
+
+No Capella installation, Eclipse workspace, or external Arcadia library checkout is required.
+
+== Input Archive
+
+The input zip archive must contain exactly:
+
+* one Eclipse `.project` file;
+* one Capella `.capella` semantic model.
+
+The archive may also contain the other files belonging to the project, such as `.aird` and `.afm` files.
+
+The official Capella 7.0.1 In-Flight Entertainment System sample can be used to test the tool:
+
+https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip[InFlightEntertainmentSystem.zip]
+
+== Linux
+
+Download and extract the product:
+
+[source,bash]
+----
+curl -L \
+  "https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-linux-x86_64.tar.gz" \
+  -o capella2sysmlv2-linux-x86_64.tar.gz
+
+mkdir capella2sysmlv2
+tar -xzf capella2sysmlv2-linux-x86_64.tar.gz -C capella2sysmlv2
+----
+
+Download the IFE sample and run the transformation:
+
+[source,bash]
+----
+curl -L \
+  "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1" \
+  -o InFlightEntertainmentSystem.zip
+
+./capella2sysmlv2/capella2sysmlv2 \
+  InFlightEntertainmentSystem.zip \
+  output
+----
+
+The application does not require a graphical display.
+
+== Windows
+
+From PowerShell, download and extract the product:
+
+[source,powershell]
+----
+Invoke-WebRequest `
+  -Uri "https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-windows-x86_64.zip" `
+  -OutFile "capella2sysmlv2-windows-x86_64.zip"
+
+Expand-Archive `
+  -Path "capella2sysmlv2-windows-x86_64.zip" `
+  -DestinationPath "capella2sysmlv2"
+----
+
+Download the IFE sample and run the transformation:
+
+[source,powershell]
+----
+Invoke-WebRequest `
+  -Uri "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1" `
+  -OutFile "InFlightEntertainmentSystem.zip"
+
+.\capella2sysmlv2\capella2sysmlv2c.exe `
+  InFlightEntertainmentSystem.zip `
+  output
+----
+
+Use `capella2sysmlv2c.exe` from a terminal so that command output remains visible.
+
+== Command Line
+
+The command takes exactly two positional arguments:
+
+[source,text]
+----
+capella2sysmlv2 INPUT_ZIP OUTPUT_DIRECTORY
+----
+
+`INPUT_ZIP`::
+The zip archive containing the Capella project and model.
+
+`OUTPUT_DIRECTORY`::
+The directory in which the generated model and internal working files are created.
+The directory is created automatically when necessary.
+
+For the IFE sample, a successful execution reports:
+
+[source,text]
+----
+Transformation completed
+Source LogicalComponent count: 23
+Generated PartUsage count: 23
+Errors: 0
+XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
+----
+
+== Output
+
+The generated model is written as:
+
+[source,text]
+----
+OUTPUT_DIRECTORY/<CAPELLA_MODEL_NAME>.sysml.xmi
+----
+
+The application reloads the XMI file after writing it and verifies its generated `PartUsage` elements and references to `Arcadia::Component`.
+
+The output directory also contains:
+
+[source,text]
+----
+OUTPUT_DIRECTORY/.capella2sysmlv2/
+----
+
+This is an internal working directory containing the extracted project and private Eclipse workspace.
+Do not place user files inside it.
+
+[IMPORTANT]
+====
+The `.sysml.xmi` file is an intermediate serialization of the SysON model.
+It is not the final textual SysML v2 `.sysml` format.
+====
+
+== Troubleshooting
+
+`Java was not found` or the application does not start::
+Install a 64-bit Java 21 runtime and ensure `java -version` reports Java 21.
+
+`Cannot prepare Capella project`::
+Check that the archive contains exactly one `.project` file and one `.capella` file.
+
+`Cannot load Capella model`::
+Check that all files referenced by the Capella semantic model are present in the archived project.
+
+The output directory is rejected::
+Do not use a location inside `OUTPUT_DIRECTORY/.capella2sysmlv2` as the input archive or output destination.
+
+== Current Limitations
+
+* Only `LogicalComponent -> PartUsage : Arcadia::Component` is supported in production.
+* Official textual SysML export is not connected yet.
+* Generated textual SysML cannot yet be validated by the SysON parser and linker.
+* The project remains at proof-of-concept maturity.
+
+== Further Documentation
+
+* link:doc/developer-guide.adoc[Developer Guide]
+* link:doc/project-status.adoc[Project Status and Roadmap]
+
+The project is licensed under the Eclipse Public License 2.0.

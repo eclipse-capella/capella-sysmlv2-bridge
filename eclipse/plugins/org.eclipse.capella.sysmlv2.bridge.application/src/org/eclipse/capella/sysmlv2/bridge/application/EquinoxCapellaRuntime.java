@@ -22,7 +22,7 @@ public final class EquinoxCapellaRuntime implements CapellaRuntime {
 		Path requestedWorkspace = context.workspaceDirectory().toAbsolutePath().normalize();
 		if (!actualWorkspace.equals(requestedWorkspace)) {
 			throw new IllegalStateException(
-					"Equinox workspace is " + actualWorkspace + " but --workspace requested " + requestedWorkspace);
+					"Equinox workspace is " + actualWorkspace + " but expected " + requestedWorkspace);
 		}
 		return new InitializedCapellaRuntime() {
 			private final AtomicBoolean closed = new AtomicBoolean();

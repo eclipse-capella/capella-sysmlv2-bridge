@@ -39,6 +39,7 @@ public final class TransformationEngine implements CapellaToSysMLTransformer {
             dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
         }
         context.deferredReferenceResolver().resolveAll();
-        return new TransformationResult(context.generatedElements(), context.diagnostics().all(), context.traceability());
+        return new TransformationResult(modelStructure.root(), context.generatedElements(), context.diagnostics().all(),
+                context.traceability());
     }
 }

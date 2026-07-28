@@ -27,6 +27,7 @@ public class Activator extends Plugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		ApplicationWorkspace.initialize(org.eclipse.core.runtime.Platform.getApplicationArgs());
 		workspaceTracker = new ServiceTracker<>(context, IWorkspace.class, null);
 		workspaceTracker.open();
 	}

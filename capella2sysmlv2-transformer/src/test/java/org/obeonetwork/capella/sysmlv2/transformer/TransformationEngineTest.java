@@ -30,6 +30,7 @@ class TransformationEngineTest {
         var result = new TransformationEngine(dispatcher, new TestLibraryResolver())
                 .transform(source, TransformationOptions.defaults());
 
+        assertThat(result.root()).isNotNull();
         assertThat(result.generatedElements()).contains(target);
         assertThat(result.diagnostics()).singleElement()
                 .satisfies(diagnostic -> assertThat(diagnostic.message()).isEqualTo("test diagnostic"));

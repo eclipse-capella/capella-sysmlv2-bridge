@@ -1,0 +1,202 @@
+name: Release products
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  IFE_URL: "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1"
+
+jobs:
+  build:
+    name: Build products
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      MAVEN_GITHUB_USERNAME: ${{ secrets.MAVEN_GITHUB_USERNAME }}
+      MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release tag
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must follow vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tag must reference a commit from main" >&2
+            exit 1
+          fi
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Verify Maven modules
+        run: >-
+          mvn --batch-mode --no-transfer-progress
+          --settings .github/maven-settings.xml
+          clean verify
+
+      - name: Build Linux and Windows products
+        run: >-
+          mvn --batch-mode --no-transfer-progress
+          --settings .github/maven-settings.xml
+          -Pcapella-runtime -DskipTests package
+
+      - name: Prepare distributions
+        shell: bash
+        run: |
+          install -D \
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product-linux.gtk.x86_64.tar.gz \
+            dist/capella2sysmlv2-linux-x86_64.tar.gz
+          install -D \
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product-win32.win32.x86_64.zip \
+            dist/capella2sysmlv2-windows-x86_64.zip
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: capella2sysmlv2-products
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  smoke-test-linux:
+    name: Test Linux product
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: capella2sysmlv2-products
+          path: dist
+
+      - name: Extract Linux product
+        run: |
+          mkdir product
+          tar -xzf dist/capella2sysmlv2-linux-x86_64.tar.gz -C product
+          chmod +x product/capella2sysmlv2
+
+      - name: Download IFE sample
+        run: curl --fail --location "$IFE_URL" --output InFlightEntertainmentSystem.zip
+
+      - name: Transform IFE sample
+        shell: bash
+        run: |
+          set -o pipefail
+          env -u DISPLAY ./product/capella2sysmlv2 \
+            InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
+          grep -F "Source LogicalComponent count: 23" run.log
+          grep -F "Generated PartUsage count: 23" run.log
+          grep -F "Errors: 0" run.log
+          test -f "output/In-Flight Entertainment System.sysml.xmi"
+          grep -F "arcadialibrary:/arcadia.json" \
+            "output/In-Flight Entertainment System.sysml.xmi"
+
+  smoke-test-windows:
+    name: Test Windows product
+    needs: build
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: capella2sysmlv2-products
+          path: dist
+
+      - name: Extract Windows product
+        shell: pwsh
+        run: Expand-Archive -Path dist/capella2sysmlv2-windows-x86_64.zip -DestinationPath product
+
+      - name: Download IFE sample
+        shell: pwsh
+        run: Invoke-WebRequest -Uri $env:IFE_URL -OutFile InFlightEntertainmentSystem.zip
+
+      - name: Transform IFE sample
+        shell: pwsh
+        run: |
+          $lines = & .\product\capella2sysmlv2c.exe `
+            InFlightEntertainmentSystem.zip output 2>&1
+          $exitCode = $LASTEXITCODE
+          $lines | Tee-Object -FilePath run.log
+          if ($exitCode -ne 0) {
+            throw "capella2sysmlv2 exited with code $exitCode"
+          }
+
+          $log = $lines -join "`n"
+          @(
+            "Source LogicalComponent count: 23",
+            "Generated PartUsage count: 23",
+            "Errors: 0"
+          ) | ForEach-Object {
+            if (-not $log.Contains($_)) {
+              throw "Missing expected output: $_"
+            }
+          }
+
+          $xmi = "output\In-Flight Entertainment System.sysml.xmi"
+          if (-not (Test-Path -Path $xmi -PathType Leaf)) {
+            throw "Missing generated model: $xmi"
+          }
+          if (-not (Select-String -Path $xmi -SimpleMatch "arcadialibrary:/arcadia.json" -Quiet)) {
+            throw "Generated model does not reference the Arcadia library"
+          }
+
+  release:
+    name: Publish GitHub release
+    needs:
+      - build
+      - smoke-test-linux
+      - smoke-test-windows
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: capella2sysmlv2-products
+          path: dist
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          dist/capella2sysmlv2-linux-x86_64.tar.gz
+          dist/capella2sysmlv2-windows-x86_64.zip
+          --repo "$GITHUB_REPOSITORY"
+          --verify-tag
+          --generate-notes
+          --title "capella2sysmlv2 $GITHUB_REF_NAME"
