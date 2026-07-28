@@ -1,7 +1,11 @@
-name: Release products
+name: Qualify and release products
 
 on:
+  workflow_dispatch:
+  pull_request:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -25,6 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate release tag
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -44,17 +49,24 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Verify Maven modules
+      - name: Qualify build and Linux product
         run: >-
           mvn --batch-mode --no-transfer-progress
           --settings .github/maven-settings.xml
+          -Pcapella-runtime,capella-product-it
+          -Dcapella.expected.java.feature=21
           clean verify
 
-      - name: Build Linux and Windows products
-        run: >-
-          mvn --batch-mode --no-transfer-progress
-          --settings .github/maven-settings.xml
-          -Pcapella-runtime -DskipTests package
+      - name: Upload build qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-qualification-evidence
+          path: |
+            eclipse/official-product-it/target/failsafe-reports/
+            eclipse/official-product-it/target/runtime/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Prepare distributions
         shell: bash
@@ -107,6 +119,7 @@ jobs:
         run: |
           set -o pipefail
           env -u DISPLAY ./product/capella2sysmlv2 \
+            -vm "$JAVA_HOME/bin/java" \
             InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
           grep -F "Source LogicalComponent count: 23" run.log
           grep -F "Generated PartUsage count: 23" run.log
@@ -114,6 +127,22 @@ jobs:
           test -f "output/In-Flight Entertainment System.sysml.xmi"
           grep -F "arcadialibrary:/arcadia.json" \
             "output/In-Flight Entertainment System.sysml.xmi"
+          grep -F "audit.passed=true" \
+            "output/.capella2sysmlv2/runtime-qualification.properties"
+          grep -F "java.feature=21" \
+            "output/.capella2sysmlv2/runtime-qualification.properties"
+
+      - name: Upload Linux qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-qualification-evidence
+          path: |
+            run.log
+            output/.capella2sysmlv2/runtime-qualification.properties
+            output/In-Flight Entertainment System.sysml.xmi
+          if-no-files-found: ignore
+          retention-days: 7
 
   smoke-test-windows:
     name: Test Windows product
@@ -146,6 +175,7 @@ jobs:
         shell: pwsh
         run: |
           $lines = & .\product\capella2sysmlv2c.exe `
+            -vm "$env:JAVA_HOME\bin\java.exe" `
             InFlightEntertainmentSystem.zip output 2>&1
           $exitCode = $LASTEXITCODE
           $lines | Tee-Object -FilePath run.log
@@ -172,8 +202,29 @@ jobs:
             throw "Generated model does not reference the Arcadia library"
           }
 
+          $report = "output\.capella2sysmlv2\runtime-qualification.properties"
+          if (-not (Select-String -Path $report -SimpleMatch "audit.passed=true" -Quiet)) {
+            throw "Runtime qualification detected graphical UI activation"
+          }
+          if (-not (Select-String -Path $report -SimpleMatch "java.feature=21" -Quiet)) {
+            throw "Windows product did not run with Java 21"
+          }
+
+      - name: Upload Windows qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-qualification-evidence
+          path: |
+            run.log
+            output/.capella2sysmlv2/runtime-qualification.properties
+            output/In-Flight Entertainment System.sysml.xmi
+          if-no-files-found: ignore
+          retention-days: 7
+
   release:
     name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
       - smoke-test-linux

@@ -85,6 +85,7 @@
                     <systemPropertyVariables>
                         <capella.product.directory>${project.build.directory}/capella-product</capella.product.directory>
                         <bridge.repository>${project.parent.basedir}/repository/org.eclipse.capella.sysmlv2.bridge.repository/target/repository</bridge.repository>
+                        <bridge.product.directory>${project.parent.basedir}/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64</bridge.product.directory>
                         <runtime.test.output>${project.build.directory}/runtime</runtime.test.output>
                         <capella.ife.project>${project.build.directory}/ife/In-Flight Entertainment System</capella.ife.project>
                         <capella.java.executable>${capella.java.executable}</capella.java.executable>

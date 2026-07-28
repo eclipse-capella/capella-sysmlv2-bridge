@@ -23,6 +23,11 @@ final class ApplicationWorkspace {
         return outputDirectory.toAbsolutePath().normalize().resolve(INTERNAL_DIRECTORY).resolve("input");
     }
 
+    static Path qualificationReport(Path outputDirectory) {
+        return outputDirectory.toAbsolutePath().normalize().resolve(INTERNAL_DIRECTORY)
+                .resolve("runtime-qualification.properties");
+    }
+
     static Path prepareInputDirectory(Path outputDirectory) throws IOException {
         Path inputDirectory = inputDirectory(outputDirectory);
         rejectSymbolicLinks(inputDirectory);
@@ -68,7 +73,7 @@ final class ApplicationWorkspace {
         }
     }
 
-    private static java.util.Optional<Path> outputDirectory(String[] applicationArguments) {
+    static java.util.Optional<Path> outputDirectory(String[] applicationArguments) {
         if (applicationArguments.length == 2) {
             return java.util.Optional.of(Path.of(applicationArguments[1]));
         }
