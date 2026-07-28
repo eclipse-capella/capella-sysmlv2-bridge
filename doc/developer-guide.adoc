@@ -1,0 +1,310 @@
+= capella2sysmlv2 Developer Guide
+:toc: left
+:toclevels: 3
+:sectnums:
+:source-highlighter: highlight.js
+
+== Scope
+
+This guide describes how to build, test, package, and release `capella2sysmlv2` from source.
+
+For installation and command-line usage, see link:../README.adoc[the user documentation].
+For implemented capabilities and planned work, see link:project-status.adoc[Project Status and Roadmap].
+
+== Development Requirements
+
+The development environment requires:
+
+* JDK 21;
+* Maven 3.9 or later;
+* Git;
+* network access to Maven Central, Eclipse p2 repositories, and GitHub Packages;
+* Asciidoctor when rendering documentation locally.
+
+Check the active toolchain before building:
+
+[source,bash]
+----
+java -version
+mvn -version
+----
+
+Both commands must report the intended JDK 21 installation.
+
+== GitHub Packages
+
+The build consumes artifacts from the SysON, Sirius, Sirius EMF JSON, and Arcadia GitHub Packages repositories.
+GitHub Packages may require authentication even when the corresponding source repositories are public.
+
+Create a GitHub personal access token with the `read:packages` permission, then expose its account and token to Maven:
+
+[source,bash]
+----
+export MAVEN_GITHUB_USERNAME=<github-account>
+export MAVEN_GITHUB_TOKEN=<token-with-read-packages>
+----
+
+The committed `.github/maven-settings.xml` file maps these environment variables to all required repository identifiers without storing credentials.
+Use it with:
+
+[source,bash]
+----
+mvn --settings .github/maven-settings.xml clean verify
+----
+
+If equivalent servers are already configured in `~/.m2/settings.xml`, the explicit `--settings` argument can be omitted.
+
+Never commit a token or a generated settings file containing a token.
+
+== Repository Structure
+
+=== Regular Maven Modules
+
+`arcadia-library`::
+Discovers and validates Arcadia SysML v2 library resources without transformation semantics.
+
+`capella-runtime`::
+Defines the runtime initialization and lifecycle boundary.
+
+`capella-loader`::
+Contains the model loading contracts and secure Capella project archive extraction.
+
+`capella2sysmlv2-transformer`::
+Contains mapper dispatch, transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
+
+`cli`::
+Contains the Picocli command and the runtime-independent transformation service contract.
+
+`integration-tests`::
+Contains functional and integration scenarios.
+
+`test-support`::
+Provides reusable test resources and golden-file assertions.
+
+=== Equinox and Tycho Modules
+
+`eclipse/target-platform`::
+Defines the Capella 7.0.1, Eclipse, Sirius, and Kitalpha target platform.
+
+`eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.transformer`::
+Adapts the regular transformer to Equinox and loads the bundled Arcadia library.
+
+`eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
+Implements the Equinox application, runtime initialization, model loading orchestration, and intermediate XMI persistence.
+
+`eclipse/features`::
+Defines the standalone and installable bridge features.
+
+`eclipse/repository`::
+Builds the bridge p2 repository.
+
+`eclipse/product`::
+Materializes and archives the Linux and Windows standalone products.
+
+`eclipse/official-product-it`::
+Runs the IFE integration scenario against an official Capella distribution.
+
+== Architecture
+
+The production pipeline is:
+
+[source,text]
+----
+Input zip archive
+        |
+        v
+Secure project extraction
+        |
+        v
+Equinox and Capella runtime initialization
+        |
+        v
+Direct .capella semantic model loading
+        |
+        v
+MetaclassId-based mapper dispatch
+        |
+        v
+Shared TransformationContext
+        |
+        v
+SysON SysML v2 model using Arcadia concepts
+        |
+        v
+Intermediate XMI persistence and reload validation
+----
+
+The transformation layer does not initialize Equinox, load projects, or serialize textual SysML.
+Mappers obtain Arcadia concepts through `TransformationContext.libraryResolver()` and must not load the library directly.
+
+Mapper lookup uses `MetaclassId(nsURI, className)` rather than runtime `EClass` identity or class names alone.
+
+== Build and Test
+
+=== Regular Build
+
+The required repository build is:
+
+[source,bash]
+----
+mvn clean verify
+----
+
+With explicit GitHub Packages settings:
+
+[source,bash]
+----
+mvn --settings .github/maven-settings.xml clean verify
+----
+
+This build runs the regular unit, functional, and integration tests without starting Capella.
+
+=== Standalone Products
+
+Build the Equinox bundles, p2 repository, and Linux and Windows products with:
+
+[source,bash]
+----
+mvn -Pcapella-runtime -DskipTests package
+----
+
+The materialized products are created under:
+
+[source,text]
+----
+eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product/win32/win32/x86_64/
+----
+
+The distributable archives are:
+
+[source,text]
+----
+eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/
+  org.eclipse.capella.sysmlv2.bridge.product-linux.gtk.x86_64.tar.gz
+  org.eclipse.capella.sysmlv2.bridge.product-win32.win32.x86_64.zip
+----
+
+=== Product Integration Test
+
+Run the complete build and official Capella IFE integration test with:
+
+[source,bash]
+----
+mvn -Pcapella-runtime,capella-product-it verify
+----
+
+This test downloads an official Capella product, installs the bridge feature, launches without `DISPLAY`, transforms the IFE model, and checks the generated XMI model.
+
+=== Manual Linux Test
+
+After building the product, download the sample:
+
+[source,bash]
+----
+curl -L \
+  "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1" \
+  -o /tmp/InFlightEntertainmentSystem.zip
+----
+
+Run the materialized Linux product:
+
+[source,bash]
+----
+env -u DISPLAY \
+  eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/\
+org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/capella2sysmlv2 \
+  /tmp/InFlightEntertainmentSystem.zip \
+  /tmp/capella2sysmlv2-output
+----
+
+The expected transformation result is 23 source `LogicalComponent` elements, 23 mapped `PartUsage` elements, and zero errors.
+
+== Release Automation
+
+The `.github/workflows/release.yml` workflow is triggered by tags matching `v*` and accepts strict `vMAJOR.MINOR.PATCH` tags.
+
+=== Repository Secrets
+
+Configure these Actions secrets in the GitHub repository:
+
+`MAVEN_GITHUB_USERNAME`::
+The GitHub account that owns the package access token.
+
+`MAVEN_GITHUB_TOKEN`::
+A token with `read:packages` access to the required SysON, Sirius, and Arcadia packages.
+
+The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when publishing the release.
+
+=== Release Sequence
+
+The workflow performs the following operations:
+
+. validates the semantic-version tag;
+. builds and tests the regular Maven modules with Java 21;
+. materializes the Linux and Windows products with Tycho;
+. renames the archives to stable public asset names;
+. runs the IFE scenario from the Linux archive without `DISPLAY`;
+. runs the IFE scenario from the Windows archive on a Windows runner;
+. verifies the `23/23/0` summary and Arcadia references in both generated XMI files;
+. creates the GitHub Release only after every preceding job succeeds.
+
+Create a release from an up-to-date `main` branch with:
+
+[source,bash]
+----
+git switch main
+git pull --ff-only
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+----
+
+The release publishes these stable assets:
+
+* `capella2sysmlv2-linux-x86_64.tar.gz`;
+* `capella2sysmlv2-windows-x86_64.zip`.
+
+The user documentation links to the corresponding `/releases/latest/download/` URLs.
+
+Do not move or recreate a published release tag.
+
+== Documentation
+
+All project-level documentation uses AsciiDoc:
+
+* `README.adoc` for end users;
+* `doc/developer-guide.adoc` for contributors;
+* `doc/project-status.adoc` for implementation status and roadmap.
+
+Render the documents locally with:
+
+[source,bash]
+----
+asciidoctor README.adoc
+asciidoctor doc/developer-guide.adoc
+asciidoctor doc/project-status.adoc
+----
+
+Generated HTML files must not be committed.
+
+== Contribution Rules
+
+New functionality follows a test-driven sequence:
+
+. add or update a minimal source model or metamodel;
+. add focused assertions;
+. execute the failing test;
+. implement the smallest correct change;
+. verify target structure, traceability, diagnostics, and references;
+. run `mvn clean verify`.
+
+Contributions must not:
+
+* introduce Capella or Eclipse UI behavior into the transformation flow;
+* depend on the SysML v2 Reference Implementation;
+* implement a private textual SysML serializer;
+* hardcode local paths;
+* let mappers load the Arcadia library directly;
+* place transformation semantics in the dispatcher, loader, or CLI;
+* keep mutable execution state in mapper instances.
