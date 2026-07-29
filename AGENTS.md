@@ -47,8 +47,8 @@ Parser / linker validation
 
 Detailed workflow:
 
-1. Initialize future Capella/Eclipse/EMF/Sirius headless runtime through `capella-runtime` abstractions.
-2. Load Capella models headlessly through `capella-loader`.
+1. Resolve installed Capella metamodel bundles through the Equinox application adapter.
+2. Register the Capella EMF packages and load the `.capella` resource directly through `capella-loader`.
 3. Resolve the Arcadia SysML v2 library through `arcadia-library` and expose semantic lookups through `LibraryResolver`.
 4. Dispatch Capella `EObject`s by stable `MetaclassId`.
 5. Invoke registered `ElementMapper`s.
@@ -144,8 +144,9 @@ Keep responsibilities isolated.
 
 ### Runtime Isolation
 
-Only `capella-runtime` may be responsible for future Eclipse, EMF, Sirius and Capella runtime initialization.
-`capella-loader` depends on runtime abstractions and must never initialize the Capella runtime directly.
+Only the Equinox application adapter may discover installed Capella metamodel bundles and register their EMF packages.
+`capella-loader` must remain independent of Eclipse, Sirius, and Capella runtime initialization.
+Loading semantic data must not require an Eclipse workspace, Sirius session, `.aird` file, or editing domain.
 
 ---
 
@@ -214,21 +215,13 @@ Responsibilities:
 * expose discovered `.sysml` files in deterministic order;
 * avoid transformation semantics.
 
-### capella-runtime
-
-Responsibilities:
-
-* future Capella runtime initialization;
-* Eclipse runtime abstraction;
-* Sirius runtime abstraction.
-
 ### capella-loader
 
 Responsibilities:
 
 * load Capella models;
 * expose model loading services;
-* depend only on runtime abstractions.
+* remain independent of Eclipse and Sirius runtime APIs.
 
 ### capella2sysmlv2-transformer
 

@@ -56,15 +56,30 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
+[NOTE]
+====
+The build temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private `obeo/arcadia-sysmlv2-lib` GitHub Packages repository.
+Once the artifact is published by `eclipse-capella/arcadia-sysmlv2-lib`, the repository URL must be switched to the official location.
+====
+
+To verify package access without reusing the local Maven cache:
+
+[source,bash]
+----
+TEST_M2=$(mktemp -d)
+mvn --settings .github/maven-settings.xml \
+  -Dmaven.repo.local="$TEST_M2" \
+  org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get \
+  -Dartifact=org.eclipse.arcadia:arcadia-library:0.0.3 \
+  -DremoteRepositories=github-arcadia::default::https://maven.pkg.github.com/obeo/arcadia-sysmlv2-lib
+----
+
 == Repository Structure
 
 === Regular Maven Modules
 
 `arcadia-library`::
 Discovers and validates Arcadia SysML v2 library resources without transformation semantics.
-
-`capella-runtime`::
-Defines the runtime initialization and lifecycle boundary.
 
 `capella-loader`::
 Contains the model loading contracts and secure Capella project archive extraction.
@@ -84,25 +99,22 @@ Provides reusable test resources and golden-file assertions.
 === Equinox and Tycho Modules
 
 `eclipse/target-platform`::
-Defines the Capella 7.0.1, Eclipse, Sirius, and Kitalpha target platform.
+Defines the Capella 7.0.1 metamodel, EMF, Equinox, and Kitalpha target platform.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.transformer`::
 Adapts the regular transformer to Equinox and loads the bundled Arcadia library.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
-Implements the Equinox application, runtime initialization, model loading orchestration, and intermediate XMI persistence.
+Implements the Equinox application, typed Capella resource loading, transformation orchestration, and intermediate XMI persistence.
 
 `eclipse/features`::
-Defines the standalone and installable bridge features.
-
-`eclipse/repository`::
-Builds the bridge p2 repository.
+Defines the standalone headless product feature.
 
 `eclipse/product`::
 Materializes and archives the Linux and Windows standalone products.
 
 `eclipse/official-product-it`::
-Runs the IFE integration scenario against an official Capella distribution.
+Runs the IFE integration scenario against the packaged standalone product.
 
 == Architecture
 
@@ -116,7 +128,7 @@ Input zip archive
 Secure project extraction
         |
         v
-Equinox and Capella runtime initialization
+Capella metamodel package registration
         |
         v
 Direct .capella semantic model loading
@@ -138,6 +150,7 @@ The transformation layer does not initialize Equinox, load projects, or serializ
 Mappers obtain Arcadia concepts through `TransformationContext.libraryResolver()` and must not load the library directly.
 
 Mapper lookup uses `MetaclassId(nsURI, className)` rather than runtime `EClass` identity or class names alone.
+The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a `ResourceSet`. It requires a typed Capella `Project` root and does not create an Eclipse workspace, editing domain, `.aird` resource, or Sirius session.
 
 == Build and Test
 
@@ -161,11 +174,14 @@ This build runs the regular unit, functional, and integration tests without star
 
 === Standalone Products
 
-Build the Equinox bundles, p2 repository, and Linux and Windows products with:
+Build the Equinox bundles and Linux and Windows products with:
 
 [source,bash]
 ----
-mvn -Pcapella-runtime -DskipTests package
+mvn --settings .github/maven-settings.xml \
+  -Pcapella-product \
+  -DskipTests \
+  clean package
 ----
 
 The materialized products are created under:
@@ -188,19 +204,16 @@ eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/
 
 === Product Integration Test
 
-Run the complete build and official Capella IFE integration test with:
+Run the complete build and standalone IFE product integration test with:
 
 [source,bash]
 ----
-mvn -Pcapella-runtime,capella-product-it verify
+mvn --settings .github/maven-settings.xml \
+  -Pcapella-product,capella-product-it \
+  clean verify
 ----
 
-This profile runs two product tests:
-
-* the materialized standalone product is launched without `DISPLAY` and must not activate graphical SWT, Eclipse UI, or E4 renderer bundles;
-* an official Capella product receives the installable bridge feature and executes the same transformation for compatibility.
-
-Both tests transform IFE, check the generated XMI model, and read the runtime qualification report.
+The materialized standalone product is launched without `DISPLAY`. The test gives it an archive containing only `.project` and `.capella` files, then checks the typed Capella source model, transformation summary, generated XMI model, and Arcadia references.
 
 === Manual Linux Test
 
@@ -220,6 +233,7 @@ Run the materialized Linux product:
 env -u DISPLAY \
   eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/\
 org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/capella2sysmlv2 \
+  -vm "$JAVA_HOME/bin/java" \
   /tmp/InFlightEntertainmentSystem.zip \
   /tmp/capella2sysmlv2-output
 ----
@@ -248,13 +262,13 @@ The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when p
 The workflow performs the following operations:
 
 . validates semantic-version tags and their ancestry from `main`;
-. executes the complete Maven, Tycho, standalone, and official-product build with Java 21;
+. executes the complete Maven, Tycho, and standalone product build with Java 21;
 . materializes the Linux and Windows products;
 . renames the archives to stable public asset names;
 . runs the IFE scenario from the Linux archive without `DISPLAY`;
 . runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary, Arcadia references, Java 21 runtime, and absence of graphical UI activation;
-. uploads qualification reports and logs, including after failures;
+. verifies the `23/23/0` summary, Arcadia references, and Java 21 runtime;
+. uploads diagnostic logs after failures;
 . creates the GitHub Release for tags only and only after every preceding job succeeds.
 
 The complete Java 21 qualification command used by the workflow is:
@@ -262,13 +276,11 @@ The complete Java 21 qualification command used by the workflow is:
 [source,bash]
 ----
 mvn --settings .github/maven-settings.xml \
-  -Pcapella-runtime,capella-product-it \
-  -Dcapella.expected.java.feature=21 \
+  -Pcapella-product,capella-product-it \
   clean verify
 ----
 
-The application writes `runtime-qualification.properties` before Equinox shutdown.
-The standalone acceptance test permits the E4 model, DI, and workbench infrastructure needed by Capella, but rejects actual activation of SWT, Eclipse UI, and E4 graphical renderer bundles.
+The standalone acceptance test demonstrates that semantic model loading and transformation require no display server, Eclipse workspace, editing domain, `.aird` file, or Sirius session.
 
 Create a release from an up-to-date `main` branch with:
 
@@ -321,7 +333,7 @@ New functionality follows a test-driven sequence:
 
 Contributions must not:
 
-* introduce Capella or Eclipse UI behavior into the transformation flow;
+* introduce Capella UI, Eclipse UI, or Sirius session behavior into the transformation flow;
 * depend on the SysML v2 Reference Implementation;
 * implement a private textual SysML serializer;
 * hardcode local paths;

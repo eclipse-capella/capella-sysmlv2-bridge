@@ -53,8 +53,7 @@ jobs:
         run: >-
           mvn --batch-mode --no-transfer-progress
           --settings .github/maven-settings.xml
-          -Pcapella-runtime,capella-product-it
-          -Dcapella.expected.java.feature=21
+          -Pcapella-product,capella-product-it
           clean verify
 
       - name: Upload build qualification evidence
@@ -127,10 +126,6 @@ jobs:
           test -f "output/In-Flight Entertainment System.sysml.xmi"
           grep -F "arcadialibrary:/arcadia.json" \
             "output/In-Flight Entertainment System.sysml.xmi"
-          grep -F "audit.passed=true" \
-            "output/.capella2sysmlv2/runtime-qualification.properties"
-          grep -F "java.feature=21" \
-            "output/.capella2sysmlv2/runtime-qualification.properties"
 
       - name: Upload Linux qualification evidence
         if: always()
@@ -139,7 +134,6 @@ jobs:
           name: linux-qualification-evidence
           path: |
             run.log
-            output/.capella2sysmlv2/runtime-qualification.properties
             output/In-Flight Entertainment System.sysml.xmi
           if-no-files-found: ignore
           retention-days: 7
@@ -202,14 +196,6 @@ jobs:
             throw "Generated model does not reference the Arcadia library"
           }
 
-          $report = "output\.capella2sysmlv2\runtime-qualification.properties"
-          if (-not (Select-String -Path $report -SimpleMatch "audit.passed=true" -Quiet)) {
-            throw "Runtime qualification detected graphical UI activation"
-          }
-          if (-not (Select-String -Path $report -SimpleMatch "java.feature=21" -Quiet)) {
-            throw "Windows product did not run with Java 21"
-          }
-
       - name: Upload Windows qualification evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -217,7 +203,6 @@ jobs:
           name: windows-qualification-evidence
           path: |
             run.log
-            output/.capella2sysmlv2/runtime-qualification.properties
             output/In-Flight Entertainment System.sysml.xmi
           if-no-files-found: ignore
           retention-days: 7

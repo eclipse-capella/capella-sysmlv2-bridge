@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 class StandaloneProductIT {
 
     @Test
-    void transformsIfeArchiveWithoutDisplayOrGraphicalUi() throws Exception {
+    void transformsIfeArchiveHeadlessly() throws Exception {
         Path product = Path.of(System.getProperty("bridge.product.directory")).toAbsolutePath();
         Path executable = product.resolve("capella2sysmlv2");
         assertTrue(executable.toFile().setExecutable(true) || Files.isExecutable(executable),
@@ -32,6 +32,6 @@ class StandaloneProductIT {
                 executable.toString(), "-vm", javaExecutable().toString(), "--launcher.suppressErrors", "-nosplash",
                 "-consolelog", sampleArchive.toString(), applicationOutput.toString()));
 
-        assertTransformation(execution, applicationOutput, true);
+        assertTransformation(execution, applicationOutput);
     }
 }

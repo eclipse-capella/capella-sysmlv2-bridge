@@ -15,7 +15,6 @@
     <modules>
         <module>test-support</module>
         <module>arcadia-library</module>
-        <module>capella-runtime</module>
         <module>capella-loader</module>
         <module>capella2sysmlv2-transformer</module>
         <module>cli</module>
@@ -119,7 +118,7 @@
 
     <profiles>
         <profile>
-            <id>capella-runtime</id>
+            <id>capella-product</id>
             <modules>
                 <module>eclipse</module>
             </modules>

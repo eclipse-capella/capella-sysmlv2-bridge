@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,8 +18,22 @@ class TransformationCoverageWriterTest {
     @Test
     void writesJsonAndMarkdownReports() throws Exception {
         var ePackage = TestMetamodels.logicalArchitecture();
-        var mapper = new LogicalComponentMapper(
-                MetaclassId.of(TestMetamodels.eClass(ePackage, "LogicalComponent")));
+        var sourceType = MetaclassId.of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
+        var mapper = new ElementMapper() {
+            @Override
+            public MetaclassId sourceType() {
+                return sourceType;
+            }
+
+            @Override
+            public MappingCoverage coverage() {
+                return MappingCoverage.mapped("name");
+            }
+
+            @Override
+            public void transform(EObject source, TransformationContext context) {
+            }
+        };
         var report = new TransformationCoverageAnalyzer().analyze(List.of(ePackage), List.of(mapper));
 
         new TransformationCoverageWriter().write(report, temporaryDirectory);
