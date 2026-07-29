@@ -14,7 +14,7 @@ class TransformationCoverageAnalyzerTest {
     void calculatesCoverageFromMetamodelAndJavaMapperDeclarations() {
         var ePackage = TestMetamodels.logicalArchitecture();
         var sourceType = MetaclassId.of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
-        var mapper = new LogicalComponentMapper(sourceType);
+        var mapper = mapper(sourceType, MappingCoverage.mapped("name"));
 
         var report = new TransformationCoverageAnalyzer().analyze(List.of(ePackage), List.of(mapper));
 

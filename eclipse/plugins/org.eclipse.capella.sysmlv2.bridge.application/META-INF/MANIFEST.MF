@@ -6,24 +6,16 @@ Bundle-Version: 0.1.0.qualifier
 Export-Package: org.eclipse.capella.sysmlv2.bridge.application
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.eclipse.capella.sysmlv2.bridge.application.Activator
 Bundle-ClassPath: .,
- target/dependency/capella-runtime-0.1.0-SNAPSHOT.jar,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,
  target/dependency/cli-0.1.0-SNAPSHOT.jar,
  target/dependency/picocli-4.7.6.jar
 Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.core.resources,
  org.eclipse.equinox.app,
  org.eclipse.emf.ecore,
  org.eclipse.emf.ecore.xmi,
- org.eclipse.emf.edit,
- org.eclipse.emf.transaction,
- org.eclipse.sirius,
- org.polarsys.capella.common.platform.sirius.ted,
- org.polarsys.capella.common.data.helpers,
- org.polarsys.capella.core.data.helpers,
  org.polarsys.capella.core.data.gen,
+ org.polarsys.capella.common.libraries.gen,
+ org.polarsys.capella.common.re.gen,
  org.eclipse.capella.sysmlv2.bridge.transformer
-Import-Package: org.osgi.framework
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.application

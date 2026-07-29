@@ -1,24 +1,24 @@
-package org.obeonetwork.capella.sysmlv2.transformer;
+package org.eclipse.capella.sysmlv2.bridge.application;
 
 import java.util.Objects;
 
-import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
+import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
+import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.MappingCoverage;
+import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
+import org.polarsys.capella.core.data.la.LaPackage;
+import org.polarsys.capella.core.data.la.LogicalComponent;
 
 public final class LogicalComponentMapper implements ElementMapper {
 
-    private final MetaclassId sourceType;
-
-    public LogicalComponentMapper(MetaclassId sourceType) {
-        this.sourceType = Objects.requireNonNull(sourceType, "sourceType must not be null");
-    }
-
     @Override
     public MetaclassId sourceType() {
-        return sourceType;
+        return MetaclassId.of(LaPackage.Literals.LOGICAL_COMPONENT);
     }
 
     @Override
@@ -30,8 +30,12 @@ public final class LogicalComponentMapper implements ElementMapper {
     public void transform(EObject source, TransformationContext context) {
         Objects.requireNonNull(source, "source must not be null");
         Objects.requireNonNull(context, "context must not be null");
+        if (!(source instanceof LogicalComponent component)) {
+            context.diagnostics().error(source, "Expected a Capella LogicalComponent");
+            return;
+        }
 
-        var name = readName(source);
+        String name = component.getName();
         if (name == null || name.isBlank()) {
             context.diagnostics().error(source, "LogicalComponent.name must be a non-blank string");
             return;
@@ -46,20 +50,12 @@ public final class LogicalComponentMapper implements ElementMapper {
         typing.setType(componentDefinition);
         partUsage.getOwnedRelationship().add(typing);
 
-        var membership = DefaultArcadiaModelStructureBuilder
-                .addOwnedElement(context.modelStructure().logicalArchitectureStructurePackage(), partUsage);
+        OwningMembership membership = SysmlFactory.eINSTANCE.createOwningMembership();
+        membership.getOwnedRelatedElement().add(partUsage);
+        context.modelStructure().logicalArchitectureStructurePackage().getOwnedRelationship().add(membership);
         context.registerGenerated(partUsage);
         context.registerGenerated(typing);
         context.registerGenerated(membership);
         context.traceability().register(source, partUsage);
-    }
-
-    private static String readName(EObject source) {
-        var nameFeature = source.eClass().getEStructuralFeature("name");
-        if (!(nameFeature instanceof EAttribute)) {
-            return null;
-        }
-        var rawName = source.eGet(nameFeature);
-        return rawName instanceof String name ? name : null;
     }
 }

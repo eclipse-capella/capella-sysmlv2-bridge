@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
 import org.eclipse.emf.ecore.EObject;
@@ -18,15 +17,12 @@ import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
 import org.obeonetwork.capella.sysmlv2.loader.CapellaProjectArchiveExtractor;
 import org.obeonetwork.capella.sysmlv2.loader.ExtractedCapellaProject;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
-import org.obeonetwork.capella.sysmlv2.runtime.CapellaRuntimeContext;
 import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
 import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.LogicalComponentMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
+import org.polarsys.capella.core.data.la.LogicalComponent;
 
 public final class EquinoxTransformationService implements TransformationService {
 
@@ -34,16 +30,13 @@ public final class EquinoxTransformationService implements TransformationService
     public TransformationSummary transform(TransformationRequest request) {
         Path outputDirectory = prepareOutputDirectory(request.outputDirectory());
         ExtractedCapellaProject extractedProject = extractProject(request.inputZip(), outputDirectory);
-        try (var runtime = initializeRuntime(outputDirectory);
-                var model = loadModel(runtime, extractedProject)) {
-            List<EObject> logicalComponents = findLogicalComponents(model.root());
+        try (var model = loadModel(extractedProject)) {
+            List<LogicalComponent> logicalComponents = findLogicalComponents(model.root());
             var arcadiaLibrary = loadArcadiaLibrary();
             var resolver = new ArcadiaLibraryResolver(arcadiaLibrary);
-            List<ElementMapper> mappers = logicalComponents.isEmpty()
-                    ? List.of()
-                    : List.of(new LogicalComponentMapper(MetaclassId.of(logicalComponents.get(0).eClass())));
             var engine = new TransformationEngine(
-                    new TransformationDispatcher(new DefaultMapperRegistry(mappers)), resolver);
+                    new TransformationDispatcher(new DefaultMapperRegistry(List.of(new LogicalComponentMapper()))),
+                    resolver);
             String modelName = modelName(extractedProject.modelPath().getFileName().toString());
             var result = engine.transformAll(logicalComponents,
                     new TransformationOptions(false, false, false, modelName, modelName));
@@ -80,13 +73,13 @@ public final class EquinoxTransformationService implements TransformationService
     private static ExtractedCapellaProject extractProject(Path inputZip, Path outputDirectory) {
         try {
             Path normalizedInputZip = inputZip.toAbsolutePath().normalize();
-            Path inputRoot = ApplicationWorkspace.prepareInputDirectory(outputDirectory);
+            Path inputRoot = InternalInputDirectory.prepareInputDirectory(outputDirectory);
             if (normalizedInputZip.startsWith(inputRoot)) {
                 throw new IllegalArgumentException("Input archive must be outside the internal working directory: "
                         + normalizedInputZip);
             }
             Path extractionDirectory = inputRoot.resolve("project");
-            ApplicationWorkspace.resetInternalDirectory(extractionDirectory);
+            InternalInputDirectory.resetInternalDirectory(extractionDirectory);
             return new CapellaProjectArchiveExtractor().extract(normalizedInputZip, extractionDirectory);
         } catch (IOException | RuntimeException exception) {
             throw new TransformationCommandException(2,
@@ -94,23 +87,11 @@ public final class EquinoxTransformationService implements TransformationService
         }
     }
 
-    private static org.obeonetwork.capella.sysmlv2.runtime.InitializedCapellaRuntime initializeRuntime(
-            Path outputDirectory) {
-        try {
-            return new EquinoxCapellaRuntime().initialize(new CapellaRuntimeContext(
-                    ApplicationWorkspace.forOutput(outputDirectory), Map.of("mode", "headless")));
-        } catch (RuntimeException exception) {
-            throw new TransformationCommandException(3, "Cannot initialize Capella runtime: " + exception.getMessage(),
-                    exception);
-        }
-    }
-
     private static org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel loadModel(
-            org.obeonetwork.capella.sysmlv2.runtime.InitializedCapellaRuntime runtime,
             ExtractedCapellaProject extractedProject) {
         try {
-            return new CapellaSessionLoader().load(runtime,
-                    new ModelLoadRequest(extractedProject.projectDirectory(), extractedProject.modelPath()));
+            return new CapellaResourceLoader()
+                    .load(new ModelLoadRequest(extractedProject.projectDirectory(), extractedProject.modelPath()));
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(4, "Cannot load Capella model: " + exception.getMessage(),
                     exception);
@@ -151,16 +132,16 @@ public final class EquinoxTransformationService implements TransformationService
         return List.copyOf(elements);
     }
 
-    private static List<EObject> findLogicalComponents(EObject root) {
-        var result = new ArrayList<EObject>();
-        if (root.eClass().getName().equals("LogicalComponent")) {
-            result.add(root);
+    private static List<LogicalComponent> findLogicalComponents(EObject root) {
+        var result = new ArrayList<LogicalComponent>();
+        if (root instanceof LogicalComponent component) {
+            result.add(component);
         }
         var contents = root.eAllContents();
         while (contents.hasNext()) {
             var candidate = contents.next();
-            if (candidate.eClass().getName().equals("LogicalComponent")) {
-                result.add(candidate);
+            if (candidate instanceof LogicalComponent component) {
+                result.add(component);
             }
         }
         return List.copyOf(result);

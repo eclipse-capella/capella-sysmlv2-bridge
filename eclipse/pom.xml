@@ -19,9 +19,7 @@
         <module>target-platform</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.transformer</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.application</module>
-        <module>features/org.eclipse.capella.sysmlv2.bridge.feature</module>
         <module>features/org.eclipse.capella.sysmlv2.bridge.headless.feature</module>
-        <module>repository/org.eclipse.capella.sysmlv2.bridge.repository</module>
         <module>product/org.eclipse.capella.sysmlv2.bridge.product</module>
     </modules>
 
@@ -40,7 +38,8 @@
         </repository>
         <repository>
             <id>github-arcadia</id>
-            <url>https://maven.pkg.github.com/eclipse-capella/arcadia-sysmlv2-lib</url>
+            <!-- Temporary until the package is published by eclipse-capella. -->
+            <url>https://maven.pkg.github.com/obeo/arcadia-sysmlv2-lib</url>
         </repository>
         <repository>
             <id>capella-7.0.1</id>

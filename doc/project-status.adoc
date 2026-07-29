@@ -60,7 +60,7 @@ Capella project zip archive
 Secure extraction and project discovery
              |
              v
-Equinox headless runtime initialization
+Capella metamodel package registration
              |
              v
 Direct .capella semantic model loading
@@ -100,22 +100,22 @@ The archive extractor:
 * refuses to overwrite unmanaged internal content;
 * prepares an isolated project directory for each execution.
 
-The application owns an internal workspace under `OUTPUT_DIRECTORY/.capella2sysmlv2/workspace` and locks its instance location.
+The application uses `OUTPUT_DIRECTORY/.capella2sysmlv2` only for secure project extraction and internal working files.
 
-=== Headless Capella Runtime
+=== Headless Capella Loading
 
-The runtime starts as an Equinox `IApplication` without creating an Eclipse workbench.
+The application starts as an Equinox `IApplication` without creating an Eclipse workspace or workbench.
 
 The production loader:
 
-* imports or reuses the extracted Eclipse project;
-* resolves the `.capella` resource through `platform:/resource`;
-* creates a Capella `SemanticEditingDomain`;
-* loads the semantic model directly;
-* does not open an `.aird` file or Sirius session;
-* closes model and runtime resources deterministically.
+* maps the extracted project directory to its `platform:/resource` URI;
+* registers the installed Capella EMF packages and resource factory;
+* loads the `.capella` resource directly into a `ResourceSet`;
+* requires a typed `org.polarsys.capella.core.data.capellamodeller.Project` root;
+* does not create an editing domain or open an `.aird` file or Sirius session;
+* closes model resources deterministically.
 
-The `SemanticEditingDomain` and cross-reference adapter remain required by Capella derived-reference helpers.
+Production mapping uses typed Capella APIs for `LogicalComponent` identity and names rather than reflective business-feature access.
 
 === Transformation Engine
 
@@ -175,10 +175,10 @@ A GitHub Actions workflow is defined for pull requests, `main`, manual runs, and
 * run regular tests;
 * materialize both products;
 * execute the IFE acceptance scenario on Linux and Windows runners;
-* verify Java 21 and graphical UI bundle inactivity from runtime reports;
+* verify the transformation summary and generated model content;
 * publish both archives in a GitHub Release only for tags and after successful acceptance tests.
 
-The release workflow still requires repository package-access secrets and its first successful tagged execution before it can be considered qualified.
+The package-access secrets are configured. The workflow temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private Obeo package repository; Java 21 and Windows qualification remain pending until the workflow completes successfully.
 
 == Current Mapping Coverage
 
@@ -237,13 +237,9 @@ All 27 parts retain an external reference to `Arcadia::Component` after XMI relo
 |Verified locally
 |Linux and Windows products and their archives are materialized successfully.
 
-|Official Capella product integration test
-|Verified locally
-|The bridge installs into an official Capella 7.0.1 product and transforms IFE without `DISPLAY`.
-
 |Standalone Linux execution
 |Automated and verified locally
-|Failsafe launches the materialized product without `DISPLAY`, checks `23/23/0`, reloads the XMI, and validates the runtime qualification report.
+|Failsafe launches the materialized product without `DISPLAY`, checks `23/23/0`, and reloads the XMI.
 
 |Standalone Windows execution
 |Pending
@@ -255,11 +251,7 @@ All 27 parts retain an external reference to `Arcadia::Component` after XMI relo
 
 |GitHub Release publication
 |Pending
-|The workflow is implemented. Package secrets and a first semantic-version tag are required.
-
-|UI bundle activation check
-|Automated and verified locally
-|The standalone product records OSGi states and lifecycle events before shutdown. SWT, Eclipse UI, and E4 graphical renderer bundles remain inactive.
+|The workflow is implemented and package secrets are configured. The first successful Java 21 Linux and Windows qualification and semantic-version tag are still required.
 
 |Textual SysML export
 |Not implemented
@@ -281,16 +273,12 @@ The standalone product still contains SWT, JFace, Eclipse UI, and E4 UI bundles 
 The current practical headless criteria are:
 
 * no Eclipse workbench is created;
+* no Eclipse workspace is created;
 * no `.aird` file or Sirius representation session is opened;
-* no `DISPLAY` variable is required on Linux;
-* SWT and Eclipse UI bundles must not become active;
-* E4 bundles that create widgets, dialogs, SWT renderers, or graphical workbench components must not become active.
+* no editing domain is created;
+* no `DISPLAY` variable is required on Linux.
 
-The application installs a synchronous OSGi lifecycle listener before workspace initialization and writes a final snapshot before `IApplication.start()` returns.
-Lazy `STARTING` state is not considered graphical activation.
-The headless E4 DI, model, and workbench service bundles required by Capella are allowed, while `ACTIVE`, `STOPPING`, `STARTED`, or `STOPPED` evidence from graphical bundles fails standalone qualification.
-
-All criteria are now verified locally for the standalone product.
+These criteria are verified locally by the standalone product acceptance test. Some UI and Sirius bundles remain in the product's transitive dependency closure, but the bridge does not call their workspace, workbench, representation, or session APIs.
 
 A physically UI-free distribution would require repackaging Capella semantic classes with modified manifests, which would create a larger maintenance and compatibility commitment.
 
@@ -298,8 +286,10 @@ A physically UI-free distribution would require repackaging Capella semantic cla
 
 === Release Infrastructure Qualification
 
-The repository must configure package credentials and complete a first tagged Java 21 build.
-The resulting GitHub Release links must then be checked from the user documentation.
+The package credentials are configured and Arcadia `0.0.3` is temporarily consumed from the private Obeo package repository.
+The repository must complete Java 21 Linux and Windows qualification and a first tagged build, then check the resulting GitHub Release links from the user documentation.
+
+The Arcadia repository URL must move from `obeo/arcadia-sysmlv2-lib` to the official `eclipse-capella/arcadia-sysmlv2-lib` package repository once that artifact is published there.
 
 === Official Textual Export
 
@@ -320,7 +310,7 @@ Additional mappings must be prioritized explicitly and implemented incrementally
 
 === 1. Qualify the Release Workflow
 
-Configure `MAVEN_GITHUB_USERNAME` and `MAVEN_GITHUB_TOKEN`, create the first semantic-version tag, and resolve any Java 21 or Windows-specific failure.
+Use the temporary Obeo Arcadia package to complete the first Java 21 Linux and Windows workflow run, then switch to the official `eclipse-capella` package repository when it becomes available.
 
 === 2. Integrate Official SysON Textual Export
 
@@ -341,7 +331,7 @@ The standalone transformation milestone is complete when:
 * the complete repository builds reproducibly with Java 21;
 * tagged GitHub Releases publish tested Linux and Windows archives;
 * both extracted products transform IFE successfully;
-* no graphical UI bundle is active during standalone transformation;
+* standalone transformation requires no graphical display, Eclipse workspace, or Sirius session;
 * the result is exported to `.sysml` through official SysON tooling;
 * generated text passes parser and linker validation;
 * generated models reference Arcadia concepts instead of redefining them;

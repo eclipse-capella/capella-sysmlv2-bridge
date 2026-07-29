@@ -4,39 +4,36 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel;
+import org.polarsys.capella.core.data.capellamodeller.Project;
 
-final class LoadedCapellaSession implements LoadedCapellaModel {
+final class LoadedCapellaResource implements LoadedCapellaModel {
 
-    private final TransactionalEditingDomain editingDomain;
+    private final ResourceSet resourceSet;
     private final Resource semanticResource;
+    private final Project project;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    LoadedCapellaSession(TransactionalEditingDomain editingDomain, Resource semanticResource) {
-        this.editingDomain = editingDomain;
+    LoadedCapellaResource(ResourceSet resourceSet, Resource semanticResource, Project project) {
+        this.resourceSet = resourceSet;
         this.semanticResource = semanticResource;
+        this.project = project;
     }
 
-    public TransactionalEditingDomain editingDomain() {
-        return editingDomain;
-    }
-
+    @Override
     public List<Resource> semanticResources() {
         return List.of(semanticResource);
     }
 
     @Override
-    public org.eclipse.emf.ecore.EObject root() {
-        if (semanticResource.getContents().isEmpty()) {
-            throw new IllegalStateException("Capella semantic resource is empty");
-        }
-        return semanticResource.getContents().get(0);
+    public Project root() {
+        return project;
     }
 
     @Override
     public List<String> diagnostics() {
-        return List.of("Capella semantic model loaded");
+        return List.of("Capella Project loaded from " + semanticResource.getURI());
     }
 
     @Override
@@ -47,7 +44,10 @@ final class LoadedCapellaSession implements LoadedCapellaModel {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            editingDomain.dispose();
+            for (Resource resource : List.copyOf(resourceSet.getResources())) {
+                resource.unload();
+            }
+            resourceSet.getResources().clear();
         }
     }
 }
