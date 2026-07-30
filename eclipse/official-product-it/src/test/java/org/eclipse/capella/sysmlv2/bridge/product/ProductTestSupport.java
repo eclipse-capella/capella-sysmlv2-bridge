@@ -56,9 +56,16 @@ final class ProductTestSupport {
     static void assertTransformation(ProcessResult execution, Path applicationOutput) throws IOException {
         assertEquals(0, execution.exitCode(), execution.output());
         assertFalse(execution.output().contains("PlatformUI.createAndRunWorkbench"), execution.output());
+        assertFalse(execution.output().contains("FrameworkEvent ERROR"), execution.output());
         assertTrue(execution.output().contains("Source LogicalComponent count: 23"), execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 23"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
+        assertTrue(execution.output().contains("Capella Transformation Coverage: 1/252 (0.40%)"),
+                execution.output());
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 1/42 (2.38%)"),
+                execution.output());
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 1/252 (0.40%)"),
+                execution.output());
 
         Path xmiModel = applicationOutput.resolve("In-Flight Entertainment System.sysml.xmi");
         assertTrue(Files.isRegularFile(xmiModel), "Missing generated model: " + xmiModel);
@@ -66,6 +73,20 @@ final class ProductTestSupport {
         assertTrue(xmi.contains("OccurrenceDefinition"), xmi);
         assertTrue(xmi.contains("PartUsage"), xmi);
         assertTrue(xmi.contains("arcadialibrary:/arcadia.json"), xmi);
+
+        Path reportDirectory = applicationOutput.resolve(".capella2sysmlv2");
+        Path jsonReport = reportDirectory.resolve("mapping-coverage.json");
+        Path markdownReport = reportDirectory.resolve("mapping-coverage.md");
+        assertTrue(Files.isRegularFile(jsonReport), "Missing mapping coverage JSON: " + jsonReport);
+        assertTrue(Files.isRegularFile(markdownReport), "Missing mapping coverage Markdown: " + markdownReport);
+        String json = Files.readString(jsonReport, StandardCharsets.UTF_8);
+        String markdown = Files.readString(markdownReport, StandardCharsets.UTF_8);
+        assertTrue(json.contains("\"packages\": 22"), json);
+        assertTrue(json.contains("\"eClasses\": 396"), json);
+        assertTrue(markdown.contains("## Capella Transformation Coverage"), markdown);
+        assertTrue(markdown.contains("## Arcadia SysML v2 Library Utilization"), markdown);
+        assertTrue(markdown.contains("14 concepts, 28 features"), markdown);
+        assertTrue(markdown.contains("## Arcadia SysML v2 Library Coverage of Capella"), markdown);
     }
 
     record ProcessResult(int exitCode, String output) {

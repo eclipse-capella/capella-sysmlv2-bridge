@@ -97,6 +97,9 @@ interface ElementMapper {
 
 Mappings must never instantiate or locate other mappers directly.
 
+Typed mappers that depend on generated Capella Java APIs live in the Equinox mappings bundle.
+Build-generated mapper candidates are scaffolding only: they must not be compiled, registered, or counted as implemented mappings until their semantic behavior, coverage metadata, and focused tests are complete.
+
 ### MapperRegistry
 
 The mapper registry stores `Map<MetaclassId, ElementMapper>` and does not depend on EMF runtime `EClass` instances.
@@ -231,6 +234,15 @@ Responsibilities:
 * provide mapper registry and dispatch infrastructure;
 * hold handwritten semantic mappings;
 * produce SysON SysML v2 models.
+
+### Equinox mappings bundle
+
+Responsibilities:
+
+* hold typed mapper implementations that depend on generated Capella Java APIs;
+* expose the explicit production mapper catalog;
+* generate deterministic, unregistered candidate sources from the installed Capella metamodel;
+* keep the curated semantic alignment backlog distinct from generated structural candidates.
 
 ### cli
 

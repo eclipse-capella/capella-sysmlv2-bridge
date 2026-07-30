@@ -12,6 +12,11 @@ public final class TransformationDispatcher {
         this.mapperRegistry = Objects.requireNonNull(mapperRegistry, "mapperRegistry must not be null");
     }
 
+    public boolean supports(EObject source) {
+        Objects.requireNonNull(source, "source must not be null");
+        return mapperRegistry.get(MetaclassId.of(source.eClass())).isPresent();
+    }
+
     public void dispatch(EObject source, TransformationContext context) {
         Objects.requireNonNull(source, "source must not be null");
         Objects.requireNonNull(context, "context must not be null");

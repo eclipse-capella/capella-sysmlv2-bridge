@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
@@ -59,5 +60,48 @@ class TransformationEngineTest {
 
         assertThat(contexts).hasSize(2);
         assertThat(contexts.get(0)).isSameAs(contexts.get(1));
+    }
+
+    @Test
+    void traversesContainedSourcesSupportedByTheRegistry() {
+        var ecore = EcoreFactory.eINSTANCE;
+        var ePackage = ecore.createEPackage();
+        ePackage.setNsURI("http://example.org/capella");
+        ePackage.setNsPrefix("capella");
+        ePackage.setName("capella");
+        var containerClass = ecore.createEClass();
+        containerClass.setName("Container");
+        var mappedClass = ecore.createEClass();
+        mappedClass.setName("Mapped");
+        var children = ecore.createEReference();
+        children.setName("children");
+        children.setContainment(true);
+        children.setUpperBound(-1);
+        children.setEType(mappedClass);
+        containerClass.getEStructuralFeatures().add(children);
+        ePackage.getEClassifiers().add(containerClass);
+        ePackage.getEClassifiers().add(mappedClass);
+        var container = ePackage.getEFactoryInstance().create(containerClass);
+        var child = ePackage.getEFactoryInstance().create(mappedClass);
+        @SuppressWarnings("unchecked")
+        var values = (java.util.List<EObject>) container.eGet(children);
+        values.add(child);
+        var transformed = new java.util.ArrayList<EObject>();
+        var mapper = new ElementMapper() {
+            @Override
+            public MetaclassId sourceType() {
+                return MetaclassId.of(mappedClass);
+            }
+
+            @Override
+            public void transform(EObject source, TransformationContext context) {
+                transformed.add(source);
+            }
+        };
+
+        new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))),
+                new TestLibraryResolver()).transform(container, TransformationOptions.defaults());
+
+        assertThat(transformed).containsExactly(child);
     }
 }

@@ -104,8 +104,14 @@ Defines the Capella 7.0.1 metamodel, EMF, Equinox, and Kitalpha target platform.
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.transformer`::
 Adapts the regular transformer to Equinox and loads the bundled Arcadia library.
 
+`eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.mappings`::
+Contains typed Capella mapper implementations, the curated alignment backlog, and deterministic candidate-source generation.
+
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
 Implements the Equinox application, typed Capella resource loading, transformation orchestration, and intermediate XMI persistence.
+
+`eclipse/tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests`::
+Tests typed mappings against small EMF models and materializes mapper candidate sources from the installed Capella metamodel.
 
 `eclipse/features`::
 Defines the standalone headless product feature.
@@ -150,7 +156,8 @@ The transformation layer does not initialize Equinox, load projects, or serializ
 Mappers obtain Arcadia concepts through `TransformationContext.libraryResolver()` and must not load the library directly.
 
 Mapper lookup uses `MetaclassId(nsURI, className)` rather than runtime `EClass` identity or class names alone.
-The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a `ResourceSet`. It requires a typed Capella `Project` root and does not create an Eclipse workspace, editing domain, `.aird` resource, or Sirius session.
+The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a Capella semantic editing domain with a Sirius cross-reference adapter. It requires a typed Capella `Project` root and does not create an Eclipse workspace, load an `.aird` resource, or open a Sirius session.
+Standalone loading removes TED's session-aware `DataNotifier` immediately after editing-domain creation. The notifier is only useful with a Sirius session and otherwise activates the full Sirius bundle during model notifications; the `SiriusCrossReferenceAdapter` remains installed for direct and inverse derived references.
 
 == Build and Test
 
@@ -240,6 +247,60 @@ org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/capella2sysmlv2 \
 
 The expected transformation result is 23 source `LogicalComponent` elements, 23 mapped `PartUsage` elements, and zero errors.
 
+=== Mapper Candidate Sources
+
+The Tycho mapping test build inventories all Capella semantic packages contributed through `org.eclipse.emf.ecore.generated_package` and writes one typed Java candidate for every non-abstract metaclass without an implemented mapper.
+For the Capella 7.0.1 baseline, it records 252 non-abstract metaclasses and generates 251 candidates under:
+
+[source,text]
+----
+eclipse/tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests/target/
+  generated-mapper-sources/
+    mapper-skeletons.txt
+    org/eclipse/capella/sysmlv2/bridge/mappings/candidates/<package>/*Mapper.java
+----
+
+These files are deterministic build artifacts and are neither compiled nor registered as production mappers.
+To implement a mapping, move the relevant candidate into the mapping bundle's handwritten source tree, replace the unsupported-operation body, add coverage metadata and focused tests, then register it explicitly in `CapellaMapperCatalog.createMappers()`.
+The curated 17-entry WIP-derived backlog and the complete generated candidate inventory serve different purposes: the former records assessed semantic priorities, while the latter guarantees structural coverage of the installed metamodel.
+
+=== Semantic Mapping Coverage Reports
+
+Every successful product transformation writes deterministic reports to:
+
+[source,text]
+----
+OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.json
+OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.md
+----
+
+Both reports contain these sections:
+
+`Capella Transformation Coverage`::
+Inventories semantic Capella packages contributed through `org.eclipse.emf.ecore.generated_package` whose namespace URI starts with `http://www.polarsys.org/capella/core/` or `http://www.polarsys.org/capella/common/`.
+The application resolves each URI through `EPackage.Registry.INSTANCE` and inventories every `EClass` and its `EAllStructuralFeatures`.
+The current Capella 7.0.1 baseline is 22 packages and 396 EClasses.
+Metaclass metrics use concrete metaclasses as their denominator.
+The report distinguishes metaclasses with any registered mapper from complete mappers, for which every applicable structural feature is explicitly mapped or ignored.
+Mapped-feature coverage counts mapped declarations; addressed-feature coverage counts mapped plus explicitly ignored declarations; both use all applicable structural feature slots on concrete metaclasses as their denominator.
+
+`Arcadia SysML v2 Library Utilization`::
+Inventories named reusable elements reachable from the `Arcadia` `LibraryPackage` only through public `OwningMembership` paths.
+Definitions are eligible concepts and Features are eligible features, deduplicated by model identity and qualified name.
+Arcadia 0.0.3 currently contributes 14 concepts and 28 features.
+Utilization counts the eligible elements explicitly declared by implemented mapper metadata.
+Standard SysML targets such as `SysML::Element::declaredName` are not Arcadia features.
+Every declared Arcadia reference must resolve in the inventory or report generation fails the transformation.
+
+`Arcadia SysML v2 Library Coverage of Capella`::
+Uses an alignment catalog independent from the mapper registry.
+Entries have `CONFIRMED`, `CANDIDATE`, `SYSML_STANDARD`, `NO_EQUIVALENT`, or `UNASSESSED` status.
+The main metric counts only confirmed metaclass alignments over all concrete Capella metaclasses; candidate backlog entries do not count as mappers or confirmed coverage.
+Feature alignments and the unassessed metaclass count are reported separately.
+
+Coverage values are observations only. The build defines no threshold or regression gate.
+Linux and Windows smoke jobs append the Markdown report to the GitHub step summary and upload both formats as qualification evidence.
+
 == Release Automation
 
 The `.github/workflows/release.yml` workflow qualifies pull requests, pushes to `main`, manual runs, and release tags.
@@ -280,7 +341,7 @@ mvn --settings .github/maven-settings.xml \
   clean verify
 ----
 
-The standalone acceptance test demonstrates that semantic model loading and transformation require no display server, Eclipse workspace, editing domain, `.aird` file, or Sirius session.
+The standalone acceptance test demonstrates that semantic model loading and transformation use Capella's semantic editing domain and derived references without requiring a display server, Eclipse workspace, `.aird` file, or Sirius session.
 
 Create a release from an up-to-date `main` branch with:
 

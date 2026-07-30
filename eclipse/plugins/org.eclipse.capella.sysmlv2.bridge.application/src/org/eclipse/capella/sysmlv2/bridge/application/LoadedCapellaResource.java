@@ -4,21 +4,25 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel;
+import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 
 final class LoadedCapellaResource implements LoadedCapellaModel {
 
-    private final ResourceSet resourceSet;
+    private final SemanticEditingDomain editingDomain;
     private final Resource semanticResource;
     private final Project project;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    LoadedCapellaResource(ResourceSet resourceSet, Resource semanticResource, Project project) {
-        this.resourceSet = resourceSet;
+    LoadedCapellaResource(SemanticEditingDomain editingDomain, Resource semanticResource, Project project) {
+        this.editingDomain = editingDomain;
         this.semanticResource = semanticResource;
         this.project = project;
+    }
+
+    SemanticEditingDomain editingDomain() {
+        return editingDomain;
     }
 
     @Override
@@ -44,10 +48,7 @@ final class LoadedCapellaResource implements LoadedCapellaModel {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            for (Resource resource : List.copyOf(resourceSet.getResources())) {
-                resource.unload();
-            }
-            resourceSet.getResources().clear();
+            editingDomain.dispose();
         }
     }
 }

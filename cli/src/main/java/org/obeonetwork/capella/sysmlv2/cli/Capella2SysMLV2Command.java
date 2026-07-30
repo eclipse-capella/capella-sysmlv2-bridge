@@ -40,6 +40,12 @@ public final class Capella2SysMLV2Command implements Callable<Integer> {
             out.println("Source LogicalComponent count: " + result.sourceLogicalComponentCount());
             out.println("Generated PartUsage count: " + result.generatedPartUsageCount());
             out.println("Errors: " + result.errorCount());
+            out.println("Capella Transformation Coverage: "
+                    + result.mappingCoverage().capellaTransformation().display());
+            out.println("Arcadia SysML v2 Library Utilization: "
+                    + result.mappingCoverage().arcadiaUtilization().display());
+            out.println("Arcadia SysML v2 Library Coverage of Capella: "
+                    + result.mappingCoverage().arcadiaCoverageOfCapella().display());
             out.println("XMI model: " + result.outputModel());
             return result.errorCount() == 0 ? 0 : 6;
         } catch (TransformationCommandException exception) {

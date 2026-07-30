@@ -100,7 +100,7 @@ The archive extractor:
 * refuses to overwrite unmanaged internal content;
 * prepares an isolated project directory for each execution.
 
-The application uses `OUTPUT_DIRECTORY/.capella2sysmlv2` only for secure project extraction and internal working files.
+The application uses `OUTPUT_DIRECTORY/.capella2sysmlv2` for secure project extraction, internal working files, and semantic mapping coverage reports.
 
 === Headless Capella Loading
 
@@ -112,7 +112,7 @@ The production loader:
 * registers the installed Capella EMF packages and resource factory;
 * loads the `.capella` resource directly into a `ResourceSet`;
 * requires a typed `org.polarsys.capella.core.data.capellamodeller.Project` root;
-* does not create an editing domain or open an `.aird` file or Sirius session;
+* creates and disposes a Capella semantic editing domain without opening an `.aird` file or Sirius session;
 * closes model resources deterministically.
 
 Production mapping uses typed Capella APIs for `LogicalComponent` identity and names rather than reflective business-feature access.
@@ -203,6 +203,17 @@ The target structure also creates the Arcadia perspective packages, root functio
 No other Capella metaclass is supported in production yet.
 Functional scenario placeholders do not imply implemented coverage.
 
+The Tycho mapping test build now generates typed, unregistered Java candidates from the installed Capella metamodel.
+The Capella 7.0.1 inventory contains 252 non-abstract metaclasses; after excluding the implemented `LogicalComponentMapper`, the build writes 251 candidates and a deterministic index under the mapping test module's `target/generated-mapper-sources` directory.
+Generated candidates do not increase mapping or alignment coverage until their implementations, metadata, registration, and tests are completed.
+The 17 WIP-derived entries remain the curated semantic backlog and are independent from this complete structural inventory.
+
+Every successful transformation also generates deterministic JSON and Markdown semantic coverage reports under `OUTPUT_DIRECTORY/.capella2sysmlv2`.
+The reports inventory the 22 Capella semantic packages and 396 EClasses, distinguish implemented mapper coverage from the independent alignment backlog, and inventory Arcadia 0.0.3's 14 public concepts and 28 public features.
+Only `LogicalComponent -> Arcadia::Component` currently has `CONFIRMED` alignment status; candidate entries remain planning data and do not increase transformation coverage.
+`FunctionInputPort` and `FunctionOutputPort` are classified as `SYSML_STANDARD` rather than Arcadia alignments.
+These metrics are evidence and prioritization data, not build thresholds.
+
 == IFE Reference Result
 
 The In-Flight Entertainment System is the current product-level reference model.
@@ -239,7 +250,7 @@ All 27 parts retain an external reference to `Arcadia::Component` after XMI relo
 
 |Standalone Linux execution
 |Automated and verified locally
-|Failsafe launches the materialized product without `DISPLAY`, checks `23/23/0`, and reloads the XMI.
+|Failsafe launches the materialized product without `DISPLAY`, checks `23/23/0`, reloads the XMI, and rejects Equinox framework errors during shutdown.
 
 |Standalone Windows execution
 |Pending
@@ -275,10 +286,10 @@ The current practical headless criteria are:
 * no Eclipse workbench is created;
 * no Eclipse workspace is created;
 * no `.aird` file or Sirius representation session is opened;
-* no editing domain is created;
+* the Capella semantic editing domain is disposed with the loaded resource;
 * no `DISPLAY` variable is required on Linux.
 
-These criteria are verified locally by the standalone product acceptance test. Some UI and Sirius bundles remain in the product's transitive dependency closure, but the bridge does not call their workspace, workbench, representation, or session APIs.
+These criteria are verified locally by the standalone product acceptance test. Some UI and Sirius bundles remain in the product's transitive dependency closure, but the bridge only uses Sirius cross-reference support and does not call workspace, workbench, representation, or session APIs.
 
 A physically UI-free distribution would require repackaging Capella semantic classes with modified manifests, which would create a larger maintenance and compatibility commitment.
 

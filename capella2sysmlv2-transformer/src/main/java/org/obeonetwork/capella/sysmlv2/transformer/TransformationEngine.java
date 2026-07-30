@@ -25,7 +25,16 @@ public final class TransformationEngine implements CapellaToSysMLTransformer {
     @Override
     public TransformationResult transform(EObject capellaRoot, TransformationOptions options) {
         Objects.requireNonNull(capellaRoot, "capellaRoot must not be null");
-        return transformAll(java.util.List.of(capellaRoot), options);
+        var sources = new java.util.ArrayList<EObject>();
+        if (dispatcher.supports(capellaRoot)) {
+            sources.add(capellaRoot);
+        }
+        capellaRoot.eAllContents().forEachRemaining(source -> {
+            if (dispatcher.supports(source)) {
+                sources.add(source);
+            }
+        });
+        return transformAll(sources, options);
     }
 
     public TransformationResult transformAll(Iterable<? extends EObject> sources, TransformationOptions options) {

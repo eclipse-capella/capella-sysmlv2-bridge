@@ -14,7 +14,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 
-public final class SysMLXmiExporter {
+public final class TemporarySysMLXmiExporter {
 
     public EObject exportAndReload(EObject root, ResourceSet resourceSet, Path outputFile) {
         Objects.requireNonNull(root, "root must not be null");
