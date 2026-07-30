@@ -5,3 +5,5 @@ target/
 .settings/
 
 *.log
+
+/AGENTS.md
