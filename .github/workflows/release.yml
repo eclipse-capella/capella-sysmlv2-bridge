@@ -9,9 +9,6 @@ on:
     tags:
       - "v*"
 
-env:
-  IFE_URL: "https://www.eclipse.org/downloads/download.php?file=/capella/samples/7.0.1/InFlightEntertainmentSystem.zip&r=1"
-
 jobs:
   build:
     name: Build products
@@ -76,6 +73,9 @@ jobs:
           install -D \
             eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product-win32.win32.x86_64.zip \
             dist/capella2sysmlv2-windows-x86_64.zip
+          install -D \
+            eclipse/official-product-it/target/runtime/standalone/ife.zip \
+            dist/InFlightEntertainmentSystem.zip
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -110,16 +110,13 @@ jobs:
           tar -xzf dist/capella2sysmlv2-linux-x86_64.tar.gz -C product
           chmod +x product/capella2sysmlv2
 
-      - name: Download IFE sample
-        run: curl --fail --location "$IFE_URL" --output InFlightEntertainmentSystem.zip
-
       - name: Transform IFE sample
         shell: bash
         run: |
           set -o pipefail
           env -u DISPLAY ./product/capella2sysmlv2 \
             -vm "$JAVA_HOME/bin/java" \
-            InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
+            dist/InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
           grep -F "Source LogicalComponent count: 23" run.log
           grep -F "Generated PartUsage count: 23" run.log
           grep -F "Errors: 0" run.log
@@ -176,16 +173,12 @@ jobs:
         shell: pwsh
         run: Expand-Archive -Path dist/capella2sysmlv2-windows-x86_64.zip -DestinationPath product
 
-      - name: Download IFE sample
-        shell: pwsh
-        run: Invoke-WebRequest -Uri $env:IFE_URL -OutFile InFlightEntertainmentSystem.zip
-
       - name: Transform IFE sample
         shell: pwsh
         run: |
           $lines = & .\product\capella2sysmlv2c.exe `
             -vm "$env:JAVA_HOME\bin\java.exe" `
-            InFlightEntertainmentSystem.zip output 2>&1
+            dist\InFlightEntertainmentSystem.zip output 2>&1
           $exitCode = $LASTEXITCODE
           $lines | Tee-Object -FilePath run.log
           if ($exitCode -ne 0) {
