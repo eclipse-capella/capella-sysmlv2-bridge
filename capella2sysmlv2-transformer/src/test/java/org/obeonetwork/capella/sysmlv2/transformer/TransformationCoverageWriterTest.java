@@ -38,15 +38,17 @@ class TransformationCoverageWriterTest {
 
         new TransformationCoverageWriter().write(report, temporaryDirectory);
 
-        assertThat(Files.readString(temporaryDirectory.resolve("coverage.json")))
+        assertThat(Files.readString(temporaryDirectory.resolve("mapping-coverage.json")))
+                .contains("\"label\": \"Capella Transformation Coverage\"")
                 .contains("\"concreteMetaclasses\": 2")
                 .contains("\"className\": \"LogicalComponent\"")
                 .contains("\"name\": \"ownedLogicalComponents\"")
                 .contains("\"containment\": true")
                 .contains("\"status\": \"PARTIAL\"");
-        assertThat(Files.readString(temporaryDirectory.resolve("coverage.md")))
-                .contains("# Transformation Coverage")
-                .contains("| 2 | 0 | 1 | 1 |")
-                .contains("| LogicalComponent | PARTIAL | name | ownedLogicalComponents |");
+        assertThat(Files.readString(temporaryDirectory.resolve("mapping-coverage.md")))
+                .contains("## Capella Transformation Coverage")
+                .contains("## Arcadia SysML v2 Library Utilization")
+                .contains("## Arcadia SysML v2 Library Coverage of Capella")
+                .contains("| LogicalComponent | concrete | PARTIAL | name |  | ownedLogicalComponents |");
     }
 }

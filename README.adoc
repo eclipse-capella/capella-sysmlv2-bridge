@@ -131,6 +131,9 @@ Transformation completed
 Source LogicalComponent count: 23
 Generated PartUsage count: 23
 Errors: 0
+Capella Transformation Coverage: <mapped>/<concrete> (<percentage>%)
+Arcadia SysML v2 Library Utilization: <used>/<eligible> (<percentage>%)
+Arcadia SysML v2 Library Coverage of Capella: <confirmed>/<concrete> (<percentage>%)
 XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
 ----
 
@@ -150,9 +153,13 @@ The output directory also contains:
 [source,text]
 ----
 OUTPUT_DIRECTORY/.capella2sysmlv2/
+  mapping-coverage.json
+  mapping-coverage.md
+  input/
 ----
 
-This is an internal working directory containing the extracted project.
+The two deterministic mapping coverage reports describe Capella mapper coverage, use of the bundled Arcadia library, and independently assessed Capella-to-Arcadia semantic alignments.
+The `input` subdirectory is an internal working directory containing the extracted project.
 Do not place user files inside it.
 
 [IMPORTANT]

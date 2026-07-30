@@ -6,11 +6,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
+import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
+import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationService;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
@@ -22,6 +25,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageWriter;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
 public final class EquinoxTransformationService implements TransformationService {
@@ -31,14 +36,17 @@ public final class EquinoxTransformationService implements TransformationService
         Path outputDirectory = prepareOutputDirectory(request.outputDirectory());
         ExtractedCapellaProject extractedProject = extractProject(request.inputZip(), outputDirectory);
         try (var model = loadModel(extractedProject)) {
+            new IfeDerivedReferenceProbe().evaluate(model)
+                    .ifPresent(probe -> System.out.println(probe.report()));
             List<LogicalComponent> logicalComponents = findLogicalComponents(model.root());
             var arcadiaLibrary = loadArcadiaLibrary();
             var resolver = new ArcadiaLibraryResolver(arcadiaLibrary);
+            var mappers = CapellaMapperCatalog.createMappers();
             var engine = new TransformationEngine(
-                    new TransformationDispatcher(new DefaultMapperRegistry(List.of(new LogicalComponentMapper()))),
+                    new TransformationDispatcher(new DefaultMapperRegistry(mappers)),
                     resolver);
             String modelName = modelName(extractedProject.modelPath().getFileName().toString());
-            var result = engine.transformAll(logicalComponents,
+            var result = engine.transform(model.root(),
                     new TransformationOptions(false, false, false, modelName, modelName));
             int generatedPartUsages = (int) logicalComponents.stream()
                     .map(result.traceability()::lookupTarget)
@@ -47,16 +55,44 @@ public final class EquinoxTransformationService implements TransformationService
             int errors = (int) result.diagnostics().stream()
                     .filter(diagnostic -> diagnostic.severity().name().equals("ERROR"))
                     .count();
+            if (errors > 0) {
+                throw new IllegalStateException("Transformation produced " + errors + " error diagnostic(s)");
+            }
             Path outputModel = outputDirectory.resolve(modelName + ".sysml.xmi");
             var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
-            EObject reloadedRoot = new SysMLXmiExporter().exportAndReload(result.root(), resourceSet, outputModel);
+            EObject reloadedRoot = new TemporarySysMLXmiExporter().exportAndReload(result.root(), resourceSet,
+                    outputModel);
             validateReloadedModel(reloadedRoot, result.generatedElements());
-            return new TransformationSummary(logicalComponents.size(), generatedPartUsages, errors, outputModel);
+            var report = new TransformationCoverageAnalyzer().analyze(
+                    new CapellaSemanticPackageDiscovery().discover(), mappers, arcadiaLibrary,
+                    CapellaMapperCatalog.alignmentCatalog());
+            writeCoverageReport(report, outputDirectory.resolve(".capella2sysmlv2"));
+            var coverageSummary = new MappingCoverageSummary(
+                    coverageValue(report.metaclassesWithMapperMetric()),
+                    coverageValue(report.arcadiaUtilization().overallMetric()),
+                    coverageValue(report.confirmedAlignmentMetric()));
+            return new TransformationSummary(logicalComponents.size(), generatedPartUsages, errors, outputModel,
+                    coverageSummary);
         } catch (TransformationCommandException exception) {
             throw exception;
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(6, "Transformation failed: " + exception.getMessage(), exception);
         }
+    }
+
+    private static void writeCoverageReport(
+            org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageReport report,
+            Path reportDirectory) {
+        try {
+            new TransformationCoverageWriter().write(report, reportDirectory);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Cannot write semantic mapping coverage reports", exception);
+        }
+    }
+
+    private static CoverageValue coverageValue(
+            org.obeonetwork.capella.sysmlv2.transformer.CoverageMetric metric) {
+        return new CoverageValue(metric.numerator(), metric.denominator());
     }
 
     private static Path prepareOutputDirectory(Path outputDirectory) {
@@ -87,11 +123,10 @@ public final class EquinoxTransformationService implements TransformationService
         }
     }
 
-    private static org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel loadModel(
-            ExtractedCapellaProject extractedProject) {
+    private static LoadedCapellaResource loadModel(ExtractedCapellaProject extractedProject) {
         try {
-            return new CapellaResourceLoader()
-                    .load(new ModelLoadRequest(extractedProject.projectDirectory(), extractedProject.modelPath()));
+            return (LoadedCapellaResource) new CapellaResourceLoader().load(
+                    new ModelLoadRequest(extractedProject.projectDirectory(), extractedProject.modelPath()));
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(4, "Cannot load Capella model: " + exception.getMessage(),
                     exception);

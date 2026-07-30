@@ -11,10 +11,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.obeonetwork.capella.sysmlv2.loader.CapellaModelLoader;
 import org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
+import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory;
+import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
 import org.polarsys.capella.common.libraries.LibrariesPackage;
 import org.polarsys.capella.common.re.RePackage;
 import org.polarsys.capella.core.data.capellamodeller.CapellamodellerPackage;
@@ -32,22 +33,39 @@ public final class CapellaResourceLoader implements CapellaModelLoader {
             throw new IllegalArgumentException("Capella model does not exist: " + modelPath);
         }
 
-        var resourceSet = new ResourceSetImpl();
-        register(resourceSet.getPackageRegistry(), CapellamodellerPackage.eINSTANCE);
-        register(resourceSet.getPackageRegistry(), LibrariesPackage.eINSTANCE);
-        register(resourceSet.getPackageRegistry(), RePackage.eINSTANCE);
-        resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("capella",
-                new CapellamodellerResourceFactoryImpl());
+        SemanticEditingDomain editingDomain = (SemanticEditingDomain) new SemanticEditingDomainFactory()
+                .createEditingDomain();
+        try {
+            var resourceSet = editingDomain.getResourceSet();
+            // No Sirius session exists in standalone mode; retain only the cross-referencer adapter.
+            resourceSet.eAdapters().remove(editingDomain.getDataNotifier());
+            register(resourceSet.getPackageRegistry(), CapellamodellerPackage.eINSTANCE);
+            register(resourceSet.getPackageRegistry(), LibrariesPackage.eINSTANCE);
+            register(resourceSet.getPackageRegistry(), RePackage.eINSTANCE);
+            resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("capella",
+                    new CapellamodellerResourceFactoryImpl());
 
-        URI platformProject = URI.createPlatformResourceURI("/" + projectName(projectDirectory) + "/", true);
-        resourceSet.getURIConverter().getURIMap().put(platformProject,
-                URI.createFileURI(projectDirectory.toString() + "/"));
+            URI platformProject = URI.createPlatformResourceURI("/" + projectName(projectDirectory) + "/", true);
+            resourceSet.getURIConverter().getURIMap().put(platformProject,
+                    URI.createFileURI(projectDirectory.toString() + "/"));
 
-        Resource resource = resourceSet.getResource(URI.createFileURI(modelPath.toString()), true);
-        if (resource.getContents().isEmpty() || !(resource.getContents().get(0) instanceof Project project)) {
-            throw new IllegalStateException("Capella semantic resource does not contain a Project root: " + modelPath);
+            Resource resource;
+            var crossReferencer = editingDomain.getCrossReferencer();
+            crossReferencer.enableResolveProxy();
+            try {
+                resource = resourceSet.getResource(URI.createFileURI(modelPath.toString()), true);
+            } finally {
+                crossReferencer.disableResolveProxy();
+            }
+            if (resource.getContents().isEmpty() || !(resource.getContents().get(0) instanceof Project project)) {
+                throw new IllegalStateException(
+                        "Capella semantic resource does not contain a Project root: " + modelPath);
+            }
+            return new LoadedCapellaResource(editingDomain, resource, project);
+        } catch (RuntimeException | Error exception) {
+            editingDomain.dispose();
+            throw exception;
         }
-        return new LoadedCapellaResource(resourceSet, resource, project);
     }
 
     private static void register(EPackage.Registry registry, EPackage ePackage) {

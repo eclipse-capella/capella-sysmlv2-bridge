@@ -123,9 +123,22 @@ jobs:
           grep -F "Source LogicalComponent count: 23" run.log
           grep -F "Generated PartUsage count: 23" run.log
           grep -F "Errors: 0" run.log
+          grep -F "Capella Transformation Coverage:" run.log
+          grep -F "Arcadia SysML v2 Library Utilization:" run.log
+          grep -F "Arcadia SysML v2 Library Coverage of Capella:" run.log
           test -f "output/In-Flight Entertainment System.sysml.xmi"
+          test -f "output/.capella2sysmlv2/mapping-coverage.json"
+          test -f "output/.capella2sysmlv2/mapping-coverage.md"
           grep -F "arcadialibrary:/arcadia.json" \
             "output/In-Flight Entertainment System.sysml.xmi"
+
+      - name: Publish Linux mapping coverage summary
+        if: always()
+        shell: bash
+        run: |
+          if test -f "output/.capella2sysmlv2/mapping-coverage.md"; then
+            cat "output/.capella2sysmlv2/mapping-coverage.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload Linux qualification evidence
         if: always()
@@ -135,6 +148,8 @@ jobs:
           path: |
             run.log
             output/In-Flight Entertainment System.sysml.xmi
+            output/.capella2sysmlv2/mapping-coverage.json
+            output/.capella2sysmlv2/mapping-coverage.md
           if-no-files-found: ignore
           retention-days: 7
 
@@ -181,7 +196,10 @@ jobs:
           @(
             "Source LogicalComponent count: 23",
             "Generated PartUsage count: 23",
-            "Errors: 0"
+            "Errors: 0",
+            "Capella Transformation Coverage:",
+            "Arcadia SysML v2 Library Utilization:",
+            "Arcadia SysML v2 Library Coverage of Capella:"
           ) | ForEach-Object {
             if (-not $log.Contains($_)) {
               throw "Missing expected output: $_"
@@ -195,6 +213,23 @@ jobs:
           if (-not (Select-String -Path $xmi -SimpleMatch "arcadialibrary:/arcadia.json" -Quiet)) {
             throw "Generated model does not reference the Arcadia library"
           }
+          @(
+            "output\.capella2sysmlv2\mapping-coverage.json",
+            "output\.capella2sysmlv2\mapping-coverage.md"
+          ) | ForEach-Object {
+            if (-not (Test-Path -Path $_ -PathType Leaf)) {
+              throw "Missing mapping coverage evidence: $_"
+            }
+          }
+
+      - name: Publish Windows mapping coverage summary
+        if: always()
+        shell: pwsh
+        run: |
+          $report = "output\.capella2sysmlv2\mapping-coverage.md"
+          if (Test-Path -Path $report -PathType Leaf) {
+            Get-Content -Path $report | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          }
 
       - name: Upload Windows qualification evidence
         if: always()
@@ -204,6 +239,8 @@ jobs:
           path: |
             run.log
             output/In-Flight Entertainment System.sysml.xmi
+            output/.capella2sysmlv2/mapping-coverage.json
+            output/.capella2sysmlv2/mapping-coverage.md
           if-no-files-found: ignore
           retention-days: 7
 

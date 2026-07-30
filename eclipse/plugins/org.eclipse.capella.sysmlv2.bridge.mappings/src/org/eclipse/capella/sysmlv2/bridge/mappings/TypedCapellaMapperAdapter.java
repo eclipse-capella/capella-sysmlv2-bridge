@@ -1,0 +1,46 @@
+package org.eclipse.capella.sysmlv2.bridge.mappings;
+
+import java.util.Objects;
+
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
+
+public abstract class TypedCapellaMapperAdapter<T extends EObject> implements ElementMapper {
+
+    private final MetaclassId sourceType;
+    private final Class<T> sourceJavaType;
+
+    protected TypedCapellaMapperAdapter(EClass sourceType, Class<T> sourceJavaType) {
+        this(MetaclassId.of(Objects.requireNonNull(sourceType, "sourceType must not be null")), sourceJavaType);
+    }
+
+    protected TypedCapellaMapperAdapter(String sourceNsUri, String sourceClassName, Class<T> sourceJavaType) {
+        this(new MetaclassId(sourceNsUri, sourceClassName), sourceJavaType);
+    }
+
+    private TypedCapellaMapperAdapter(MetaclassId sourceType, Class<T> sourceJavaType) {
+        this.sourceType = Objects.requireNonNull(sourceType, "sourceType must not be null");
+        this.sourceJavaType = Objects.requireNonNull(sourceJavaType, "sourceJavaType must not be null");
+    }
+
+    @Override
+    public final MetaclassId sourceType() {
+        return sourceType;
+    }
+
+    @Override
+    public final void transform(EObject source, TransformationContext context) {
+        Objects.requireNonNull(source, "source must not be null");
+        Objects.requireNonNull(context, "context must not be null");
+        if (!sourceJavaType.isInstance(source)) {
+            context.diagnostics().error(source, "Expected a Capella " + sourceJavaType.getSimpleName());
+            return;
+        }
+        transformTyped(sourceJavaType.cast(source), context);
+    }
+
+    protected abstract void transformTyped(T source, TransformationContext context);
+}

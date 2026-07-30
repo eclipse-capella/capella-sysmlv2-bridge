@@ -19,7 +19,9 @@ class Capella2SysMLV2CommandTest {
         var request = new AtomicReference<TransformationRequest>();
         var commandLine = new CommandLine(new Capella2SysMLV2Command(value -> {
             request.set(value);
-            return new TransformationSummary(3, 3, 0, Path.of("output/model.sysml.xmi"));
+            return new TransformationSummary(3, 3, 0, Path.of("output/model.sysml.xmi"),
+                    new MappingCoverageSummary(new CoverageValue(1, 10), new CoverageValue(1, 42),
+                            new CoverageValue(1, 10)));
         }));
         commandLine.setOut(new PrintWriter(output));
 
@@ -30,6 +32,9 @@ class Capella2SysMLV2CommandTest {
         assertThat(output.toString()).contains("Source LogicalComponent count: 3")
                 .contains("Generated PartUsage count: 3")
                 .contains("Errors: 0")
+                .contains("Capella Transformation Coverage: 1/10 (10.00%)")
+                .contains("Arcadia SysML v2 Library Utilization: 1/42 (2.38%)")
+                .contains("Arcadia SysML v2 Library Coverage of Capella: 1/10 (10.00%)")
                 .contains("XMI model: output/model.sysml.xmi");
     }
 
