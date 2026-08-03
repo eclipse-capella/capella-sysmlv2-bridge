@@ -18,16 +18,20 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ModelLoadResultTest {
+	@TempDir
+	Path temporaryDirectory;
 
-    @Test
-    void loadRequestStoresProjectAndRelativeModelPath() {
-        var request = new ModelLoadRequest(Path.of("project"), Path.of("model.capella"));
+	@Test
+	void loadRequestStoresProjectAndRelativeModelPath() {
+		var request = new ModelLoadRequest(Path.of("project"),
+				Path.of("model.capella"));
 
-        assertThat(request.projectDirectory()).isEqualTo(Path.of("project"));
-        assertThat(request.modelPath()).isEqualTo(Path.of("model.capella"));
-    }
+		assertThat(request.projectDirectory()).isEqualTo(Path.of("project"));
+		assertThat(request.modelPath()).isEqualTo(Path.of("model.capella"));
+	}
 
     @Test
     void rejectsAbsoluteModelPath() {

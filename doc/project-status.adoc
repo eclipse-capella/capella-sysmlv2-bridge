@@ -27,13 +27,13 @@ Build and contribution instructions are maintained in link:developer-guide.adoc[
 |Component |Version or constraint
 
 |Java
-|21
+|17
 
 |Capella
 |7.0.1
 
 |SysON
-|2026.7.0
+|2025.2.12
 
 |Arcadia SysML v2 library
 |`org.eclipse.arcadia:arcadia-library:0.0.3`
@@ -171,14 +171,14 @@ The Windows distribution contains both `capella2sysmlv2.exe` and the console lau
 
 A GitHub Actions workflow is defined for pull requests, `main`, manual runs, and release tags to:
 
-* build with Java 21;
+* build with Java 17;
 * run regular tests;
 * materialize both products;
 * execute the IFE acceptance scenario on Linux and Windows runners;
 * verify the transformation summary and generated model content;
 * publish both archives in a GitHub Release only for tags and after successful acceptance tests.
 
-The package-access secrets are configured. The workflow temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private Obeo package repository; Java 21 and Windows qualification remain pending until the workflow completes successfully.
+The package-access secrets are configured. The workflow temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private Obeo package repository; Java 17 and Windows qualification remain pending until the workflow completes successfully.
 
 == Current Mapping Coverage
 
@@ -256,13 +256,13 @@ All 27 parts retain an external reference to `Arcadia::Component` after XMI relo
 |Pending
 |The product is materialized, but no Windows environment was available locally. The release workflow contains a Windows acceptance job.
 
-|Java 21 qualification
+|Java 17 qualification
 |Pending
-|Local product validation used Java 25. The release workflow is configured for Temurin 21 but has not completed its first tagged run.
+|The release workflow is configured for Temurin 17 but has not completed its first tagged run.
 
 |GitHub Release publication
 |Pending
-|The workflow is implemented and package secrets are configured. The first successful Java 21 Linux and Windows qualification and semantic-version tag are still required.
+|The workflow is implemented and package secrets are configured. The first successful Java 17 Linux and Windows qualification and semantic-version tag are still required.
 
 |Textual SysML export
 |Not implemented
@@ -298,13 +298,13 @@ A physically UI-free distribution would require repackaging Capella semantic cla
 === Release Infrastructure Qualification
 
 The package credentials are configured and Arcadia `0.0.3` is temporarily consumed from the private Obeo package repository.
-The repository must complete Java 21 Linux and Windows qualification and a first tagged build, then check the resulting GitHub Release links from the user documentation.
+The repository must complete Java 17 Linux and Windows qualification and a first tagged build, then check the resulting GitHub Release links from the user documentation.
 
 The Arcadia repository URL must move from `obeo/arcadia-sysmlv2-lib` to the official `eclipse-capella/arcadia-sysmlv2-lib` package repository once that artifact is published there.
 
 === Official Textual Export
 
-The project must identify and integrate the official SysON 2026.7.0 textual export API behind a small service boundary.
+The project must identify and integrate the official SysON 2025.2.12 textual export API behind a small service boundary.
 
 The implementation must not introduce a local serializer or depend on the SysML v2 Reference Implementation.
 
@@ -321,7 +321,7 @@ Additional mappings must be prioritized explicitly and implemented incrementally
 
 === 1. Qualify the Release Workflow
 
-Use the temporary Obeo Arcadia package to complete the first Java 21 Linux and Windows workflow run, then switch to the official `eclipse-capella` package repository when it becomes available.
+Use the temporary Obeo Arcadia package to complete the first Java 17 Linux and Windows workflow run, then switch to the official `eclipse-capella` package repository when it becomes available.
 
 === 2. Integrate Official SysON Textual Export
 
@@ -339,7 +339,7 @@ Add Capella concepts one at a time through the established transformation engine
 
 The standalone transformation milestone is complete when:
 
-* the complete repository builds reproducibly with Java 21;
+* the complete repository builds reproducibly with Java 17;
 * tagged GitHub Releases publish tested Linux and Windows archives;
 * both extracted products transform IFE successfully;
 * standalone transformation requires no graphical display, Eclipse workspace, or Sirius session;

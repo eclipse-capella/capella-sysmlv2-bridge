@@ -32,9 +32,9 @@ import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
 
 class MapperSkeletonGeneratorTest {
 
-    private static final List<String> CAPELLA_URI_PREFIXES = List.of(
-            "http://www.polarsys.org/capella/core/",
-            "http://www.polarsys.org/capella/common/");
+	private static final List<String> CAPELLA_URI_PREFIXES = List.of(
+			"http://www.polarsys.org/capella/core/",
+			"http://www.polarsys.org/capella/common/");
 
     @Test
     void generatesCandidateSourcesForEveryUnimplementedConcreteMetaclass() throws Exception {
@@ -42,7 +42,8 @@ class MapperSkeletonGeneratorTest {
         var packages = capellaPackages();
         var implementedTypes = CapellaMapperCatalog.createMappers().stream().map(ElementMapper::sourceType).toList();
 
-        var result = new MapperSkeletonGenerator().generate(packages, implementedTypes, outputDirectory);
+		var result = new MapperSkeletonGenerator().generate(packages,
+				implementedTypes, outputDirectory);
 
         assertEquals(252, result.concreteMetaclassCount());
         assertEquals(251, result.generatedFiles().size());

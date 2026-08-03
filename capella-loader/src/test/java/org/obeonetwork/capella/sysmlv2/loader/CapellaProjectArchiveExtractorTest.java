@@ -22,13 +22,14 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class CapellaProjectArchiveExtractorTest {
 
-    @TempDir
-    Path temporaryDirectory;
+	@TempDir
+	Path temporaryDirectory;
 
     @Test
     void extractsAndDiscoversOneCapellaProject() throws IOException {
@@ -37,14 +38,18 @@ class CapellaProjectArchiveExtractorTest {
                 "IFE/model/IFE.capella", "model"));
         Path extractionDirectory = this.temporaryDirectory.resolve("extracted");
 
-        try (var project = new CapellaProjectArchiveExtractor().extract(archive, extractionDirectory)) {
-            assertThat(project.projectDirectory()).isEqualTo(extractionDirectory.toAbsolutePath().resolve("IFE"));
-            assertThat(project.modelPath()).isEqualTo(Path.of("model/IFE.capella"));
-            assertThat(project.projectDirectory().resolve(project.modelPath())).hasContent("model");
-        }
+		try (var project = new CapellaProjectArchiveExtractor().extract(archive,
+				extractionDirectory)) {
+			assertThat(project.projectDirectory()).isEqualTo(
+					extractionDirectory.toAbsolutePath().resolve("IFE"));
+			assertThat(project.modelPath())
+					.isEqualTo(Path.of("model/IFE.capella"));
+			assertThat(project.projectDirectory().resolve(project.modelPath()))
+					.hasContent("model");
+		}
 
-        assertThat(extractionDirectory).doesNotExist();
-    }
+		assertThat(extractionDirectory).doesNotExist();
+	}
 
     @Test
     void rejectsEntriesOutsideTheExtractionDirectory() throws IOException {
@@ -87,11 +92,12 @@ class CapellaProjectArchiveExtractorTest {
         Files.createDirectories(extractionDirectory);
         Path existingFile = Files.writeString(extractionDirectory.resolve("existing.txt"), "keep");
 
-        assertThatIllegalArgumentException().isThrownBy(() -> new CapellaProjectArchiveExtractor()
-                .extract(archive, extractionDirectory))
-                .withMessageContaining("must be empty");
-        assertThat(existingFile).hasContent("keep");
-    }
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new CapellaProjectArchiveExtractor()
+						.extract(archive, extractionDirectory))
+				.withMessageContaining("must be empty");
+		assertThat(existingFile).hasContent("keep");
+	}
 
     @Test
     void rejectsASymbolicLinkInTheExtractionPath() throws IOException {

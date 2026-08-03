@@ -4,6 +4,8 @@ target/
 .project
 .settings/
 
+bin/
+
 *.log
 
 /AGENTS.md

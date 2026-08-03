@@ -22,6 +22,5 @@
         <relativePath>../..</relativePath>
     </parent>
     <artifactId>org.eclipse.capella.sysmlv2.bridge.headless.feature</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
     <packaging>eclipse-feature</packaging>
 </project>
