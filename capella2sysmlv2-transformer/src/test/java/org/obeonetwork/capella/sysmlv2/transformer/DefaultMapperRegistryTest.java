@@ -22,39 +22,45 @@ import org.junit.jupiter.api.Test;
 
 class DefaultMapperRegistryTest {
 
-    private static final MetaclassId TYPE = new MetaclassId("http://example.org/capella", "LogicalComponent");
+	private static final MetaclassId TYPE = new MetaclassId(
+			"http://example.org/capella", "LogicalComponent");
 
-    @Test
-    void findsMapperByMetaclassId() {
-        var mapper = mapper(TYPE);
-        var registry = new DefaultMapperRegistry(List.of(mapper));
+	@Test
+	void findsMapperByMetaclassId() {
+		var mapper = mapper(TYPE);
+		var registry = new DefaultMapperRegistry(List.of(mapper));
 
-        assertThat(registry.get(TYPE)).contains(mapper);
-    }
+		assertThat(registry.get(TYPE)).contains(mapper);
+	}
 
-    @Test
-    void returnsEmptyForUnknownMetaclassId() {
-        var registry = new DefaultMapperRegistry(List.of(mapper(TYPE)));
+	@Test
+	void returnsEmptyForUnknownMetaclassId() {
+		var registry = new DefaultMapperRegistry(List.of(mapper(TYPE)));
 
-        assertThat(registry.get(new MetaclassId("http://example.org/capella", "LogicalFunction"))).isEmpty();
-    }
+		assertThat(registry.get(new MetaclassId("http://example.org/capella",
+				"LogicalFunction"))).isEmpty();
+	}
 
-    @Test
-    void rejectsDuplicateMapperRegistration() {
-        assertThatIllegalArgumentException().isThrownBy(() -> new DefaultMapperRegistry(List.of(mapper(TYPE), mapper(TYPE))))
-                .withMessageContaining("Duplicate mapper registration");
-    }
+	@Test
+	void rejectsDuplicateMapperRegistration() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new DefaultMapperRegistry(
+						List.of(mapper(TYPE), mapper(TYPE))))
+				.withMessageContaining("Duplicate mapper registration");
+	}
 
-    private static ElementMapper mapper(MetaclassId sourceType) {
-        return new ElementMapper() {
-            @Override
-            public MetaclassId sourceType() {
-                return sourceType;
-            }
+	private static ElementMapper mapper(MetaclassId sourceType) {
+		return new ElementMapper() {
+			@Override
+			public MetaclassId sourceType() {
+				return sourceType;
+			}
 
-            @Override
-            public void transform(EObject source, TransformationContext context) {
-            }
-        };
-    }
+			@Override
+			public void transform(EObject source,
+					TransformationContext context) {
+				// nothing to do by default
+			}
+		};
+	}
 }

@@ -49,7 +49,9 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
 
 public final class CapellaMapperCatalog {
 
-    private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
+    private static final String ARCADIA_FUNCTION = "Arcadia::Function";
+	private static final String ARCADIA_COMPONENT = "Arcadia::Component";
+	private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
 
     private CapellaMapperCatalog() {
     }
@@ -64,13 +66,13 @@ public final class CapellaMapperCatalog {
 
     public static List<MetaclassAlignment> alignmentCatalog() {
         return List.of(
-                confirmed(LaPackage.Literals.LOGICAL_COMPONENT, "Arcadia::Component",
+                confirmed(LaPackage.Literals.LOGICAL_COMPONENT, ARCADIA_COMPONENT,
                         new FeatureAlignment("name", "SysML::Element::declaredName",
                                 AlignmentStatus.SYSML_STANDARD)),
                 candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
-                candidate(CtxPackage.Literals.SYSTEM_COMPONENT, "Arcadia::Component"),
-                candidate(CtxPackage.Literals.SYSTEM_FUNCTION, "Arcadia::Function"),
+                candidate(CtxPackage.Literals.SYSTEM_COMPONENT, ARCADIA_COMPONENT),
+                candidate(CtxPackage.Literals.SYSTEM_FUNCTION, ARCADIA_FUNCTION),
                 candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
                 candidate(FaPackage.Literals.COMPONENT_PORT, "Arcadia::ComponentPort"),
                 standard(FaPackage.Literals.FUNCTION_INPUT_PORT, "SysML::Feature"),
@@ -78,13 +80,13 @@ public final class CapellaMapperCatalog {
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
                 candidate(FaPackage.Literals.FUNCTIONAL_EXCHANGE, "Arcadia::FunctionalExchange"),
                 candidate(InformationPackage.Literals.EXCHANGE_ITEM, "Arcadia::ExchangeItem"),
-                candidate(LaPackage.Literals.LOGICAL_FUNCTION, "Arcadia::Function"),
+                candidate(LaPackage.Literals.LOGICAL_FUNCTION, ARCADIA_FUNCTION),
                 candidate(OaPackage.Literals.COMMUNICATION_MEAN, "Arcadia::ComponentExchange"),
-                candidate(OaPackage.Literals.ENTITY, "Arcadia::Component"),
-                candidate(OaPackage.Literals.OPERATIONAL_ACTIVITY, "Arcadia::Function"),
+                candidate(OaPackage.Literals.ENTITY, ARCADIA_COMPONENT),
+                candidate(OaPackage.Literals.OPERATIONAL_ACTIVITY, ARCADIA_FUNCTION),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain"),
-                candidate(PaPackage.Literals.PHYSICAL_COMPONENT, "Arcadia::Component"),
-                candidate(PaPackage.Literals.PHYSICAL_FUNCTION, "Arcadia::Function"));
+                candidate(PaPackage.Literals.PHYSICAL_COMPONENT, ARCADIA_COMPONENT),
+                candidate(PaPackage.Literals.PHYSICAL_FUNCTION, ARCADIA_FUNCTION));
     }
 
     private static Map<String, List<MapperBacklogEntry>> createBacklog() {

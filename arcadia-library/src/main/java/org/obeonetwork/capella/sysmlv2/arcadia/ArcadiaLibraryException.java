@@ -13,8 +13,9 @@
 package org.obeonetwork.capella.sysmlv2.arcadia;
 
 public class ArcadiaLibraryException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
 
-    public ArcadiaLibraryException(String message) {
+	public ArcadiaLibraryException(String message) {
         super(message);
     }
 
