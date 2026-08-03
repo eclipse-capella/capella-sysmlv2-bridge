@@ -23,7 +23,7 @@
 
     <properties>
         <tycho.version>4.0.12</tycho.version>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -115,13 +115,67 @@
                             <arch>x86_64</arch>
                         </environment>
                     </environments>
-                    <executionEnvironmentDefault>JavaSE-21</executionEnvironmentDefault>
+                    <executionEnvironmentDefault>JavaSE-17</executionEnvironmentDefault>
                     <dependency-resolution>
                         <optionalDependencies>ignore</optionalDependencies>
                     </dependency-resolution>
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+	        <plugins>
+	            <plugin>
+	                <groupId>org.eclipse.m2e</groupId>
+	                <artifactId>lifecycle-mapping</artifactId>
+	                <version>1.0.0</version>
+	
+	                <configuration>
+	                    <lifecycleMappingMetadata>
+	                        <pluginExecutions>
+	                            <pluginExecution>
+	                                <pluginExecutionFilter>
+	                                    <groupId>org.eclipse.tycho</groupId>
+	                                    <artifactId>
+	                                        tycho-bnd-plugin
+	                                    </artifactId>
+	                                    <versionRange>
+	                                        [4.0.12,4.0.13)
+	                                    </versionRange>
+	                                    <goals>
+	                                        <goal>process</goal>
+	                                    </goals>
+	                                </pluginExecutionFilter>
+	
+	                                <action>
+	                                    <ignore/>
+	                                </action>
+	                            </pluginExecution>
+	                            <pluginExecution>
+		                            <pluginExecutionFilter>
+		                                <groupId>
+		                                    org.apache.maven.plugins
+		                                </groupId>
+		                                <artifactId>
+		                                    maven-clean-plugin
+		                                </artifactId>
+		                                <versionRange>
+		                                    [3.2.0,4.0.0)
+		                                </versionRange>
+		                                <goals>
+		                                    <goal>clean</goal>
+		                                </goals>
+		                            </pluginExecutionFilter>
+		
+		                            <action>
+		                                <ignore/>
+		                            </action>
+		                        </pluginExecution>
+	                        </pluginExecutions>
+	                    </lifecycleMappingMetadata>
+	                </configuration>
+	            </plugin>
+	        </plugins>
+	    </pluginManagement>
     </build>
 
     <profiles>

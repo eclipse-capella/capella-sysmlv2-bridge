@@ -4,7 +4,7 @@ Bundle-Name: Capella SysML v2 Bridge Application
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.application;singleton:=true
 Bundle-Version: 0.1.0.qualifier
 Export-Package: org.eclipse.capella.sysmlv2.bridge.application
-Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,
@@ -16,13 +16,12 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.edit,
  org.eclipse.emf.transaction,
  org.eclipse.sirius.common,
- org.polarsys.capella.common.data.core.gen,
- org.polarsys.capella.common.data.helpers,
- org.polarsys.capella.common.platform.sirius.ted,
- org.polarsys.capella.core.data.gen,
- org.polarsys.capella.core.data.helpers,
- org.polarsys.capella.common.libraries.gen,
- org.polarsys.capella.common.re.gen,
  org.eclipse.capella.sysmlv2.bridge.transformer,
- org.eclipse.capella.sysmlv2.bridge.mappings
+ org.eclipse.capella.sysmlv2.bridge.mappings,
+ org.polarsys.capella.common.platform.sirius.ted,
+ org.polarsys.capella.common.libraries.gen,
+ org.polarsys.capella.core.data.gen,
+ org.eclipse.emf.workspace,
+ org.polarsys.capella.common.re.gen,
+ org.polarsys.capella.core.data.helpers
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.application

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Capella SysML v2 Bridge Mapping Tests
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.mappings.tests
 Bundle-Version: 0.1.0.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.core.runtime,
  org.eclipse.capella.sysmlv2.bridge.transformer,
@@ -11,6 +11,9 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.polarsys.capella.core.data.gen,
  org.polarsys.capella.common.libraries.gen,
  org.polarsys.capella.common.re.gen,
+ org.polarsys.capella.common.model,
+ org.polarsys.capella.common.model.helpers,
  org.junit,
- junit-jupiter-api
+ junit-jupiter-api,
+ org.opentest4j
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings.tests

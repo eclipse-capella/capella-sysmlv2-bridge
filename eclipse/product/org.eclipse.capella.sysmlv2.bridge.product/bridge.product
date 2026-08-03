@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="Capella SysML v2 Bridge" uid="org.eclipse.capella.sysmlv2.bridge.product" id="org.eclipse.capella.sysmlv2.bridge.application.product" application="org.eclipse.capella.sysmlv2.bridge.application" version="0.1.0.qualifier" type="features" includeLaunchers="true" autoIncludeRequirements="true">
+<product name="Capella SysML v2 Bridge" uid="org.eclipse.capella.sysmlv2.bridge.product" id="org.eclipse.capella.sysmlv2.bridge.application.product" application="org.eclipse.capella.sysmlv2.bridge.application" version="0.1.0.qualifier" useFeatures="true" includeLaunchers="true" autoIncludeRequirements="false">
+
 
    <configIni use="default">
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-Dosgi.requiredJavaVersion=21
--Dpde.jreProfile=JavaSE-21
+      <vmArgs>-Dosgi.requiredJavaVersion=17
+-Dpde.jreProfile=JavaSE-17
+-Dfile.encoding=UTF-8
+-Dsun.stdout.encoding=UTF-8
+-Dsun.stderr.encoding=UTF-8
       </vmArgs>
    </launcherArgs>
+
+   <windowImages/>
+
 
    <launcher name="capella2sysmlv2">
       <win useIco="false">
@@ -18,8 +25,10 @@
       </win>
    </launcher>
 
+
    <vm>
    </vm>
+
 
    <plugins>
    </plugins>
@@ -30,12 +39,20 @@
    </features>
 
    <configurations>
-       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.capella.sysmlv2.bridge.application" autoStart="true" startLevel="5" />
+      <plugin id="org.eclipse.core.contenttype" autoStart="true" startLevel="3" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="3" />
       <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="3" />
-       <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
-       <plugin id="org.eclipse.capella.sysmlv2.bridge.application" autoStart="true" startLevel="5" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
    </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
 
 </product>

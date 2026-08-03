@@ -22,7 +22,6 @@
         <relativePath>../..</relativePath>
     </parent>
     <artifactId>org.eclipse.capella.sysmlv2.bridge.transformer</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
     <packaging>eclipse-plugin</packaging>
 
     <dependencies>
@@ -34,7 +33,12 @@
         <dependency>
             <groupId>org.eclipse.syson</groupId>
             <artifactId>syson-sysml-metamodel</artifactId>
-            <version>2026.7.0</version>
+            <version>2025.2.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-services</artifactId>
+            <version>2025.2.12</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.arcadia</groupId>
@@ -62,12 +66,13 @@
                 <version>3.8.1</version>
                 <executions>
                     <execution>
+						<?m2e ignore?>
                         <id>copy-embedded-runtime</id>
                         <phase>process-resources</phase>
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella2sysmlv2-transformer,syson-sysml-metamodel,arcadia-library,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3</includeArtifactIds>
+                            <includeArtifactIds>capella2sysmlv2-transformer,syson-services,syson-sysml-metamodel,arcadia-library,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

@@ -30,7 +30,7 @@ Contributors can build the products by following the link:doc/developer-guide.ad
 == Requirements
 
 * A 64-bit Linux or Windows system
-* A Java 21 runtime available from `PATH` or `JAVA_HOME`
+* A Java 17 JDK available from `PATH` and configured in `JAVA_HOME`
 * A zip archive containing one Capella project
 
 No Capella installation, Eclipse workspace, or external Arcadia library checkout is required.
@@ -171,7 +171,7 @@ It is not the final textual SysML v2 `.sysml` format.
 == Troubleshooting
 
 `Java was not found` or the application does not start::
-Install a 64-bit Java 21 runtime and ensure `java -version` reports Java 21.
+Install a 64-bit Java 17 runtime and ensure `java -version` reports Java 17.
 
 `Cannot prepare Capella project`::
 Check that the archive contains exactly one `.project` file and one `.capella` file.

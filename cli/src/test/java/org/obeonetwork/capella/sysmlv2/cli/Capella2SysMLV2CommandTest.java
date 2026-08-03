@@ -14,6 +14,7 @@ package org.obeonetwork.capella.sysmlv2.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;

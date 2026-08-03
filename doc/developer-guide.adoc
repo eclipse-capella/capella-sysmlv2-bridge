@@ -15,7 +15,7 @@ For implemented capabilities and planned work, see link:project-status.adoc[Proj
 
 The development environment requires:
 
-* JDK 21;
+* JDK 17;
 * Maven 3.9 or later;
 * Git;
 * network access to Maven Central, Eclipse p2 repositories, and GitHub Packages;
@@ -29,7 +29,7 @@ java -version
 mvn -version
 ----
 
-Both commands must report the intended JDK 21 installation.
+Both commands must report the intended JDK 17 installation.
 
 == GitHub Packages
 
@@ -320,16 +320,16 @@ The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when p
 The workflow performs the following operations:
 
 . validates semantic-version tags and their ancestry from `main`;
-. executes the complete Maven, Tycho, and standalone product build with Java 21;
+. executes the complete Maven, Tycho, and standalone product build with Java 17;
 . materializes the Linux and Windows products;
 . renames the archives to stable public asset names;
 . runs the IFE scenario from the Linux archive without `DISPLAY`;
 . runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary, Arcadia references, and Java 21 runtime;
+. verifies the `23/23/0` summary, Arcadia references, and Java 17 runtime;
 . uploads diagnostic logs after failures;
 . creates the GitHub Release for tags only and only after every preceding job succeeds.
 
-The complete Java 21 qualification command used by the workflow is:
+The complete Java 17 qualification command used by the workflow is:
 
 [source,bash]
 ----

@@ -6,10 +6,16 @@
       <unit id="org.polarsys.capella.core.data.gen" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.common.data.core.gen" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.common.data.helpers" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.common.model" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.common.model.helpers" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.common.platform.sirius.ted" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.core.data.helpers" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.common.libraries.gen" version="7.0.1.202503211540"/>
       <unit id="org.polarsys.capella.common.re.gen" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.common.re" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.core.sirius.analysis" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.common.data.activity.gen" version="7.0.1.202503211540"/>
+      <unit id="org.polarsys.capella.common.data.behavior.gen" version="7.0.1.202503211540"/>
       <repository location="https://download.eclipse.org/capella/core/updates/releases/7.0.1/org.polarsys.capella.rcp.site/"/>
     </location>
     <location includeMode="slicer" includeAllPlatforms="false" includeSource="false" includeConfigurePhase="false" type="InstallableUnit">
@@ -22,12 +28,16 @@
       <unit id="org.eclipse.emf.transaction" version="1.9.2.202208110935"/>
       <unit id="org.eclipse.emf.workspace" version="1.5.2.202208110935"/>
       <unit id="org.eclipse.emf.validation" version="1.8.1.202208271102"/>
+      <unit id="org.eclipse.emf.common" version="2.28.0.v20230223-0922"/>
       <unit id="org.junit" version="4.13.2.v20211018-1956"/>
       <unit id="junit-jupiter-api" version="5.9.2"/>
       <unit id="junit-jupiter-engine" version="5.9.2"/>
       <unit id="junit-platform-commons" version="1.9.2"/>
       <unit id="junit-platform-engine" version="1.9.2"/>
       <unit id="junit-platform-launcher" version="1.9.2"/>
+      <unit id="org.opentest4j" version="1.2.0"/>
+      <unit id="org.eclipse.equinox.registry" version="3.11.200.v20220817-1601"/>
+      <unit id="org.eclipse.emf.workspace" version="1.5.2.202208110935"/>
       <repository location="https://download.eclipse.org/releases/2023-03/"/>
     </location>
     <location includeMode="slicer" includeAllPlatforms="false" includeSource="false" includeConfigurePhase="false" type="InstallableUnit">

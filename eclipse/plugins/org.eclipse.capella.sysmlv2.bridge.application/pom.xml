@@ -37,25 +37,98 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.8.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-embedded-runtime</id>
-                        <phase>process-resources</phase>
-                        <goals><goal>copy-dependencies</goal></goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-loader,cli</includeArtifactIds>
-                            <excludeTransitive>false</excludeTransitive>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+	    <plugins>
+	        <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-dependency-plugin</artifactId>
+	            <version>3.8.1</version>
+	
+	            <executions>
+	                <execution>
+	                    <?m2e ignore?>
+	
+	                    <id>copy-embedded-runtime</id>
+	
+	                    <phase>process-resources</phase>
+	
+	                    <goals>
+	                        <goal>copy-dependencies</goal>
+	                    </goals>
+	
+	                    <configuration>
+	                        <outputDirectory>
+	                            ${project.build.directory}/dependency
+	                        </outputDirectory>
+	
+	                        <includeArtifactIds>
+	                            capella-loader,cli,picocli
+	                        </includeArtifactIds>
+	
+	                        <excludeTransitive>false</excludeTransitive>
+	
+	                        <overWriteReleases>false</overWriteReleases>
+	                        <overWriteSnapshots>true</overWriteSnapshots>
+	                        <overWriteIfNewer>true</overWriteIfNewer>
+	                    </configuration>
+	                </execution>
+	            </executions>
+	        </plugin>
+	    </plugins>
+	
+	    <pluginManagement>
+	        <plugins>
+	            <plugin>
+	                <groupId>org.eclipse.m2e</groupId>
+	                <artifactId>lifecycle-mapping</artifactId>
+	                <version>1.0.0</version>
+	
+	                <configuration>
+	                    <lifecycleMappingMetadata>
+	                        <pluginExecutions>
+	                            <pluginExecution>
+	                                <pluginExecutionFilter>
+	                                    <groupId>org.eclipse.tycho</groupId>
+	                                    <artifactId>
+	                                        tycho-packaging-plugin
+	                                    </artifactId>
+	                                    <versionRange>
+	                                        [4.0.12,4.0.13)
+	                                    </versionRange>
+	                                    <goals>
+	                                        <goal>package-plugin</goal>
+	                                    </goals>
+	                                </pluginExecutionFilter>
+	
+	                                <action>
+	                                    <ignore/>
+	                                </action>
+	                            </pluginExecution>
+	
+	                            <pluginExecution>
+	                                <pluginExecutionFilter>
+	                                    <groupId>org.eclipse.tycho</groupId>
+	                                    <artifactId>
+	                                        tycho-bnd-plugin
+	                                    </artifactId>
+	                                    <versionRange>
+	                                        [4.0.12,4.0.13)
+	                                    </versionRange>
+	                                    <goals>
+	                                        <goal>process</goal>
+	                                    </goals>
+	                                </pluginExecutionFilter>
+	
+	                                <action>
+	                                    <ignore/>
+	                                </action>
+	                            </pluginExecution>
+	
+	                        </pluginExecutions>
+	                    </lifecycleMappingMetadata>
+	                </configuration>
+	            </plugin>
+	        </plugins>
+	    </pluginManagement>
+	</build>
 </project>
