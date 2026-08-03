@@ -49,7 +49,7 @@ public final class TransformationCoverageWriter {
                 .append("Inventory: **").append(report.packageCount()).append(" packages, ")
                 .append(report.metaclasses().size()).append(" EClasses, ")
                 .append(report.concreteMetaclassCount()).append(" concrete metaclasses**.\n\n")
-                .append("| Metric | Coverage | Percentage |\n| --- | ---: | ---: |\n");
+                .append(METRIC_COVERAGE_PERCENTAGE);
         appendMetricRow(result, "Concrete metaclasses with mapper", report.metaclassesWithMapperMetric());
         appendMetricRow(result, "Concrete metaclasses with complete mapper", report.completeMappersMetric());
         appendMetricRow(result, "Mapped structural features", report.mappedFeaturesMetric());
@@ -71,7 +71,7 @@ public final class TransformationCoverageWriter {
                 .append("Arcadia 0.0.3 public reusable inventory: **")
                 .append(utilization.concepts().size()).append(" concepts, ")
                 .append(utilization.features().size()).append(" features**.\n\n")
-                .append("| Metric | Coverage | Percentage |\n| --- | ---: | ---: |\n");
+                .append(METRIC_COVERAGE_PERCENTAGE);
         appendMetricRow(result, "Used eligible concepts and features", utilization.overallMetric());
         appendMetricRow(result, "Used concepts", utilization.conceptMetric());
         appendMetricRow(result, "Used features", utilization.featureMetric());
@@ -81,7 +81,7 @@ public final class TransformationCoverageWriter {
         appendArcadiaTable(result, "Feature detail", utilization.features());
 
         result.append("\n## Arcadia SysML v2 Library Coverage of Capella\n\n")
-                .append("| Metric | Coverage | Percentage |\n| --- | ---: | ---: |\n");
+                .append(METRIC_COVERAGE_PERCENTAGE);
         appendMetricRow(result, "Confirmed metaclass alignments", report.confirmedAlignmentMetric());
         result.append("\nUnassessed concrete Capella metaclasses: **")
                 .append(report.unassessedAlignmentCount()).append("**.\n\n")
@@ -112,7 +112,7 @@ public final class TransformationCoverageWriter {
         for (int index = 0; index < report.metaclasses().size(); index++) {
             var coverage = report.metaclasses().get(index);
             result.append("      {\"nsURI\": \"").append(escapeJson(coverage.metaclass().id().nsURI()))
-                    .append("\", \"className\": \"").append(escapeJson(coverage.metaclass().id().className()))
+                    .append(CLASS_NAME).append(escapeJson(coverage.metaclass().id().className()))
                     .append("\", \"abstract\": ").append(coverage.metaclass().abstractType())
                     .append(", \"superTypes\": ").append(jsonMetaclassIds(coverage.metaclass().superTypes()))
                     .append(", \"features\": ").append(jsonFeatures(coverage.metaclass().features()))
@@ -154,7 +154,7 @@ public final class TransformationCoverageWriter {
         for (int index = 0; index < report.alignments().size(); index++) {
             var alignment = report.alignments().get(index);
             result.append("      {\"nsURI\": \"").append(escapeJson(alignment.sourceType().nsURI()))
-                    .append("\", \"className\": \"").append(escapeJson(alignment.sourceType().className()))
+                    .append(CLASS_NAME).append(escapeJson(alignment.sourceType().className()))
                     .append("\", \"status\": \"").append(alignment.status()).append("\", \"target\": ")
                     .append(jsonNullable(alignment.target())).append(", \"featureAlignments\": [");
             for (int featureIndex = 0; featureIndex < alignment.featureAlignments().size(); featureIndex++) {
@@ -259,7 +259,7 @@ public final class TransformationCoverageWriter {
             if (!first)
                 result.append(", ");
             result.append("{\"nsURI\": \"").append(escapeJson(value.nsURI()))
-                    .append("\", \"className\": \"").append(escapeJson(value.className())).append("\"}");
+                    .append(CLASS_NAME).append(escapeJson(value.className())).append("\"}");
             first = false;
         }
         return result.append(']').toString();
@@ -273,7 +273,7 @@ public final class TransformationCoverageWriter {
                 result.append(", ");
             result.append("{\"name\": \"").append(escapeJson(feature.name()))
                     .append("\", \"declaringType\": {\"nsURI\": \"")
-                    .append(escapeJson(feature.declaringType().nsURI())).append("\", \"className\": \"")
+                    .append(escapeJson(feature.declaringType().nsURI())).append(CLASS_NAME)
                     .append(escapeJson(feature.declaringType().className())).append("\"}, \"kind\": \"")
                     .append(feature.kind()).append("\", \"lowerBound\": ").append(feature.lowerBound())
                     .append(", \"upperBound\": ").append(feature.upperBound())

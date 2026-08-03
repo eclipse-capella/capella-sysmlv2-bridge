@@ -20,12 +20,14 @@ import org.eclipse.emf.ecore.EObject;
 
 public final class IdentityTraceability implements Traceability {
 
-    private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
+    private static final String TARGET_MUST_NOT_BE_NULL = "target must not be null";
+	private static final String SOURCE_MUST_NOT_BE_NULL = "source must not be null";
+	private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
 
     @Override
     public void register(EObject source, EObject target) {
-        Objects.requireNonNull(source, "source must not be null");
-        Objects.requireNonNull(target, "target must not be null");
+        Objects.requireNonNull(source, SOURCE_MUST_NOT_BE_NULL);
+        Objects.requireNonNull(target, TARGET_MUST_NOT_BE_NULL);
 
         var existing = this.mappings.putIfAbsent(source, target);
         if (existing != null && existing != target) {

@@ -24,29 +24,33 @@ import org.junit.jupiter.api.io.TempDir;
 
 class TransformationCoverageWriterTest {
 
-    @TempDir
-    Path temporaryDirectory;
+	@TempDir
+	Path temporaryDirectory;
 
-    @Test
-    void writesJsonAndMarkdownReports() throws Exception {
-        var ePackage = TestMetamodels.logicalArchitecture();
-        var sourceType = MetaclassId.of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
-        var mapper = new ElementMapper() {
-            @Override
-            public MetaclassId sourceType() {
-                return sourceType;
-            }
+	@Test
+	void writesJsonAndMarkdownReports() throws Exception {
+		var ePackage = TestMetamodels.logicalArchitecture();
+		var sourceType = MetaclassId
+				.of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
+		var mapper = new ElementMapper() {
+			@Override
+			public MetaclassId sourceType() {
+				return sourceType;
+			}
 
-            @Override
-            public MappingCoverage coverage() {
-                return MappingCoverage.mapped("name");
-            }
+			@Override
+			public MappingCoverage coverage() {
+				return MappingCoverage.mapped("name");
+			}
 
-            @Override
-            public void transform(EObject source, TransformationContext context) {
-            }
-        };
-        var report = new TransformationCoverageAnalyzer().analyze(List.of(ePackage), List.of(mapper));
+			@Override
+			public void transform(EObject source,
+					TransformationContext context) {
+				// nothing to do by default
+			}
+		};
+		var report = new TransformationCoverageAnalyzer()
+				.analyze(List.of(ePackage), List.of(mapper));
 
         new TransformationCoverageWriter().write(report, this.temporaryDirectory);
 
