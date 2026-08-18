@@ -38,7 +38,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-loader,cli,picocli</includeArtifactIds>
+                            <includeArtifactIds>capella-loader,cli</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

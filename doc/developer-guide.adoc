@@ -88,7 +88,7 @@ Contains the model loading contracts and secure Capella project archive extracti
 Contains mapper dispatch, transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
 
 `cli`::
-Contains the Picocli command and the runtime-independent transformation service contract.
+Contains the Java command-line entry point and the runtime-independent transformation service contract.
 
 `integration-tests`::
 Contains functional and integration scenarios.
