@@ -78,9 +78,6 @@ mvn --settings .github/maven-settings.xml \
 
 === Regular Maven Modules
 
-`arcadia-library`::
-Discovers and validates Arcadia SysML v2 library resources without transformation semantics.
-
 `capella-loader`::
 Contains the model loading contracts and secure Capella project archive extraction.
 
