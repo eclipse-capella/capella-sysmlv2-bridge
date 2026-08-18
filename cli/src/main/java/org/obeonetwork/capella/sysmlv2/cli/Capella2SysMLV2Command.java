@@ -1,55 +1,67 @@
 package org.obeonetwork.capella.sysmlv2.cli;
 
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
-import picocli.CommandLine.Model.CommandSpec;
+public final class Capella2SysMLV2Command {
 
-@Command(
-        name = "capella2sysmlv2",
-        mixinStandardHelpOptions = true,
-        description = "Transforms a zipped Capella project to a SysML v2 model.")
-public final class Capella2SysMLV2Command implements Callable<Integer> {
+    private static final String USAGE = """
+            Usage: capella2sysmlv2 INPUT_ZIP OUTPUT_DIRECTORY
+            Transforms a zipped Capella project to a SysML v2 model.
+              INPUT_ZIP        Zip archive containing one Capella project
+              OUTPUT_DIRECTORY Transformation output directory
+              -h, --help       Show this help message
+            """;
 
     private final TransformationService transformationService;
-
-    @Parameters(index = "0", paramLabel = "INPUT_ZIP", description = "Zip archive containing one Capella project")
-    private Path inputZip;
-
-    @Parameters(index = "1", paramLabel = "OUTPUT_DIRECTORY", description = "Transformation output directory")
-    private Path outputDirectory;
-
-    @Spec
-    private CommandSpec spec;
 
     public Capella2SysMLV2Command(TransformationService transformationService) {
         this.transformationService = Objects.requireNonNull(transformationService,
                 "transformationService must not be null");
     }
 
-    @Override
-    public Integer call() {
+    public int execute(String[] arguments, PrintWriter out, PrintWriter err) {
         try {
-            var result = transformationService.transform(new TransformationRequest(inputZip, outputDirectory));
-            var out = spec.commandLine().getOut();
-            out.println("Transformation completed");
-            out.println("Source LogicalComponent count: " + result.sourceLogicalComponentCount());
-            out.println("Generated PartUsage count: " + result.generatedPartUsageCount());
-            out.println("Errors: " + result.errorCount());
-            out.println("Capella Transformation Coverage: "
+            return execute(arguments, out::println, err::println);
+        } finally {
+            out.flush();
+            err.flush();
+        }
+    }
+
+    public int execute(String[] arguments, Consumer<String> out, Consumer<String> err) {
+        Objects.requireNonNull(arguments, "arguments must not be null");
+        Objects.requireNonNull(out, "out must not be null");
+        Objects.requireNonNull(err, "err must not be null");
+        if (arguments.length == 1 && ("-h".equals(arguments[0]) || "--help".equals(arguments[0]))) {
+            out.accept(USAGE);
+            return 0;
+        }
+        if (arguments.length != 2) {
+            err.accept("Expected INPUT_ZIP and OUTPUT_DIRECTORY");
+            err.accept(USAGE);
+            return 2;
+        }
+
+        try {
+            var result = transformationService.transform(
+                    new TransformationRequest(Path.of(arguments[0]), Path.of(arguments[1])));
+            out.accept("Transformation completed");
+            out.accept("Source LogicalComponent count: " + result.sourceLogicalComponentCount());
+            out.accept("Generated PartUsage count: " + result.generatedPartUsageCount());
+            out.accept("Errors: " + result.errorCount());
+            out.accept("Capella Transformation Coverage: "
                     + result.mappingCoverage().capellaTransformation().display());
-            out.println("Arcadia SysML v2 Library Utilization: "
+            out.accept("Arcadia SysML v2 Library Utilization: "
                     + result.mappingCoverage().arcadiaUtilization().display());
-            out.println("Arcadia SysML v2 Library Coverage of Capella: "
+            out.accept("Arcadia SysML v2 Library Coverage of Capella: "
                     + result.mappingCoverage().arcadiaCoverageOfCapella().display());
-            out.println("XMI model: " + result.outputModel());
+            out.accept("XMI model: " + result.outputModel());
             return result.errorCount() == 0 ? 0 : 6;
         } catch (TransformationCommandException exception) {
-            spec.commandLine().getErr().println(exception.getMessage());
+            err.accept(exception.getMessage());
             return exception.exitCode();
         }
     }

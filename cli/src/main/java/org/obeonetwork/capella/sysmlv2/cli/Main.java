@@ -1,18 +1,20 @@
 package org.obeonetwork.capella.sysmlv2.cli;
 
-import picocli.CommandLine;
+import java.util.logging.Logger;
 
 public final class Main {
+
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
     private Main() {
     }
 
     public static void main(String[] args) {
-        var commandLine = new CommandLine(new Capella2SysMLV2Command(request -> {
+        var command = new Capella2SysMLV2Command(request -> {
             throw new TransformationCommandException(3,
                     "capella2sysmlv2 must run from the Equinox product", null);
-        }));
-        int exitCode = commandLine.execute(args);
+        });
+        int exitCode = command.execute(args, LOGGER::info, LOGGER::severe);
         System.exit(exitCode);
     }
 }

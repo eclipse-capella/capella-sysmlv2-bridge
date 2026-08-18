@@ -8,8 +8,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,
- target/dependency/cli-0.1.0-SNAPSHOT.jar,
- target/dependency/picocli-4.7.6.jar
+ target/dependency/cli-0.1.0-SNAPSHOT.jar
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.equinox.app,
  org.eclipse.emf.ecore,

@@ -30,7 +30,6 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-        <picocli.version>4.7.6</picocli.version>
         <syson.version>2026.7.0</syson.version>
     </properties>
 
@@ -68,11 +67,6 @@
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>info.picocli</groupId>
-                <artifactId>picocli</artifactId>
-                <version>${picocli.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.obeonetwork.capella.sysmlv2</groupId>
