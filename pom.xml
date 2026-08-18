@@ -14,7 +14,6 @@
 
     <modules>
         <module>test-support</module>
-        <module>arcadia-library</module>
         <module>capella-loader</module>
         <module>capella2sysmlv2-transformer</module>
         <module>cli</module>
