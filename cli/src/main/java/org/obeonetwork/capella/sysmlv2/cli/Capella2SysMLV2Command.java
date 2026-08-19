@@ -36,7 +36,7 @@ public final class Capella2SysMLV2Command {
 
     public int execute(String[] arguments, PrintWriter out, PrintWriter err) {
         try {
-            return execute(arguments, out::println, err::println);
+            return this.execute(arguments, out::println, err::println);
         } finally {
             out.flush();
             err.flush();
@@ -58,7 +58,7 @@ public final class Capella2SysMLV2Command {
         }
 
         try {
-            var result = transformationService.transform(
+            var result = this.transformationService.transform(
                     new TransformationRequest(Path.of(arguments[0]), Path.of(arguments[1])));
             out.accept("Transformation completed");
             out.accept("Source LogicalComponent count: " + result.sourceLogicalComponentCount());

@@ -23,6 +23,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
 public abstract class TypedCapellaMapperAdapter<T extends EObject> implements ElementMapper {
 
     private final MetaclassId sourceType;
+
     private final Class<T> sourceJavaType;
 
     protected TypedCapellaMapperAdapter(EClass sourceType, Class<T> sourceJavaType) {
@@ -40,18 +41,18 @@ public abstract class TypedCapellaMapperAdapter<T extends EObject> implements El
 
     @Override
     public final MetaclassId sourceType() {
-        return sourceType;
+        return this.sourceType;
     }
 
     @Override
     public final void transform(EObject source, TransformationContext context) {
         Objects.requireNonNull(source, "source must not be null");
         Objects.requireNonNull(context, "context must not be null");
-        if (!sourceJavaType.isInstance(source)) {
-            context.diagnostics().error(source, "Expected a Capella " + sourceJavaType.getSimpleName());
+        if (!this.sourceJavaType.isInstance(source)) {
+            context.diagnostics().error(source, "Expected a Capella " + this.sourceJavaType.getSimpleName());
             return;
         }
-        transformTyped(sourceJavaType.cast(source), context);
+        this.transformTyped(this.sourceJavaType.cast(source), context);
     }
 
     protected abstract void transformTyped(T source, TransformationContext context);

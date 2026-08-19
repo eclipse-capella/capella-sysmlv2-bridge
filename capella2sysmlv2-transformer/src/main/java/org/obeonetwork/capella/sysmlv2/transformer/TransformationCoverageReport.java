@@ -28,54 +28,54 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
     }
 
     public long concreteMetaclassCount() {
-        return metaclasses.stream().filter(coverage -> coverage.status() != MappingStatus.ABSTRACT).count();
+        return this.metaclasses.stream().filter(coverage -> coverage.status() != MappingStatus.ABSTRACT).count();
     }
 
     public CoverageMetric metaclassesWithMapperMetric() {
-        return new CoverageMetric(metaclasses.stream()
+        return new CoverageMetric(this.metaclasses.stream()
                 .filter(coverage -> coverage.status() != MappingStatus.ABSTRACT && coverage.mapperClass() != null)
-                .count(), concreteMetaclassCount());
+                .count(), this.concreteMetaclassCount());
     }
 
     public CoverageMetric completeMappersMetric() {
-        return new CoverageMetric(metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.MAPPED)
-                .count(), concreteMetaclassCount());
+        return new CoverageMetric(this.metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.MAPPED)
+                .count(), this.concreteMetaclassCount());
     }
 
     public CoverageMetric mappedFeaturesMetric() {
-        return new CoverageMetric(metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.mappedFeatures().size()).sum(), applicableFeatureCount());
+        return new CoverageMetric(this.metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
+                .mapToLong(coverage -> coverage.mappedFeatures().size()).sum(), this.applicableFeatureCount());
     }
 
     public CoverageMetric addressedFeaturesMetric() {
-        return new CoverageMetric(metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
+        return new CoverageMetric(this.metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
                 .mapToLong(coverage -> coverage.mappedFeatures().size() + coverage.ignoredFeatures().size()).sum(),
-                applicableFeatureCount());
+                this.applicableFeatureCount());
     }
 
     public CoverageMetric confirmedAlignmentMetric() {
-        return new CoverageMetric(alignments.stream().filter(alignment -> alignment.status() == AlignmentStatus.CONFIRMED)
-                .count(), concreteMetaclassCount());
+        return new CoverageMetric(this.alignments.stream().filter(alignment -> alignment.status() == AlignmentStatus.CONFIRMED)
+                .count(), this.concreteMetaclassCount());
     }
 
     public long unassessedAlignmentCount() {
-        return alignments.stream().filter(alignment -> alignment.status() == AlignmentStatus.UNASSESSED).count();
+        return this.alignments.stream().filter(alignment -> alignment.status() == AlignmentStatus.UNASSESSED).count();
     }
 
     public long mappedMetaclassCount() {
-        return metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.MAPPED).count();
+        return this.metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.MAPPED).count();
     }
 
     public long partialMetaclassCount() {
-        return metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.PARTIAL).count();
+        return this.metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.PARTIAL).count();
     }
 
     public long unmappedMetaclassCount() {
-        return metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.UNMAPPED).count();
+        return this.metaclasses.stream().filter(coverage -> coverage.status() == MappingStatus.UNMAPPED).count();
     }
 
     private long applicableFeatureCount() {
-        return metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
+        return this.metaclasses.stream().filter(TransformationCoverageReport::isConcrete)
                 .mapToLong(coverage -> coverage.metaclass().features().size()).sum();
     }
 

@@ -26,11 +26,11 @@ public final class FunctionalTestRunner {
     }
 
     public FunctionalScenario scenario(String name) {
-        var root = resources.existingDirectory("functional/" + name);
+        var root = this.resources.existingDirectory("functional/" + name);
         return new FunctionalScenario(
                 name,
-                resources.existingDirectory("functional/" + name + "/input"),
-                resources.existingDirectory("functional/" + name + "/expected"),
+                this.resources.existingDirectory("functional/" + name + "/input"),
+                this.resources.existingDirectory("functional/" + name + "/expected"),
                 root);
     }
 

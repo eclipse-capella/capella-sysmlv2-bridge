@@ -24,9 +24,11 @@ import org.eclipse.syson.sysml.PartDefinition;
 public final class ArcadiaLibraryResolver implements LibraryResolver {
 
     private static final String ARCADIA_PACKAGE = "Arcadia";
+
     private static final String COMPONENT_DEFINITION = "Component";
 
     private final Collection<? extends EObject> arcadiaLibraryRoots;
+
     private PartDefinition componentDefinition;
 
     public ArcadiaLibraryResolver(Collection<? extends EObject> arcadiaLibraryRoots) {
@@ -36,14 +38,14 @@ public final class ArcadiaLibraryResolver implements LibraryResolver {
 
     @Override
     public PartDefinition getComponentDefinition() {
-        if (componentDefinition == null) {
-            componentDefinition = resolveComponentDefinition();
+        if (this.componentDefinition == null) {
+            this.componentDefinition = this.resolveComponentDefinition();
         }
-        return componentDefinition;
+        return this.componentDefinition;
     }
 
     private PartDefinition resolveComponentDefinition() {
-        var arcadia = findElementNamed(arcadiaLibraryRoots, ARCADIA_PACKAGE);
+        var arcadia = findElementNamed(this.arcadiaLibraryRoots, ARCADIA_PACKAGE);
         if (arcadia == null) {
             throw new IllegalStateException("Unable to resolve Arcadia package while looking for Arcadia::Component");
         }

@@ -23,6 +23,7 @@ import java.util.zip.ZipInputStream;
 public final class CapellaProjectArchiveExtractor {
 
     private static final int MAX_ENTRIES = 10_000;
+
     private static final long MAX_EXTRACTED_BYTES = 2L * 1024 * 1024 * 1024;
 
     public ExtractedCapellaProject extract(Path archive, Path extractionDirectory) {

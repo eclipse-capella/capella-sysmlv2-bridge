@@ -23,7 +23,7 @@ public record CoverageValue(long numerator, long denominator) {
     }
 
     public String display() {
-        double percentage = denominator == 0 ? 0.0 : numerator * 100.0 / denominator;
-        return numerator + "/" + denominator + " (" + String.format(Locale.ROOT, "%.2f%%", percentage) + ")";
+        double percentage = this.denominator == 0 ? 0.0 : this.numerator * 100.0 / this.denominator;
+        return this.numerator + "/" + this.denominator + " (" + String.format(Locale.ROOT, "%.2f%%", percentage) + ")";
     }
 }

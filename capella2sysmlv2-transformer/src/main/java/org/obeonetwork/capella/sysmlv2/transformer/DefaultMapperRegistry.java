@@ -38,6 +38,6 @@ public final class DefaultMapperRegistry implements MapperRegistry {
     @Override
     public Optional<ElementMapper> get(MetaclassId sourceType) {
         Objects.requireNonNull(sourceType, "sourceType must not be null");
-        return Optional.ofNullable(mappers.get(sourceType));
+        return Optional.ofNullable(this.mappers.get(sourceType));
     }
 }

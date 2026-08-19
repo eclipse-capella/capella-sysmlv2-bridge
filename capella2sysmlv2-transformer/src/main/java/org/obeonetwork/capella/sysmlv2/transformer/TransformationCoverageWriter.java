@@ -22,14 +22,15 @@ import java.util.Objects;
 public final class TransformationCoverageWriter {
 
     public static final String JSON_FILE_NAME = "mapping-coverage.json";
+
     public static final String MARKDOWN_FILE_NAME = "mapping-coverage.md";
 
     public void write(TransformationCoverageReport report, Path outputDirectory) throws IOException {
         Objects.requireNonNull(report, "report must not be null");
         Objects.requireNonNull(outputDirectory, "outputDirectory must not be null");
         Files.createDirectories(outputDirectory);
-        Files.writeString(outputDirectory.resolve(JSON_FILE_NAME), toJson(report), StandardCharsets.UTF_8);
-        Files.writeString(outputDirectory.resolve(MARKDOWN_FILE_NAME), toMarkdown(report), StandardCharsets.UTF_8);
+        Files.writeString(outputDirectory.resolve(JSON_FILE_NAME), this.toJson(report), StandardCharsets.UTF_8);
+        Files.writeString(outputDirectory.resolve(MARKDOWN_FILE_NAME), this.toMarkdown(report), StandardCharsets.UTF_8);
     }
 
     String toJson(TransformationCoverageReport report) {
@@ -230,7 +231,8 @@ public final class TransformationCoverageWriter {
         var result = new StringBuilder("[");
         var first = true;
         for (var value : values) {
-            if (!first) result.append(", ");
+            if (!first)
+                result.append(", ");
             result.append('"').append(escapeJson(value)).append('"');
             first = false;
         }
@@ -241,7 +243,8 @@ public final class TransformationCoverageWriter {
         var result = new StringBuilder("{");
         var first = true;
         for (var entry : values.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
-            if (!first) result.append(", ");
+            if (!first)
+                result.append(", ");
             result.append('"').append(escapeJson(entry.getKey())).append("\": \"")
                     .append(escapeJson(entry.getValue())).append('"');
             first = false;
@@ -253,7 +256,8 @@ public final class TransformationCoverageWriter {
         var result = new StringBuilder("[");
         var first = true;
         for (var value : values) {
-            if (!first) result.append(", ");
+            if (!first)
+                result.append(", ");
             result.append("{\"nsURI\": \"").append(escapeJson(value.nsURI()))
                     .append("\", \"className\": \"").append(escapeJson(value.className())).append("\"}");
             first = false;
@@ -265,7 +269,8 @@ public final class TransformationCoverageWriter {
         var result = new StringBuilder("[");
         var first = true;
         for (var feature : features) {
-            if (!first) result.append(", ");
+            if (!first)
+                result.append(", ");
             result.append("{\"name\": \"").append(escapeJson(feature.name()))
                     .append("\", \"declaringType\": {\"nsURI\": \"")
                     .append(escapeJson(feature.declaringType().nsURI())).append("\", \"className\": \"")

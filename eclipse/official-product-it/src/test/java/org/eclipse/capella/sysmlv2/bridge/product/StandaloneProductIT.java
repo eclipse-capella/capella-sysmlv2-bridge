@@ -28,16 +28,16 @@ class StandaloneProductIT {
 
     @Test
     void transformsIfeArchiveHeadlessly() throws Exception {
-        Path product = Path.of(System.getProperty("bridge.product.directory")).toAbsolutePath();
-        Path executable = product.resolve("capella2sysmlv2");
+        var product = Path.of(System.getProperty("bridge.product.directory")).toAbsolutePath();
+        var executable = product.resolve("capella2sysmlv2");
         assertTrue(executable.toFile().setExecutable(true) || Files.isExecutable(executable),
                 "Cannot make standalone launcher executable: " + executable);
 
-        Path sampleProject = Path.of(System.getProperty("capella.ife.project")).toAbsolutePath();
-        Path outputRoot = Path.of(System.getProperty("runtime.test.output")).toAbsolutePath().resolve("standalone");
+        var sampleProject = Path.of(System.getProperty("capella.ife.project")).toAbsolutePath();
+        var outputRoot = Path.of(System.getProperty("runtime.test.output")).toAbsolutePath().resolve("standalone");
         Files.createDirectories(outputRoot);
-        Path sampleArchive = outputRoot.resolve("ife.zip");
-        Path applicationOutput = outputRoot.resolve("application-output");
+        var sampleArchive = outputRoot.resolve("ife.zip");
+        var applicationOutput = outputRoot.resolve("application-output");
         zipProject(sampleProject, sampleArchive);
 
         var execution = run(outputRoot.resolve("application.log"), List.of(

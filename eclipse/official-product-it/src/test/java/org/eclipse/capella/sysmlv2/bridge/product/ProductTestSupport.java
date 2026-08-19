@@ -29,6 +29,7 @@ import java.util.zip.ZipOutputStream;
 final class ProductTestSupport {
 
     private static final Duration PROCESS_TIMEOUT = Duration.ofMinutes(8);
+
     private ProductTestSupport() {
     }
 

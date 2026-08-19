@@ -96,8 +96,8 @@ public final class MapperSkeletonGenerator {
                     }
                 }
                 """.formatted(packageName, sourceJavaType, mapperName, sourceSimpleName, mapperName,
-                        javaString(sourceType.getEPackage().getNsURI()), javaString(sourceType.getName()),
-                        sourceSimpleName, sourceSimpleName, mapperName);
+                javaString(sourceType.getEPackage().getNsURI()), javaString(sourceType.getName()),
+                sourceSimpleName, sourceSimpleName, mapperName);
         Files.writeString(generatedFile, source, StandardCharsets.UTF_8);
         return generatedFile;
     }

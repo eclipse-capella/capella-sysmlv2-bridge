@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 public final class DirectoryComparison {
 
     private final Path expectedDirectory;
+
     private final Path actualDirectory;
 
     public DirectoryComparison(Path expectedDirectory, Path actualDirectory) {
@@ -36,17 +37,17 @@ public final class DirectoryComparison {
 
     public List<String> differences() {
         var differences = new ArrayList<String>();
-        if (!Files.isDirectory(expectedDirectory)) {
-            differences.add("Expected directory does not exist: " + expectedDirectory);
+        if (!Files.isDirectory(this.expectedDirectory)) {
+            differences.add("Expected directory does not exist: " + this.expectedDirectory);
             return differences;
         }
-        if (!Files.isDirectory(actualDirectory)) {
-            differences.add("Actual directory does not exist: " + actualDirectory);
+        if (!Files.isDirectory(this.actualDirectory)) {
+            differences.add("Actual directory does not exist: " + this.actualDirectory);
             return differences;
         }
 
-        Set<Path> expectedFiles = relativeFiles(expectedDirectory);
-        Set<Path> actualFiles = relativeFiles(actualDirectory);
+        Set<Path> expectedFiles = this.relativeFiles(this.expectedDirectory);
+        Set<Path> actualFiles = this.relativeFiles(this.actualDirectory);
 
         expectedFiles.stream()
                 .filter(file -> !actualFiles.contains(file))
@@ -64,7 +65,7 @@ public final class DirectoryComparison {
 
     private Set<Path> relativeFiles(Path directory) {
         try (Stream<Path> stream = Files.walk(directory)) {
-            var files = new TreeSet<Path>(Comparator.comparing(Path::toString));
+            var files = new TreeSet<>(Comparator.comparing(Path::toString));
             stream.filter(Files::isRegularFile)
                     .map(directory::relativize)
                     .forEach(files::add);
@@ -75,8 +76,8 @@ public final class DirectoryComparison {
     }
 
     private boolean contentDiffers(Path relativeFile) {
-        return !normalizedContent(expectedDirectory.resolve(relativeFile))
-                .equals(normalizedContent(actualDirectory.resolve(relativeFile)));
+        return !normalizedContent(this.expectedDirectory.resolve(relativeFile))
+                .equals(normalizedContent(this.actualDirectory.resolve(relativeFile)));
     }
 
     static String normalizedContent(Path file) {

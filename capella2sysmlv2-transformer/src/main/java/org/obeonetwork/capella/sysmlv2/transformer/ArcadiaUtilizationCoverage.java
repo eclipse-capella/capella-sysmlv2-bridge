@@ -27,22 +27,22 @@ public record ArcadiaUtilizationCoverage(List<ArcadiaElementCoverage> concepts,
     }
 
     public CoverageMetric overallMetric() {
-        return new CoverageMetric(usedConceptCount() + usedFeatureCount(), concepts.size() + features.size());
+        return new CoverageMetric(this.usedConceptCount() + this.usedFeatureCount(), this.concepts.size() + this.features.size());
     }
 
     public CoverageMetric conceptMetric() {
-        return new CoverageMetric(usedConceptCount(), concepts.size());
+        return new CoverageMetric(this.usedConceptCount(), this.concepts.size());
     }
 
     public CoverageMetric featureMetric() {
-        return new CoverageMetric(usedFeatureCount(), features.size());
+        return new CoverageMetric(this.usedFeatureCount(), this.features.size());
     }
 
     private long usedConceptCount() {
-        return concepts.stream().filter(ArcadiaElementCoverage::used).count();
+        return this.concepts.stream().filter(ArcadiaElementCoverage::used).count();
     }
 
     private long usedFeatureCount() {
-        return features.stream().filter(ArcadiaElementCoverage::used).count();
+        return this.features.stream().filter(ArcadiaElementCoverage::used).count();
     }
 }

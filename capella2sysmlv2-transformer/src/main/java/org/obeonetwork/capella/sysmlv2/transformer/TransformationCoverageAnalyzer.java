@@ -26,6 +26,7 @@ import org.eclipse.emf.ecore.EPackage;
 public final class TransformationCoverageAnalyzer {
 
     private final CapellaMetamodelInventory metamodelInventory;
+
     private final ArcadiaLibraryInventory arcadiaLibraryInventory;
 
     public TransformationCoverageAnalyzer() {
@@ -46,7 +47,7 @@ public final class TransformationCoverageAnalyzer {
     public TransformationCoverageReport analyze(Collection<? extends EPackage> packages,
             Collection<? extends ElementMapper> mappers) {
         Objects.requireNonNull(mappers, "mappers must not be null");
-        var metaclasses = metamodelInventory.inspect(packages);
+        var metaclasses = this.metamodelInventory.inspect(packages);
         var metaclassesById = new LinkedHashMap<MetaclassId, MetaclassDescriptor>();
         for (var metaclass : metaclasses) {
             if (metaclassesById.putIfAbsent(metaclass.id(), metaclass) != null) {
@@ -73,8 +74,8 @@ public final class TransformationCoverageAnalyzer {
             Collection<MetaclassAlignment> alignmentCatalog) {
         Objects.requireNonNull(arcadiaLibraryRoots, "arcadiaLibraryRoots must not be null");
         Objects.requireNonNull(alignmentCatalog, "alignmentCatalog must not be null");
-        var capellaReport = analyze(packages, mappers);
-        var utilization = analyzeArcadiaUtilization(arcadiaLibraryInventory.inspect(arcadiaLibraryRoots), mappers);
+        var capellaReport = this.analyze(packages, mappers);
+        var utilization = analyzeArcadiaUtilization(this.arcadiaLibraryInventory.inspect(arcadiaLibraryRoots), mappers);
         var alignments = expandAlignments(capellaReport.metaclasses(), alignmentCatalog);
         return new TransformationCoverageReport(capellaReport.packageCount(), capellaReport.metaclasses(), utilization,
                 alignments);
@@ -131,11 +132,15 @@ public final class TransformationCoverageAnalyzer {
         validateArcadiaReferences("concept", usedConcepts, conceptsByName.keySet());
         validateArcadiaReferences("feature", usedFeatures, featuresByName.keySet());
         var concepts = conceptsByName.values().stream().sorted(java.util.Comparator.comparing(
-                ArcadiaElementDescriptor::qualifiedName)).map(element -> new ArcadiaElementCoverage(element,
-                        usedConcepts.contains(element.qualifiedName()))).toList();
+                ArcadiaElementDescriptor::qualifiedName)).map(
+                        element -> new ArcadiaElementCoverage(element,
+                                usedConcepts.contains(element.qualifiedName())))
+                .toList();
         var features = featuresByName.values().stream().sorted(java.util.Comparator.comparing(
-                ArcadiaElementDescriptor::qualifiedName)).map(element -> new ArcadiaElementCoverage(element,
-                        usedFeatures.contains(element.qualifiedName()))).toList();
+                ArcadiaElementDescriptor::qualifiedName)).map(
+                        element -> new ArcadiaElementCoverage(element,
+                                usedFeatures.contains(element.qualifiedName())))
+                .toList();
         long references = usedConcepts.size() + usedFeatures.size();
         return new ArcadiaUtilizationCoverage(concepts, features, references, references);
     }

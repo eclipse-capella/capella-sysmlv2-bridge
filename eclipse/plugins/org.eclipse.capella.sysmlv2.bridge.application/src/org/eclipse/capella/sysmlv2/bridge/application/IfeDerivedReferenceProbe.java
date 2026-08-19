@@ -24,6 +24,7 @@ import org.polarsys.capella.core.data.la.LogicalComponent;
 final class IfeDerivedReferenceProbe {
 
     private static final String COMPONENT_ID = "724d6db9-9175-450b-8f05-023fcffec79c";
+
     private static final String PART_ID = "ce1400b3-f97e-4c62-8187-562b72134923";
 
     Optional<Result> evaluate(LoadedCapellaResource model) {
@@ -73,9 +74,9 @@ final class IfeDerivedReferenceProbe {
             String crossReferencerClass) {
 
         String report() {
-            return "IFE derived reference: Part[" + partId + "] -> LogicalComponent[" + componentId
-                    + "]; inverse references: " + inverseReferenceCount + "; editing domain: " + editingDomainClass
-                    + "; cross-referencer: " + crossReferencerClass;
+            return "IFE derived reference: Part[" + this.partId + "] -> LogicalComponent[" + this.componentId
+                    + "]; inverse references: " + this.inverseReferenceCount + "; editing domain: " + this.editingDomainClass
+                    + "; cross-referencer: " + this.crossReferencerClass;
         }
     }
 }

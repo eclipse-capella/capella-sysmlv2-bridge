@@ -30,9 +30,9 @@ public record ExtractedCapellaProject(Path extractionDirectory, Path projectDire
     @Override
     public void close() {
         try {
-            deleteRecursively(extractionDirectory);
+            deleteRecursively(this.extractionDirectory);
         } catch (IOException exception) {
-            throw new IllegalStateException("Cannot delete extracted Capella project: " + extractionDirectory,
+            throw new IllegalStateException("Cannot delete extracted Capella project: " + this.extractionDirectory,
                     exception);
         }
     }

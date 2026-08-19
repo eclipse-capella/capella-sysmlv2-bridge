@@ -48,16 +48,16 @@ class TransformationCoverageWriterTest {
         };
         var report = new TransformationCoverageAnalyzer().analyze(List.of(ePackage), List.of(mapper));
 
-        new TransformationCoverageWriter().write(report, temporaryDirectory);
+        new TransformationCoverageWriter().write(report, this.temporaryDirectory);
 
-        assertThat(Files.readString(temporaryDirectory.resolve("mapping-coverage.json")))
+        assertThat(Files.readString(this.temporaryDirectory.resolve("mapping-coverage.json")))
                 .contains("\"label\": \"Capella Transformation Coverage\"")
                 .contains("\"concreteMetaclasses\": 2")
                 .contains("\"className\": \"LogicalComponent\"")
                 .contains("\"name\": \"ownedLogicalComponents\"")
                 .contains("\"containment\": true")
                 .contains("\"status\": \"PARTIAL\"");
-        assertThat(Files.readString(temporaryDirectory.resolve("mapping-coverage.md")))
+        assertThat(Files.readString(this.temporaryDirectory.resolve("mapping-coverage.md")))
                 .contains("## Capella Transformation Coverage")
                 .contains("## Arcadia SysML v2 Library Utilization")
                 .contains("## Arcadia SysML v2 Library Coverage of Capella")

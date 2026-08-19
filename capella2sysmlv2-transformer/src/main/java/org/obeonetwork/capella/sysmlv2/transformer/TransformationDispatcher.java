@@ -26,7 +26,7 @@ public final class TransformationDispatcher {
 
     public boolean supports(EObject source) {
         Objects.requireNonNull(source, "source must not be null");
-        return mapperRegistry.get(MetaclassId.of(source.eClass())).isPresent();
+        return this.mapperRegistry.get(MetaclassId.of(source.eClass())).isPresent();
     }
 
     public void dispatch(EObject source, TransformationContext context) {
@@ -34,7 +34,7 @@ public final class TransformationDispatcher {
         Objects.requireNonNull(context, "context must not be null");
 
         var sourceType = MetaclassId.of(source.eClass());
-        mapperRegistry.get(sourceType).ifPresentOrElse(
+        this.mapperRegistry.get(sourceType).ifPresentOrElse(
                 mapper -> mapper.transform(source, context),
                 () -> context.diagnostics().warning(source,
                         "No mapper registered for " + sourceType));

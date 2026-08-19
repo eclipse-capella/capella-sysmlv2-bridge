@@ -23,9 +23,9 @@ import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoade
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.PartUsage;
-import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
 import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
+import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationService;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
@@ -34,11 +34,11 @@ import org.obeonetwork.capella.sysmlv2.loader.ExtractedCapellaProject;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
 import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageWriter;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageAnalyzer;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageWriter;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
 public final class EquinoxTransformationService implements TransformationService {

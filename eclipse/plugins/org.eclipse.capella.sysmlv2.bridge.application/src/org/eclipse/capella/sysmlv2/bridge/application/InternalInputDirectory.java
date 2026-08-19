@@ -20,6 +20,7 @@ import java.util.Comparator;
 final class InternalInputDirectory {
 
     private static final String INTERNAL_DIRECTORY = ".capella2sysmlv2";
+
     private static final String OWNERSHIP_MARKER = ".managed-by-capella2sysmlv2";
 
     private InternalInputDirectory() {

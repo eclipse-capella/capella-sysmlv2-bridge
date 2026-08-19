@@ -37,7 +37,7 @@ public final class LogicalComponentMapper extends TypedCapellaMapperAdapter<Logi
 
     @Override
     protected void transformTyped(LogicalComponent source, TransformationContext context) {
-        String name = source.getName();
+        var name = source.getName();
         if (name == null || name.isBlank()) {
             context.diagnostics().error(source, "LogicalComponent.name must be a non-blank string");
             return;

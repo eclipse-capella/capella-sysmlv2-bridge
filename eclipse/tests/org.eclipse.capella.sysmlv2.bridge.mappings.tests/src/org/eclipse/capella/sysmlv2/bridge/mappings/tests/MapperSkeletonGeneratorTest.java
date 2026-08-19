@@ -28,6 +28,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperSkeletonGenerator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
 
 class MapperSkeletonGeneratorTest {
 
@@ -37,9 +38,9 @@ class MapperSkeletonGeneratorTest {
 
     @Test
     void generatesCandidateSourcesForEveryUnimplementedConcreteMetaclass() throws Exception {
-        Path outputDirectory = Path.of(System.getProperty("mapper.skeleton.output"));
+        var outputDirectory = Path.of(System.getProperty("mapper.skeleton.output"));
         var packages = capellaPackages();
-        var implementedTypes = CapellaMapperCatalog.createMappers().stream().map(mapper -> mapper.sourceType()).toList();
+        var implementedTypes = CapellaMapperCatalog.createMappers().stream().map(ElementMapper::sourceType).toList();
 
         var result = new MapperSkeletonGenerator().generate(packages, implementedTypes, outputDirectory);
 
@@ -47,14 +48,14 @@ class MapperSkeletonGeneratorTest {
         assertEquals(251, result.generatedFiles().size());
         assertFalse(Files.exists(outputDirectory.resolve(
                 "org/eclipse/capella/sysmlv2/bridge/mappings/candidates/la/LogicalComponentMapper.java")));
-        Path physicalComponentMapper = outputDirectory.resolve(
+        var physicalComponentMapper = outputDirectory.resolve(
                 "org/eclipse/capella/sysmlv2/bridge/mappings/candidates/pa/PhysicalComponentMapper.java");
         assertTrue(Files.isRegularFile(physicalComponentMapper));
-        String source = Files.readString(physicalComponentMapper, StandardCharsets.UTF_8);
+        var source = Files.readString(physicalComponentMapper, StandardCharsets.UTF_8);
         assertTrue(source.contains("extends TypedCapellaMapperAdapter<PhysicalComponent>"), source);
         assertTrue(source.contains("super(\"http://www.polarsys.org/capella/core/pa/7.0.0\", "
                 + "\"PhysicalComponent\", PhysicalComponent.class);"), source);
-        String index = Files.readString(result.index(), StandardCharsets.UTF_8);
+        var index = Files.readString(result.index(), StandardCharsets.UTF_8);
         assertTrue(index.startsWith("Concrete Capella metaclasses: 252\nGenerated mapper skeletons: 251\n"), index);
     }
 
@@ -62,7 +63,7 @@ class MapperSkeletonGeneratorTest {
         var registry = Platform.getExtensionRegistry();
         var uris = new LinkedHashSet<String>();
         for (var element : registry.getConfigurationElementsFor("org.eclipse.emf.ecore.generated_package")) {
-            String uri = element.getAttribute("uri");
+            var uri = element.getAttribute("uri");
             if (uri != null && CAPELLA_URI_PREFIXES.stream().anyMatch(uri::startsWith)) {
                 uris.add(uri);
             }

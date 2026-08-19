@@ -33,8 +33,8 @@ public final class TemporarySysMLXmiExporter {
         Objects.requireNonNull(resourceSet, "resourceSet must not be null");
         Objects.requireNonNull(outputFile, "outputFile must not be null");
 
-        Path normalizedOutput = outputFile.toAbsolutePath().normalize();
-        Path temporaryOutput = normalizedOutput.resolveSibling(normalizedOutput.getFileName() + ".tmp");
+        var normalizedOutput = outputFile.toAbsolutePath().normalize();
+        var temporaryOutput = normalizedOutput.resolveSibling(normalizedOutput.getFileName() + ".tmp");
         var outputUri = URI.createFileURI(normalizedOutput.toString());
         var resource = new XMIResourceImpl(outputUri);
         resourceSet.getResources().add(resource);

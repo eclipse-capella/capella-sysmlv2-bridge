@@ -31,7 +31,6 @@ class ModelLoadResultTest {
 
     @Test
     void rejectsAbsoluteModelPath() {
-        assertThatIllegalArgumentException().isThrownBy(() ->
-                new ModelLoadRequest(Path.of("project"), Path.of("/tmp/model.capella")));
+        assertThatIllegalArgumentException().isThrownBy(() -> new ModelLoadRequest(Path.of("project"), Path.of("/tmp/model.capella")));
     }
 }
