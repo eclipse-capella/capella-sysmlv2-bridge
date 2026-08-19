@@ -118,7 +118,7 @@ public final class EquinoxTransformationService implements TransformationService
             InternalInputDirectory.resetInternalDirectory(extractionDirectory);
             return new CapellaProjectArchiveExtractor().extract(normalizedInputZip, extractionDirectory);
         } catch (IOException | RuntimeException exception) {
-            throw new TransformationCommandException(2,
+            throw new TransformationCommandException(3,
                     "Cannot prepare Capella project: " + exception.getMessage(), exception);
         }
     }
