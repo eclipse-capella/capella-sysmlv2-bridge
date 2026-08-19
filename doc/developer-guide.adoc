@@ -398,3 +398,7 @@ Contributions must not:
 * let mappers load the Arcadia library directly;
 * place transformation semantics in the dispatcher, loader, or CLI;
 * keep mutable execution state in mapper instances.
+
+Contributions must:
+
+* follow the coding guidelines available in releng/resources
