@@ -31,17 +31,17 @@ public final class HeadlessSemanticEditingDomainProviders implements ISemanticEd
         factory.addAdapterFactory(new ReflectiveItemProviderAdapterFactory());
         return factory;
     };
-    private final ICrossReferencerProvider crossReferencerProvider = editingDomain ->
-            new SiriusCrossReferenceAdapter();
+
+    private final ICrossReferencerProvider crossReferencerProvider = editingDomain -> new SiriusCrossReferenceAdapter();
 
     @Override
     public IAdapterFactoryProvider getAdapterFactoryProvider() {
-        return adapterFactoryProvider;
+        return this.adapterFactoryProvider;
     }
 
     @Override
     public ICrossReferencerProvider getCrossReferencerProvider() {
-        return crossReferencerProvider;
+        return this.crossReferencerProvider;
     }
 
     @Override

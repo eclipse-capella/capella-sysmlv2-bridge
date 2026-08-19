@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.MetaclassAlignment;
 import org.polarsys.capella.core.data.ctx.Capability;

@@ -12,8 +12,8 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import java.util.Objects;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public record MappingCoverage(Set<String> mappedFeatures, Set<String> ignoredFeatures,
@@ -48,21 +48,21 @@ public record MappingCoverage(Set<String> mappedFeatures, Set<String> ignoredFea
     }
 
     public MappingCoverage mappingTo(String sourceFeature, String targetFeature) {
-        var targets = new java.util.LinkedHashMap<>(featureTargets);
+        var targets = new java.util.LinkedHashMap<>(this.featureTargets);
         targets.put(sourceFeature, targetFeature);
-        return new MappingCoverage(mappedFeatures, ignoredFeatures, targets, usedArcadiaConcepts, usedArcadiaFeatures);
+        return new MappingCoverage(this.mappedFeatures, this.ignoredFeatures, targets, this.usedArcadiaConcepts, this.usedArcadiaFeatures);
     }
 
     public MappingCoverage usingArcadiaConcepts(String... qualifiedNames) {
-        var concepts = new java.util.LinkedHashSet<>(usedArcadiaConcepts);
+        var concepts = new java.util.LinkedHashSet<>(this.usedArcadiaConcepts);
         concepts.addAll(Set.of(qualifiedNames));
-        return new MappingCoverage(mappedFeatures, ignoredFeatures, featureTargets, concepts,
-                usedArcadiaFeatures);
+        return new MappingCoverage(this.mappedFeatures, this.ignoredFeatures, this.featureTargets, concepts,
+                this.usedArcadiaFeatures);
     }
 
     public MappingCoverage usingArcadiaFeatures(String... qualifiedNames) {
-        var features = new java.util.LinkedHashSet<>(usedArcadiaFeatures);
+        var features = new java.util.LinkedHashSet<>(this.usedArcadiaFeatures);
         features.addAll(Set.of(qualifiedNames));
-        return new MappingCoverage(mappedFeatures, ignoredFeatures, featureTargets, usedArcadiaConcepts, features);
+        return new MappingCoverage(this.mappedFeatures, this.ignoredFeatures, this.featureTargets, this.usedArcadiaConcepts, features);
     }
 }

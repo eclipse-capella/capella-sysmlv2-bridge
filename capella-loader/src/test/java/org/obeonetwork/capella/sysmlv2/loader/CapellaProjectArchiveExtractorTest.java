@@ -32,10 +32,10 @@ class CapellaProjectArchiveExtractorTest {
 
     @Test
     void extractsAndDiscoversOneCapellaProject() throws IOException {
-        Path archive = zip("project.zip", Map.of(
+        Path archive = this.zip("project.zip", Map.of(
                 "IFE/.project", "<projectDescription/>",
                 "IFE/model/IFE.capella", "model"));
-        Path extractionDirectory = temporaryDirectory.resolve("extracted");
+        Path extractionDirectory = this.temporaryDirectory.resolve("extracted");
 
         try (var project = new CapellaProjectArchiveExtractor().extract(archive, extractionDirectory)) {
             assertThat(project.projectDirectory()).isEqualTo(extractionDirectory.toAbsolutePath().resolve("IFE"));
@@ -48,42 +48,42 @@ class CapellaProjectArchiveExtractorTest {
 
     @Test
     void rejectsEntriesOutsideTheExtractionDirectory() throws IOException {
-        Path archive = zip("project.zip", Map.of("../outside/.project", "invalid"));
+        Path archive = this.zip("project.zip", Map.of("../outside/.project", "invalid"));
 
         assertThatIllegalArgumentException().isThrownBy(() -> new CapellaProjectArchiveExtractor()
-                .extract(archive, temporaryDirectory.resolve("extracted")))
+                .extract(archive, this.temporaryDirectory.resolve("extracted")))
                 .withMessageContaining("escapes the extraction directory");
     }
 
     @Test
     void rejectsAnArchiveContainingMultipleModels() throws IOException {
-        Path archive = zip("project.zip", Map.of(
+        Path archive = this.zip("project.zip", Map.of(
                 "IFE/.project", "<projectDescription/>",
                 "IFE/first.capella", "first",
                 "IFE/second.capella", "second"));
 
         assertThatIllegalArgumentException().isThrownBy(() -> new CapellaProjectArchiveExtractor()
-                .extract(archive, temporaryDirectory.resolve("extracted")))
+                .extract(archive, this.temporaryDirectory.resolve("extracted")))
                 .withMessageContaining("Multiple capella model files");
     }
 
     @Test
     void rejectsAnArchiveContainingMultipleProjects() throws IOException {
-        Path archive = zip("project.zip", Map.of(
+        Path archive = this.zip("project.zip", Map.of(
                 "first/.project", "<projectDescription/>",
                 "first/first.capella", "first",
                 "second/.project", "<projectDescription/>",
                 "second/second.capella", "second"));
 
         assertThatIllegalArgumentException().isThrownBy(() -> new CapellaProjectArchiveExtractor()
-                .extract(archive, temporaryDirectory.resolve("extracted")))
+                .extract(archive, this.temporaryDirectory.resolve("extracted")))
                 .withMessageContaining("Multiple capella project description files");
     }
 
     @Test
     void preservesARejectedNonEmptyExtractionDirectory() throws IOException {
-        Path archive = zip("project.zip", Map.of("IFE/.project", "<projectDescription/>"));
-        Path extractionDirectory = temporaryDirectory.resolve("extracted");
+        Path archive = this.zip("project.zip", Map.of("IFE/.project", "<projectDescription/>"));
+        Path extractionDirectory = this.temporaryDirectory.resolve("extracted");
         Files.createDirectories(extractionDirectory);
         Path existingFile = Files.writeString(extractionDirectory.resolve("existing.txt"), "keep");
 
@@ -95,9 +95,9 @@ class CapellaProjectArchiveExtractorTest {
 
     @Test
     void rejectsASymbolicLinkInTheExtractionPath() throws IOException {
-        Path archive = zip("project.zip", Map.of("IFE/.project", "<projectDescription/>"));
-        Path actualDirectory = Files.createDirectory(temporaryDirectory.resolve("actual"));
-        Path symbolicLink = temporaryDirectory.resolve("link");
+        Path archive = this.zip("project.zip", Map.of("IFE/.project", "<projectDescription/>"));
+        Path actualDirectory = Files.createDirectory(this.temporaryDirectory.resolve("actual"));
+        Path symbolicLink = this.temporaryDirectory.resolve("link");
         Files.createSymbolicLink(symbolicLink, actualDirectory);
 
         assertThatIllegalArgumentException().isThrownBy(() -> new CapellaProjectArchiveExtractor()
@@ -106,7 +106,7 @@ class CapellaProjectArchiveExtractorTest {
     }
 
     private Path zip(String fileName, Map<String, String> entries) throws IOException {
-        Path archive = temporaryDirectory.resolve(fileName);
+        Path archive = this.temporaryDirectory.resolve(fileName);
         try (var output = new ZipOutputStream(Files.newOutputStream(archive))) {
             for (var entry : entries.entrySet()) {
                 output.putNextEntry(new ZipEntry(entry.getKey()));

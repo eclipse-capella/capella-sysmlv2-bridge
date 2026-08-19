@@ -33,7 +33,7 @@ public final class ArcadiaLibraryInventory {
 
     public List<ArcadiaElementDescriptor> inspect(Collection<? extends EObject> roots) {
         Objects.requireNonNull(roots, "roots must not be null");
-        LibraryPackage arcadia = roots.stream()
+        var arcadia = roots.stream()
                 .flatMap(root -> allContents(root).stream())
                 .filter(LibraryPackage.class::isInstance)
                 .map(LibraryPackage.class::cast)
@@ -57,15 +57,15 @@ public final class ArcadiaLibraryInventory {
                     || membership.getVisibility() != VisibilityKind.PUBLIC) {
                 continue;
             }
-            Element member = membership.getOwnedMemberElement();
+            var member = membership.getOwnedMemberElement();
             if (member == null || !byIdentity.add(member)) {
                 continue;
             }
-            String qualifiedName = member.getQualifiedName();
-            String declaredName = member.getDeclaredName();
+            var qualifiedName = member.getQualifiedName();
+            var declaredName = member.getDeclaredName();
             if (declaredName != null && !declaredName.isBlank()
                     && qualifiedName != null && !qualifiedName.isBlank()) {
-                ArcadiaElementKind kind = member instanceof Definition ? ArcadiaElementKind.CONCEPT
+                var kind = member instanceof Definition ? ArcadiaElementKind.CONCEPT
                         : member instanceof Feature ? ArcadiaElementKind.FEATURE : null;
                 if (kind != null) {
                     var descriptor = new ArcadiaElementDescriptor(qualifiedName, nullToEmpty(member.getElementId()),

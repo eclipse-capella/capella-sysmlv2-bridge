@@ -29,16 +29,16 @@ class GoldenFileAssertionsTest {
 
     @Test
     void comparesFilesWithNormalizedLineEndings() throws IOException {
-        var expected = Files.writeString(temporaryDirectory.resolve("expected.sysml"), "part def A {\n}\n");
-        var actual = Files.writeString(temporaryDirectory.resolve("actual.sysml"), "part def A {\r\n}\r\n");
+        var expected = Files.writeString(this.temporaryDirectory.resolve("expected.sysml"), "part def A {\n}\n");
+        var actual = Files.writeString(this.temporaryDirectory.resolve("actual.sysml"), "part def A {\r\n}\r\n");
 
         GoldenFileAssertions.assertFileMatches(expected, actual);
     }
 
     @Test
     void detectsMissingFiles() throws IOException {
-        var expected = Files.createDirectories(temporaryDirectory.resolve("expected"));
-        var actual = Files.createDirectories(temporaryDirectory.resolve("actual"));
+        var expected = Files.createDirectories(this.temporaryDirectory.resolve("expected"));
+        var actual = Files.createDirectories(this.temporaryDirectory.resolve("actual"));
         Files.writeString(expected.resolve("model.sysml"), "part def A;\n");
 
         var differences = new DirectoryComparison(expected, actual).differences();
@@ -48,8 +48,8 @@ class GoldenFileAssertionsTest {
 
     @Test
     void detectsUnexpectedFiles() throws IOException {
-        var expected = Files.createDirectories(temporaryDirectory.resolve("expected"));
-        var actual = Files.createDirectories(temporaryDirectory.resolve("actual"));
+        var expected = Files.createDirectories(this.temporaryDirectory.resolve("expected"));
+        var actual = Files.createDirectories(this.temporaryDirectory.resolve("actual"));
         Files.writeString(actual.resolve("extra.sysml"), "part def Extra;\n");
 
         var differences = new DirectoryComparison(expected, actual).differences();
@@ -59,8 +59,8 @@ class GoldenFileAssertionsTest {
 
     @Test
     void comparesRecursiveDirectories() throws IOException {
-        var expected = Files.createDirectories(temporaryDirectory.resolve("expected"));
-        var actual = Files.createDirectories(temporaryDirectory.resolve("actual"));
+        var expected = Files.createDirectories(this.temporaryDirectory.resolve("expected"));
+        var actual = Files.createDirectories(this.temporaryDirectory.resolve("actual"));
         Files.createDirectories(expected.resolve("nested"));
         Files.createDirectories(actual.resolve("nested"));
         Files.writeString(expected.resolve("model.sysml"), "part def A;\n");
@@ -73,8 +73,8 @@ class GoldenFileAssertionsTest {
 
     @Test
     void reportsDirectoryDifferencesInAssertionMessage() throws IOException {
-        var expected = Files.createDirectories(temporaryDirectory.resolve("expected"));
-        var actual = Files.createDirectories(temporaryDirectory.resolve("actual"));
+        var expected = Files.createDirectories(this.temporaryDirectory.resolve("expected"));
+        var actual = Files.createDirectories(this.temporaryDirectory.resolve("actual"));
         Files.writeString(expected.resolve("model.sysml"), "part def A;\n");
         Files.writeString(actual.resolve("model.sysml"), "part def B;\n");
 

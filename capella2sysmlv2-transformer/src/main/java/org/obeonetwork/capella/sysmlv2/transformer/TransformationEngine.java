@@ -19,7 +19,9 @@ import org.eclipse.emf.ecore.EObject;
 public final class TransformationEngine implements CapellaToSysMLTransformer {
 
     private final TransformationDispatcher dispatcher;
+
     private final LibraryResolver libraryResolver;
+
     private final DefaultArcadiaModelStructureBuilder modelStructureBuilder;
 
     public TransformationEngine(TransformationDispatcher dispatcher, LibraryResolver libraryResolver) {
@@ -38,26 +40,26 @@ public final class TransformationEngine implements CapellaToSysMLTransformer {
     public TransformationResult transform(EObject capellaRoot, TransformationOptions options) {
         Objects.requireNonNull(capellaRoot, "capellaRoot must not be null");
         var sources = new java.util.ArrayList<EObject>();
-        if (dispatcher.supports(capellaRoot)) {
+        if (this.dispatcher.supports(capellaRoot)) {
             sources.add(capellaRoot);
         }
         capellaRoot.eAllContents().forEachRemaining(source -> {
-            if (dispatcher.supports(source)) {
+            if (this.dispatcher.supports(source)) {
                 sources.add(source);
             }
         });
-        return transformAll(sources, options);
+        return this.transformAll(sources, options);
     }
 
     public TransformationResult transformAll(Iterable<? extends EObject> sources, TransformationOptions options) {
         Objects.requireNonNull(sources, "sources must not be null");
         Objects.requireNonNull(options, "options must not be null");
 
-        var modelStructure = modelStructureBuilder.build(options, libraryResolver);
-        var context = new DefaultTransformationContext(options, libraryResolver, modelStructure);
+        var modelStructure = this.modelStructureBuilder.build(options, this.libraryResolver);
+        var context = new DefaultTransformationContext(options, this.libraryResolver, modelStructure);
         modelStructure.generatedElements().forEach(context::registerGenerated);
         for (EObject source : sources) {
-            dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
+            this.dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
         }
         context.deferredReferenceResolver().resolveAll();
         return new TransformationResult(modelStructure.root(), context.generatedElements(), context.diagnostics().all(),

@@ -12,9 +12,9 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;

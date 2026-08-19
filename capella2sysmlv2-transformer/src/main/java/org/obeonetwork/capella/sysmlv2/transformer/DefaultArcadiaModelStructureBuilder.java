@@ -17,13 +17,9 @@ import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.FeatureTyping;
-import org.eclipse.syson.sysml.OccurrenceDefinition;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartDefinition;
-import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 
 public final class DefaultArcadiaModelStructureBuilder {
@@ -38,7 +34,7 @@ public final class DefaultArcadiaModelStructureBuilder {
         var componentDefinition = libraryResolver.getComponentDefinition();
         var generatedElements = new ArrayList<EObject>();
 
-        OccurrenceDefinition root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
+        var root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
         root.setDeclaredName(options.modelShortName());
         generatedElements.add(root);
 
@@ -86,18 +82,18 @@ public final class DefaultArcadiaModelStructureBuilder {
     }
 
     private static void addRootFunction(Element owner, List<EObject> generatedElements) {
-        ActionUsage rootFunction = SysmlFactory.eINSTANCE.createActionUsage();
+        var rootFunction = SysmlFactory.eINSTANCE.createActionUsage();
         rootFunction.setDeclaredName("Root Function");
         generatedElements.add(rootFunction);
         addOwnedElement(owner, rootFunction, generatedElements);
     }
 
     private static void addSystemPart(Element owner, PartDefinition componentDefinition, List<EObject> generatedElements) {
-        PartUsage systemPart = SysmlFactory.eINSTANCE.createPartUsage();
+        var systemPart = SysmlFactory.eINSTANCE.createPartUsage();
         systemPart.setDeclaredName("system");
         generatedElements.add(systemPart);
 
-        FeatureTyping typing = SysmlFactory.eINSTANCE.createFeatureTyping();
+        var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
         typing.setTypedFeature(systemPart);
         typing.setType(componentDefinition);
         systemPart.getOwnedRelationship().add(typing);
@@ -107,14 +103,14 @@ public final class DefaultArcadiaModelStructureBuilder {
     }
 
     static void addOwnedElement(Element owner, Element ownedElement, List<EObject> generatedElements) {
-        OwningMembership membership = SysmlFactory.eINSTANCE.createOwningMembership();
+        var membership = SysmlFactory.eINSTANCE.createOwningMembership();
         membership.getOwnedRelatedElement().add(ownedElement);
         owner.getOwnedRelationship().add(membership);
         generatedElements.add(membership);
     }
 
     static OwningMembership addOwnedElement(Element owner, Element ownedElement) {
-        OwningMembership membership = SysmlFactory.eINSTANCE.createOwningMembership();
+        var membership = SysmlFactory.eINSTANCE.createOwningMembership();
         membership.getOwnedRelatedElement().add(ownedElement);
         owner.getOwnedRelationship().add(membership);
         return membership;

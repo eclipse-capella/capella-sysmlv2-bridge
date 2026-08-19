@@ -27,7 +27,7 @@ public final class TestResources {
 
     public Path path(String resourceName) {
         Objects.requireNonNull(resourceName, "resourceName must not be null");
-        var resource = anchorClass.getClassLoader().getResource(resourceName);
+        var resource = this.anchorClass.getClassLoader().getResource(resourceName);
         if (resource == null) {
             throw new IllegalArgumentException("Test resource not found: " + resourceName);
         }
@@ -39,7 +39,7 @@ public final class TestResources {
     }
 
     public Path existingDirectory(String resourceName) {
-        var path = path(resourceName);
+        var path = this.path(resourceName);
         if (!Files.isDirectory(path)) {
             throw new IllegalArgumentException("Test resource is not a directory: " + resourceName);
         }
@@ -47,7 +47,7 @@ public final class TestResources {
     }
 
     public Path existingFile(String resourceName) {
-        var path = path(resourceName);
+        var path = this.path(resourceName);
         if (!Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Test resource is not a file: " + resourceName);
         }

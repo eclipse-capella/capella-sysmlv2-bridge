@@ -23,10 +23,10 @@ public record CoverageMetric(long numerator, long denominator) {
     }
 
     public double percentage() {
-        return denominator == 0 ? 0.0 : numerator * 100.0 / denominator;
+        return this.denominator == 0 ? 0.0 : this.numerator * 100.0 / this.denominator;
     }
 
     public String formattedPercentage() {
-        return String.format(Locale.ROOT, "%.2f%%", percentage());
+        return String.format(Locale.ROOT, "%.2f%%", this.percentage());
     }
 }

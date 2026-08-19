@@ -23,8 +23,11 @@ import org.polarsys.capella.core.data.capellamodeller.Project;
 final class LoadedCapellaResource implements LoadedCapellaModel {
 
     private final SemanticEditingDomain editingDomain;
+
     private final Resource semanticResource;
+
     private final Project project;
+
     private final AtomicBoolean closed = new AtomicBoolean();
 
     LoadedCapellaResource(SemanticEditingDomain editingDomain, Resource semanticResource, Project project) {
@@ -34,33 +37,33 @@ final class LoadedCapellaResource implements LoadedCapellaModel {
     }
 
     SemanticEditingDomain editingDomain() {
-        return editingDomain;
+        return this.editingDomain;
     }
 
     @Override
     public List<Resource> semanticResources() {
-        return List.of(semanticResource);
+        return List.of(this.semanticResource);
     }
 
     @Override
     public Project root() {
-        return project;
+        return this.project;
     }
 
     @Override
     public List<String> diagnostics() {
-        return List.of("Capella Project loaded from " + semanticResource.getURI());
+        return List.of("Capella Project loaded from " + this.semanticResource.getURI());
     }
 
     @Override
     public boolean isClosed() {
-        return closed.get();
+        return this.closed.get();
     }
 
     @Override
     public void close() {
-        if (closed.compareAndSet(false, true)) {
-            editingDomain.dispose();
+        if (this.closed.compareAndSet(false, true)) {
+            this.editingDomain.dispose();
         }
     }
 }

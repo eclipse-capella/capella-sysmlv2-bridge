@@ -22,6 +22,7 @@ import org.eclipse.emf.ecore.EPackage;
 final class CapellaSemanticPackageDiscovery {
 
     private static final String GENERATED_PACKAGE_EXTENSION = "org.eclipse.emf.ecore.generated_package";
+
     private static final List<String> CAPELLA_URI_PREFIXES = List.of(
             "http://www.polarsys.org/capella/core/",
             "http://www.polarsys.org/capella/common/");

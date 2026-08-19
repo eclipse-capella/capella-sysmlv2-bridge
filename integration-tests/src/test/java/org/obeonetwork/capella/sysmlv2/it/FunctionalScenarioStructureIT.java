@@ -33,7 +33,7 @@ class FunctionalScenarioStructureIT {
     @ParameterizedTest
     @MethodSource("scenarios")
     void functionalScenarioContainsInputAndExpectedDirectories(String scenarioName) {
-        var runner = new FunctionalTestRunner(new TestResources(getClass()));
+        var runner = new FunctionalTestRunner(new TestResources(this.getClass()));
 
         var scenario = runner.scenario(scenarioName);
 

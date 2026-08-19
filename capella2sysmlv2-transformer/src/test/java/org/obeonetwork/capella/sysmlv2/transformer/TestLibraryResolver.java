@@ -21,10 +21,10 @@ final class TestLibraryResolver implements LibraryResolver {
 
     @Override
     public PartDefinition getComponentDefinition() {
-        return componentDefinition;
+        return this.componentDefinition;
     }
 
     PartDefinition componentDefinition() {
-        return componentDefinition;
+        return this.componentDefinition;
     }
 }

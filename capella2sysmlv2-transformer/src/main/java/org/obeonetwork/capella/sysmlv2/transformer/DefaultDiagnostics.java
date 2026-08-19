@@ -24,26 +24,26 @@ public final class DefaultDiagnostics implements Diagnostics {
 
     @Override
     public void info(EObject source, String message) {
-        add(new TransformationDiagnostic(DiagnosticSeverity.INFO, source, message));
+        this.add(new TransformationDiagnostic(DiagnosticSeverity.INFO, source, message));
     }
 
     @Override
     public void warning(EObject source, String message) {
-        add(TransformationDiagnostic.warning(source, message));
+        this.add(TransformationDiagnostic.warning(source, message));
     }
 
     @Override
     public void error(EObject source, String message) {
-        add(TransformationDiagnostic.error(source, message));
+        this.add(TransformationDiagnostic.error(source, message));
     }
 
     @Override
     public void add(TransformationDiagnostic diagnostic) {
-        diagnostics.add(Objects.requireNonNull(diagnostic, "diagnostic must not be null"));
+        this.diagnostics.add(Objects.requireNonNull(diagnostic, "diagnostic must not be null"));
     }
 
     @Override
     public List<TransformationDiagnostic> all() {
-        return List.copyOf(diagnostics);
+        return List.copyOf(this.diagnostics);
     }
 }

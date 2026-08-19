@@ -27,6 +27,6 @@ public final class TransformationCommandException extends RuntimeException {
     }
 
     public int exitCode() {
-        return exitCode;
+        return this.exitCode;
     }
 }

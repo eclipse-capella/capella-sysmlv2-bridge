@@ -21,6 +21,7 @@ import org.eclipse.emf.ecore.EObject;
 public final class DefaultDeferredReferenceResolver implements DeferredReferenceResolver {
 
     private final Diagnostics diagnostics;
+
     private final List<DeferredAction> deferredActions = new ArrayList<>();
 
     public DefaultDeferredReferenceResolver(Diagnostics diagnostics) {
@@ -29,25 +30,25 @@ public final class DefaultDeferredReferenceResolver implements DeferredReference
 
     @Override
     public void defer(EObject source, Runnable resolution) {
-        deferredActions.add(new DeferredAction(source, Objects.requireNonNull(resolution, "resolution must not be null")));
+        this.deferredActions.add(new DeferredAction(source, Objects.requireNonNull(resolution, "resolution must not be null")));
     }
 
     @Override
     public void resolveAll() {
-        var actions = List.copyOf(deferredActions);
-        deferredActions.clear();
+        var actions = List.copyOf(this.deferredActions);
+        this.deferredActions.clear();
         for (DeferredAction action : actions) {
             try {
                 action.resolution().run();
             } catch (RuntimeException exception) {
-                diagnostics.error(action.source(), "Unable to resolve deferred reference: " + exception.getMessage());
+                this.diagnostics.error(action.source(), "Unable to resolve deferred reference: " + exception.getMessage());
             }
         }
     }
 
     @Override
     public List<EObject> pendingSources() {
-        return deferredActions.stream().map(DeferredAction::source).toList();
+        return this.deferredActions.stream().map(DeferredAction::source).toList();
     }
 
     private record DeferredAction(EObject source, Runnable resolution) {

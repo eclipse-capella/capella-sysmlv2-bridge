@@ -26,7 +26,7 @@ public final class Main {
             throw new TransformationCommandException(3,
                     "capella2sysmlv2 must run from the Equinox product", null);
         });
-        int exitCode = command.execute(args, LOGGER::info, LOGGER::severe);
+        var exitCode = command.execute(args, LOGGER::info, LOGGER::severe);
         System.exit(exitCode);
     }
 }

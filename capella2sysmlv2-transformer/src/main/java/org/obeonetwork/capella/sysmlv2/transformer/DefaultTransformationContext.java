@@ -21,11 +21,17 @@ import org.eclipse.emf.ecore.EObject;
 public final class DefaultTransformationContext implements TransformationContext {
 
     private final TransformationOptions options;
+
     private final LibraryResolver libraryResolver;
+
     private final Traceability traceability;
+
     private final Diagnostics diagnostics;
+
     private final DeferredReferenceResolver deferredReferenceResolver;
+
     private final ArcadiaModelStructure modelStructure;
+
     private final List<EObject> generatedElements = new ArrayList<>();
 
     public DefaultTransformationContext(TransformationOptions options, LibraryResolver libraryResolver,
@@ -45,41 +51,41 @@ public final class DefaultTransformationContext implements TransformationContext
 
     @Override
     public TransformationOptions options() {
-        return options;
+        return this.options;
     }
 
     @Override
     public LibraryResolver libraryResolver() {
-        return libraryResolver;
+        return this.libraryResolver;
     }
 
     @Override
     public Traceability traceability() {
-        return traceability;
+        return this.traceability;
     }
 
     @Override
     public Diagnostics diagnostics() {
-        return diagnostics;
+        return this.diagnostics;
     }
 
     @Override
     public DeferredReferenceResolver deferredReferenceResolver() {
-        return deferredReferenceResolver;
+        return this.deferredReferenceResolver;
     }
 
     @Override
     public ArcadiaModelStructure modelStructure() {
-        return modelStructure;
+        return this.modelStructure;
     }
 
     @Override
     public void registerGenerated(EObject target) {
-        generatedElements.add(Objects.requireNonNull(target, "target must not be null"));
+        this.generatedElements.add(Objects.requireNonNull(target, "target must not be null"));
     }
 
     @Override
     public List<EObject> generatedElements() {
-        return List.copyOf(generatedElements);
+        return List.copyOf(this.generatedElements);
     }
 }
