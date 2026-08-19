@@ -8,7 +8,7 @@ public final class TransformationCommandException extends RuntimeException {
 
     public TransformationCommandException(int exitCode, String message, Throwable cause) {
         super(message, cause);
-        if (exitCode < 3 || exitCode > 6) {
+        if (exitCode < 2 || exitCode > 6) {
             throw new IllegalArgumentException("exitCode must identify a runtime transformation failure");
         }
         this.exitCode = exitCode;
