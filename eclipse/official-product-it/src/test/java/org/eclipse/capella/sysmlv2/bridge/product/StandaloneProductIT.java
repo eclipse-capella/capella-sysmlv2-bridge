@@ -22,14 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 class StandaloneProductIT {
-	@TempDir
-	private Path temporaryDirectory;
 
     @Test
     void transformsIfeArchiveHeadlessly() throws Exception {
@@ -45,32 +40,15 @@ class StandaloneProductIT {
         var applicationOutput = outputRoot.resolve("application-output");
         zipProject(sampleProject, sampleArchive);
 
-		assertTrue(
-				executable.toFile().setExecutable(true)
-						|| Files.isExecutable(executable),
-				"Cannot make standalone launcher executable: " + executable);
+        var execution = run(outputRoot.resolve("application.log"), List.of(
+                executable.toString(), "-vm", javaExecutable().toString(), "--launcher.suppressErrors", "-nosplash",
+                "-consolelog", sampleArchive.toString(), applicationOutput.toString()));
 
-		Path sampleProject = Path.of(System.getProperty("capella.ife.project"))
-				.toAbsolutePath();
-		Path outputRoot = Path.of(System.getProperty("runtime.test.output"))
-				.toAbsolutePath().resolve("standalone");
-		Files.createDirectories(outputRoot);
-		Path sampleArchive = outputRoot.resolve("ife.zip");
-		Path applicationOutput = outputRoot.resolve("application-output");
-		zipProject(sampleProject, sampleArchive);
-
-		var execution = run(outputRoot.resolve("application.log"), List.of(
-				executable.toString(), "-vm", javaExecutable().toString(),
-				"--launcher.suppressErrors", "-nosplash", "-consolelog",
-				sampleArchive.toString(), applicationOutput.toString()));
-
-		assertTransformation(execution, applicationOutput);
-		assertTrue(execution.output().contains(
-				"IFE derived reference: Part[ce1400b3-f97e-4c62-8187-562b72134923] "
-						+ "-> LogicalComponent[724d6db9-9175-450b-8f05-023fcffec79c]; inverse references: 1"),
-				execution.output());
-		assertTrue(execution.output().contains("cross-referencer: "
-				+ "org.eclipse.sirius.common.tools.api.util.SiriusCrossReferenceAdapter"),
-				execution.output());
-	}
+        assertTransformation(execution, applicationOutput);
+        assertTrue(execution.output().contains("IFE derived reference: Part[ce1400b3-f97e-4c62-8187-562b72134923] "
+                + "-> LogicalComponent[724d6db9-9175-450b-8f05-023fcffec79c]; inverse references: 1"),
+                execution.output());
+        assertTrue(execution.output().contains("cross-referencer: "
+                + "org.eclipse.sirius.common.tools.api.util.SiriusCrossReferenceAdapter"), execution.output());
+    }
 }

@@ -80,14 +80,14 @@ public final class ArcadiaLibraryInventory {
         }
     }
 
-	private static List<EObject> allContents(EObject root) {
-		var result = new ArrayList<EObject>();
-		result.add(root);
-		root.eAllContents().forEachRemaining(result::add);
-		return result;
-	}
+    private static List<EObject> allContents(EObject root) {
+        var result = new ArrayList<EObject>();
+        result.add(root);
+        root.eAllContents().forEachRemaining(result::add);
+        return result;
+    }
 
-	private static String nullToEmpty(String value) {
-		return value == null ? "" : value;
-	}
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
 }
