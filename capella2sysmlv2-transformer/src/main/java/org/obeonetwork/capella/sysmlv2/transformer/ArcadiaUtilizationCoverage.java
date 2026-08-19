@@ -16,20 +16,15 @@ import java.util.List;
 import java.util.Objects;
 
 public record ArcadiaUtilizationCoverage(List<ArcadiaElementCoverage> concepts,
-		List<ArcadiaElementCoverage> features, int declaredReferences,
-		int resolvedReferences) {
+        List<ArcadiaElementCoverage> features, long declaredReferences, long resolvedReferences) {
 
-	public ArcadiaUtilizationCoverage {
-		concepts = List.copyOf(
-				Objects.requireNonNull(concepts, "concepts must not be null"));
-		features = List.copyOf(
-				Objects.requireNonNull(features, "features must not be null"));
-		if (declaredReferences < 0 || resolvedReferences < 0
-				|| resolvedReferences > declaredReferences) {
-			throw new IllegalArgumentException(
-					"Invalid Arcadia reference counts");
-		}
-	}
+    public ArcadiaUtilizationCoverage {
+        concepts = List.copyOf(Objects.requireNonNull(concepts, "concepts must not be null"));
+        features = List.copyOf(Objects.requireNonNull(features, "features must not be null"));
+        if (declaredReferences < 0 || resolvedReferences < 0 || resolvedReferences > declaredReferences) {
+            throw new IllegalArgumentException("Invalid Arcadia reference counts");
+        }
+    }
 
     public CoverageMetric overallMetric() {
         return new CoverageMetric(this.usedConceptCount() + this.usedFeatureCount(), this.concepts.size() + this.features.size());

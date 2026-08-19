@@ -12,9 +12,11 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.capella.sysmlv2.bridge.mappings.TypedCapellaMapperAdapter;
-import org.eclipse.capella.sysmlv2.bridge.mappings.services.logical.architecture.LARepresentationMutationService;
+import org.eclipse.syson.sysml.FeatureTyping;
+import org.eclipse.syson.sysml.OwningMembership;
+import org.eclipse.syson.sysml.PartUsage;
+import org.eclipse.syson.sysml.SysmlFactory;
 import org.obeonetwork.capella.sysmlv2.transformer.MappingCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
 import org.polarsys.capella.core.data.la.LaPackage;
@@ -38,25 +40,26 @@ public final class LogicalComponentMapper
 	@Override
 	protected void transformTyped(LogicalComponent source,
 			TransformationContext context) {
-		var laRepresentationMutationService = new LARepresentationMutationService(
-				context);
-		// TODO: replace logicalArchitectureStructurePackage by real parent (use
-		// transfo cache to find parent
-		// equivalent in sysml model?)
-		var laPackage = context.modelStructure()
-				.logicalArchitectureStructurePackage();
-
-    @Override
-    protected void transformTyped(LogicalComponent source, TransformationContext context) {
         var name = source.getName();
         if (name == null || name.isBlank()) {
             context.diagnostics().error(source, "LogicalComponent.name must be a non-blank string");
             return;
         }
 
-		context.traceability().register(source, partUsage);
+        PartUsage partUsage = SysmlFactory.eINSTANCE.createPartUsage();
+        partUsage.setDeclaredName(name);
 
-		MapperUtils.transformName(source, partUsage, context);
-		// source.getDescription();
+        FeatureTyping typing = SysmlFactory.eINSTANCE.createFeatureTyping();
+        typing.setTypedFeature(partUsage);
+        typing.setType(context.libraryResolver().getComponentDefinition());
+        partUsage.getOwnedRelationship().add(typing);
+
+        OwningMembership membership = SysmlFactory.eINSTANCE.createOwningMembership();
+        membership.getOwnedRelatedElement().add(partUsage);
+        context.modelStructure().logicalArchitectureStructurePackage().getOwnedRelationship().add(membership);
+        context.registerGenerated(partUsage);
+        context.registerGenerated(typing);
+        context.registerGenerated(membership);
+        context.traceability().register(source, partUsage);
 	}
 }
