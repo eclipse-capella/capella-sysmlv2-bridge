@@ -12,6 +12,9 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.cli;
 
+import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.COMMAND_LINE_USAGE_ERROR;
+import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.SUCCESS;
+
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -49,12 +52,12 @@ public final class Capella2SysMLV2Command {
         Objects.requireNonNull(err, "err must not be null");
         if (arguments.length == 1 && ("-h".equals(arguments[0]) || "--help".equals(arguments[0]))) {
             out.accept(USAGE);
-            return 0;
+            return SUCCESS;
         }
         if (arguments.length != 2) {
             err.accept("Expected INPUT_ZIP and OUTPUT_DIRECTORY");
             err.accept(USAGE);
-            return 2;
+            return COMMAND_LINE_USAGE_ERROR;
         }
 
         try {
@@ -71,7 +74,7 @@ public final class Capella2SysMLV2Command {
             out.accept("Arcadia SysML v2 Library Coverage of Capella: "
                     + result.mappingCoverage().arcadiaCoverageOfCapella().display());
             out.accept("XMI model: " + result.outputModel());
-            return result.errorCount() == 0 ? 0 : 6;
+            return SUCCESS;
         } catch (TransformationCommandException exception) {
             err.accept(exception.getMessage());
             return exception.exitCode();

@@ -123,6 +123,18 @@ The zip archive containing the Capella project and model.
 The directory in which the generated model and internal working files are created.
 The directory is created automatically when necessary.
 
+[cols="1,3",options="header"]
+|===
+|Code |Meaning
+|0 |Success
+|2 |Invalid command-line usage
+|3 |Invalid or unavailable runtime environment
+|4 |Project preparation failure
+|5 |Capella model loading failure
+|6 |Arcadia library loading failure
+|7 |Transformation failure
+|===
+
 For the IFE sample, a successful execution reports:
 
 [source,text]
