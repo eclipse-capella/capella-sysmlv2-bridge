@@ -28,7 +28,10 @@ class StandaloneProductIT {
 
     @Test
     void transformsIfeArchiveHeadlessly() throws Exception {
-        var product = Path.of(System.getProperty("bridge.product.directory")).toAbsolutePath();
+        var productProperty = System.getProperty("os.name").startsWith("Windows")
+                ? "bridge.product.windows.directory"
+                : "bridge.product.unix.directory";
+        var product = Path.of(System.getProperty(productProperty)).toAbsolutePath();
         var executable = product.resolve("capella2sysmlv2");
         assertTrue(executable.toFile().setExecutable(true) || Files.isExecutable(executable),
                 "Cannot make standalone launcher executable: " + executable);
