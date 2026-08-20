@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.application;
 
+import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.RUNTIME_ENVIRONMENT_FAILURE;
+
 import java.util.logging.Logger;
 
 import org.eclipse.equinox.app.IApplication;
@@ -30,7 +32,7 @@ public final class BridgeApplication implements IApplication {
         var arguments = (String[]) context.getArguments()
                 .get(IApplicationContext.APPLICATION_ARGS);
         if (this.stopping) {
-            return 2;
+            return RUNTIME_ENVIRONMENT_FAILURE;
         }
         var command = new Capella2SysMLV2Command(
                 new EquinoxTransformationService());

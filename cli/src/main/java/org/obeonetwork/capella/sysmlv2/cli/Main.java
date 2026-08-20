@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.cli;
 
+import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.RUNTIME_ENVIRONMENT_FAILURE;
+
 import java.util.logging.Logger;
 
 public final class Main {
@@ -23,7 +25,7 @@ public final class Main {
 
     public static void main(String[] args) {
         var command = new Capella2SysMLV2Command(request -> {
-            throw new TransformationCommandException(3,
+            throw new TransformationCommandException(RUNTIME_ENVIRONMENT_FAILURE,
                     "capella2sysmlv2 must run from the Equinox product", null);
         });
         var exitCode = command.execute(args, LOGGER::info, LOGGER::severe);

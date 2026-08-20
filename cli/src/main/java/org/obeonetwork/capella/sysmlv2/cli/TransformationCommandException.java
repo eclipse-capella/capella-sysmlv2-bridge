@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.cli;
 
+import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.isRuntimeFailure;
+
 public final class TransformationCommandException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
@@ -20,7 +22,7 @@ public final class TransformationCommandException extends RuntimeException {
 
     public TransformationCommandException(int exitCode, String message, Throwable cause) {
         super(message, cause);
-        if (exitCode < 2 || exitCode > 6) {
+        if (!isRuntimeFailure(exitCode)) {
             throw new IllegalArgumentException("exitCode must identify a runtime transformation failure");
         }
         this.exitCode = exitCode;
