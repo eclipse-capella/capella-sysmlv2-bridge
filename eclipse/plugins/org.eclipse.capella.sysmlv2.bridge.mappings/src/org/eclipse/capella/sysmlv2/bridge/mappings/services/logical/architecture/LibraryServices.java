@@ -12,7 +12,11 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.services.logical.architecture;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.services.transverse.TransverseQueryService.ARCADIA_COMPONENT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.services.transverse.TransverseQueryService.ARCADIA_PREFIX;
+
 import org.eclipse.syson.services.UtilService;
+import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.LibraryResolver;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
@@ -23,20 +27,23 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
  * @author rpage
  */
 public class LibraryServices {
-	private final LibraryResolver arcadiaLibraryResolver;
-	private UtilService utilService;
-	private TransformationContext context;
+    private final LibraryResolver arcadiaLibraryResolver;
 
-	public LibraryServices(TransformationContext context) {
-		this.utilService = new UtilService();
-		this.arcadiaLibraryResolver = context.libraryResolver();
-		this.context = context;
-	}
+    private UtilService utilService;
 
-	public void typeWithArcadiaComponent(Usage usage) {
-		var componentPartDefinition = arcadiaLibraryResolver
-				.getComponentDefinition();
-		utilService.setFeatureTyping(usage, componentPartDefinition);
-		context.registerGenerated(usage.getOwnedTyping().get(0));
-	}
+    public LibraryServices(TransformationContext context) {
+        this.utilService = new UtilService();
+        this.arcadiaLibraryResolver = context.libraryResolver();
+    }
+
+    /**
+     * Applies the Arcadia component typing to a SysML usage.
+     *
+     * @param usage
+     *            the usage to type
+     */
+    public void typeWithArcadiaComponent(Usage usage) {
+        var componentPartDefinition = arcadiaLibraryResolver.resolveDefinition(ARCADIA_PREFIX + ARCADIA_COMPONENT, PartDefinition.class);
+        utilService.setFeatureTyping(usage, componentPartDefinition);
+    }
 }

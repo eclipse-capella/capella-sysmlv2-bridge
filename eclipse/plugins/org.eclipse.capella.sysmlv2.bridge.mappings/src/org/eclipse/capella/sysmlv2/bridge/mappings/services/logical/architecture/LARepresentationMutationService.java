@@ -22,6 +22,7 @@ import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
+import org.polarsys.capella.core.data.la.LogicalComponent;
 
 /**
  * Logical Architecture (LA) related service.
@@ -29,34 +30,43 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
  * @author rpage
  */
 public class LARepresentationMutationService {
-	private final TransverseMutationService transverseMutationService;
+    private final TransverseMutationService transverseMutationService;
 
-	private final ElementInitializerSwitch elementInitializerSwitch;
+    private final ElementInitializerSwitch elementInitializerSwitch;
 
-	private final LibraryServices libraryServices;
+    private final LibraryServices libraryServices;
 
-	private final TransformationContext context;
+    private final TransformationContext context;
 
-	public LARepresentationMutationService(TransformationContext context) {
-		this.transverseMutationService = new TransverseMutationService(context);
-		this.elementInitializerSwitch = new ElementInitializerSwitch();
-		this.libraryServices = new LibraryServices(context);
-		this.context = context;
-	}
+    public LARepresentationMutationService(TransformationContext context) {
+        this.transverseMutationService = new TransverseMutationService();
+        this.elementInitializerSwitch = new ElementInitializerSwitch();
+        this.libraryServices = new LibraryServices(context);
+        this.context = context;
+    }
 
-	public PartUsage createComponent(Element parent, boolean isActor) {
-		var partUsage = SysmlFactory.eINSTANCE.createPartUsage();
-		this.elementInitializerSwitch.doSwitch(partUsage);
-		this.libraryServices.typeWithArcadiaComponent(partUsage);
-		this.transverseMutationService.addChildInParent(parent, partUsage);
+    /**
+     * Creates and registers a SysML representation of a logical component.
+     *
+     * @param parent
+     *            the owning SysML element
+     * @param source
+     *            the Capella logical component
+     * @return the created part usage
+     */
+    public PartUsage createComponent(Element parent, LogicalComponent source) {
+        var partUsage = SysmlFactory.eINSTANCE.createPartUsage();
+        this.elementInitializerSwitch.doSwitch(partUsage);
+        this.libraryServices.typeWithArcadiaComponent(partUsage);
+        this.transverseMutationService.addChildInParent(parent, partUsage);
 
-		if (isActor) {
-			this.transverseMutationService.setBooleanAttribute(partUsage,
-					ARCADIA_PREFIX + ARCADIA_COMPONENT, ARCADIA_IS_ACTOR, true);
-		}
+        if (source.isActor()) {
+            this.transverseMutationService.setBooleanAttribute(partUsage,
+                    ARCADIA_PREFIX + ARCADIA_COMPONENT, ARCADIA_IS_ACTOR, true);
+        }
 
-		context.registerGenerated(partUsage);
+        context.traceability().register(source, partUsage);
 
-		return partUsage;
-	}
+        return partUsage;
+    }
 }

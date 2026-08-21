@@ -32,14 +32,4 @@ class DefaultTransformationContextTest {
         assertThat(context.diagnostics()).isNotNull();
         assertThat(context.deferredReferenceResolver()).isNotNull();
     }
-
-    @Test
-    void recordsGeneratedElements() {
-        var target = TestEObjects.create("http://example.org/sysml", "PartUsage");
-        var context = TestContexts.create();
-
-        context.registerGenerated(target);
-
-        assertThat(context.generatedElements()).containsExactly(target);
-    }
 }

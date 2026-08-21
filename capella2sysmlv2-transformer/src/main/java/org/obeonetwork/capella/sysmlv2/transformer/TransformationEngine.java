@@ -57,12 +57,11 @@ public final class TransformationEngine implements CapellaToSysMLTransformer {
 
         var modelStructure = this.modelStructureBuilder.build(options, this.libraryResolver);
         var context = new DefaultTransformationContext(options, this.libraryResolver, modelStructure);
-        modelStructure.generatedElements().forEach(context::registerGenerated);
         for (EObject source : sources) {
             this.dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
         }
         context.deferredReferenceResolver().resolveAll();
-        return new TransformationResult(modelStructure.root(), context.generatedElements(), context.diagnostics().all(),
+        return new TransformationResult(modelStructure.root(), context.diagnostics().all(),
                 context.traceability());
     }
 }

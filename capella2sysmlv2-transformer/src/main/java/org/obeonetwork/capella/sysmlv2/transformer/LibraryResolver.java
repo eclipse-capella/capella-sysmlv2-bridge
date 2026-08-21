@@ -12,9 +12,20 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import org.eclipse.syson.sysml.PartDefinition;
+import org.eclipse.syson.sysml.Type;
 
 public interface LibraryResolver {
 
-    PartDefinition getComponentDefinition();
+    /**
+     * Resolves a definition from the loaded library.
+     *
+     * @param qualifiedName
+     *            the qualified definition name
+     * @param expectedType
+     *            the expected definition type
+     * @param <T>
+     *            the definition type
+     * @return the resolved definition
+     */
+    <T extends Type> T resolveDefinition(String qualifiedName, Class<T> expectedType);
 }

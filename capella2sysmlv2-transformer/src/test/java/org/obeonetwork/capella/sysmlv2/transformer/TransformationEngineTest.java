@@ -23,9 +23,8 @@ import org.junit.jupiter.api.Test;
 class TransformationEngineTest {
 
     @Test
-    void returnsGeneratedElementsAndDiagnosticsFromContext() {
+    void returnsDiagnosticsFromContext() {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
-        var target = TestEObjects.create("http://example.org/sysml", "PartUsage");
         var mapper = new ElementMapper() {
             @Override
             public MetaclassId sourceType() {
@@ -34,7 +33,6 @@ class TransformationEngineTest {
 
             @Override
             public void transform(EObject source, TransformationContext context) {
-                context.registerGenerated(target);
                 context.diagnostics().warning(source, "test diagnostic");
             }
         };
@@ -44,7 +42,6 @@ class TransformationEngineTest {
                 .transform(source, TransformationOptions.defaults());
 
         assertThat(result.root()).isNotNull();
-        assertThat(result.generatedElements()).contains(target);
         assertThat(result.diagnostics()).singleElement()
                 .satisfies(diagnostic -> assertThat(diagnostic.message()).isEqualTo("test diagnostic"));
     }

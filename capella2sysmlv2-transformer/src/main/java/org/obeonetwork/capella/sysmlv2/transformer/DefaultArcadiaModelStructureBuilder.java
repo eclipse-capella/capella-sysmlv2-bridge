@@ -12,11 +12,10 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.eclipse.emf.ecore.EObject;
+import org.eclipse.syson.sysml.ActionDefinition;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartDefinition;
@@ -27,86 +26,85 @@ public final class DefaultArcadiaModelStructureBuilder {
     private static final List<String> STANDARD_PACKAGES = List.of("Functions", "Capabilities", "Interfaces", "Data",
             "Structure", "Requirements");
 
+    /**
+     * Builds the standard Arcadia model structure used by a transformation.
+     *
+     * @param options
+     *            the transformation options
+     * @param libraryResolver
+     *            the Arcadia library resolver
+     * @return the generated model structure
+     */
     public ArcadiaModelStructure build(TransformationOptions options, LibraryResolver libraryResolver) {
         Objects.requireNonNull(options, "options must not be null");
         Objects.requireNonNull(libraryResolver, "libraryResolver must not be null");
 
-        var componentDefinition = libraryResolver.getComponentDefinition();
-        var generatedElements = new ArrayList<EObject>();
-
+        var componentDefinition = libraryResolver.resolveDefinition(
+                "Arcadia::Component", PartDefinition.class);
+        var functionDefinition = libraryResolver.resolveDefinition(
+                "Arcadia::Function", ActionDefinition.class);
         var root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
         root.setDeclaredName(options.modelShortName());
-        generatedElements.add(root);
 
-        var operationalAnalysis = createPerspective(root, "Operational Analysis", componentDefinition, false,
-                generatedElements);
-        var systemAnalysis = createPerspective(root, "System Analysis", componentDefinition, true, generatedElements);
-        var logicalArchitecture = createPerspective(root, "Logical Architecture", componentDefinition, true,
-                generatedElements);
-        var physicalArchitecture = createPerspective(root, "Physical Architecture", componentDefinition, true,
-                generatedElements);
-        var epbsArchitecture = createPerspective(root, "EPBS Architecture", componentDefinition, true, generatedElements);
+        var operationalAnalysis = createPerspective(root, "Operational Analysis", componentDefinition, functionDefinition, false);
+        var systemAnalysis = createPerspective(root, "System Analysis", componentDefinition, functionDefinition, true);
+        var logicalArchitecture = createPerspective(root, "Logical Architecture", componentDefinition, functionDefinition, true);
+        var physicalArchitecture = createPerspective(root, "Physical Architecture", componentDefinition, functionDefinition, true);
+        var epbsArchitecture = createPerspective(root, "EPBS Architecture", componentDefinition, functionDefinition, true);
 
         return new ArcadiaModelStructure(root, operationalAnalysis.structurePackage(), systemAnalysis.structurePackage(),
                 logicalArchitecture.structurePackage(), physicalArchitecture.structurePackage(),
-                epbsArchitecture.structurePackage(), generatedElements);
+                epbsArchitecture.structurePackage());
     }
 
     private static PerspectiveStructure createPerspective(Element owner, String name, PartDefinition componentDefinition,
-            boolean createSystemPart, List<EObject> generatedElements) {
-        var perspectivePackage = createPackage(name, generatedElements);
-        addOwnedElement(owner, perspectivePackage, generatedElements);
+            ActionDefinition functionDefinition, boolean createSystemPart) {
+        var perspectivePackage = createPackage(name);
+        addOwnedElement(owner, perspectivePackage);
 
         org.eclipse.syson.sysml.Package structurePackage = null;
         for (var childName : STANDARD_PACKAGES) {
-            var childPackage = createPackage(childName, generatedElements);
-            addOwnedElement(perspectivePackage, childPackage, generatedElements);
+            var childPackage = createPackage(childName);
+            addOwnedElement(perspectivePackage, childPackage);
             if ("Functions".equals(childName)) {
-                addRootFunction(childPackage, generatedElements);
+                addRootFunction(childPackage, functionDefinition);
             } else if ("Structure".equals(childName)) {
                 structurePackage = childPackage;
             }
         }
 
         if (createSystemPart) {
-            addSystemPart(structurePackage, componentDefinition, generatedElements);
+            addSystemPart(structurePackage, componentDefinition);
         }
         return new PerspectiveStructure(structurePackage);
     }
 
-    private static org.eclipse.syson.sysml.Package createPackage(String name, List<EObject> generatedElements) {
+    private static org.eclipse.syson.sysml.Package createPackage(String name) {
         var sysmlPackage = SysmlFactory.eINSTANCE.createPackage();
         sysmlPackage.setDeclaredName(name);
-        generatedElements.add(sysmlPackage);
         return sysmlPackage;
     }
 
-    private static void addRootFunction(Element owner, List<EObject> generatedElements) {
+    private static void addRootFunction(Element owner, ActionDefinition functionDefinition) {
         var rootFunction = SysmlFactory.eINSTANCE.createActionUsage();
         rootFunction.setDeclaredName("Root Function");
-        generatedElements.add(rootFunction);
-        addOwnedElement(owner, rootFunction, generatedElements);
+        var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
+        typing.setTypedFeature(rootFunction);
+        typing.setType(functionDefinition);
+        rootFunction.getOwnedRelationship().add(typing);
+        addOwnedElement(owner, rootFunction);
     }
 
-    private static void addSystemPart(Element owner, PartDefinition componentDefinition, List<EObject> generatedElements) {
+    private static void addSystemPart(Element owner, PartDefinition componentDefinition) {
         var systemPart = SysmlFactory.eINSTANCE.createPartUsage();
         systemPart.setDeclaredName("system");
-        generatedElements.add(systemPart);
 
         var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
         typing.setTypedFeature(systemPart);
         typing.setType(componentDefinition);
         systemPart.getOwnedRelationship().add(typing);
-        generatedElements.add(typing);
 
-        addOwnedElement(owner, systemPart, generatedElements);
-    }
-
-    static void addOwnedElement(Element owner, Element ownedElement, List<EObject> generatedElements) {
-        var membership = SysmlFactory.eINSTANCE.createOwningMembership();
-        membership.getOwnedRelatedElement().add(ownedElement);
-        owner.getOwnedRelationship().add(membership);
-        generatedElements.add(membership);
+        addOwnedElement(owner, systemPart);
     }
 
     static OwningMembership addOwnedElement(Element owner, Element ownedElement) {

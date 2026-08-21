@@ -40,7 +40,17 @@ class DefaultArcadiaModelStructureBuilderTest {
         assertPerspective(structure.root(), "Logical Architecture", true, resolver);
         assertPerspective(structure.root(), "Physical Architecture", true, resolver);
         assertPerspective(structure.root(), "EPBS Architecture", true, resolver);
-        assertThat(structure.logicalArchitectureStructurePackage().getDeclaredName()).isEqualTo("Structure");
+        assertThat(structure.logicalArchitecturePackage().getDeclaredName()).isEqualTo("Structure");
+        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
+        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
+        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
+        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
+        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
+        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
+        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
+        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
+        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
+        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
     }
 
     private static void assertPerspective(Element root, String perspectiveName, boolean hasSystemPart,
@@ -56,7 +66,12 @@ class DefaultArcadiaModelStructureBuilderTest {
 
         var functionsPackage = ownedElementNamed(perspectivePackage, "Functions");
         assertThat(functionsPackage.getOwnedElement()).singleElement().isInstanceOfSatisfying(ActionUsage.class,
-                action -> assertThat(action.getDeclaredName()).isEqualTo("Root Function"));
+                action -> {
+                    assertThat(action.getDeclaredName()).isEqualTo("Root Function");
+                    assertThat(action.getOwnedRelationship()).singleElement()
+                            .isInstanceOfSatisfying(FeatureTyping.class,
+                                    typing -> assertThat(typing.getType()).isSameAs(resolver.functionDefinition()));
+                });
 
         var structurePackage = ownedElementNamed(perspectivePackage, "Structure");
         if (hasSystemPart) {
