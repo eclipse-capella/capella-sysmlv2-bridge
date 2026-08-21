@@ -17,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import java.util.List;
 
+import org.eclipse.syson.sysml.ActionDefinition;
+import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
 
@@ -27,16 +29,17 @@ class ArcadiaLibraryResolverTest {
         var componentDefinition = SysmlFactory.eINSTANCE.createPartDefinition();
         var arcadiaPackage = TestSysONModels.arcadiaPackageWithComponent(componentDefinition);
         var resolver = new ArcadiaLibraryResolver(List.of(arcadiaPackage));
+        var resolvedComponentDefinition = resolver.resolveDefinition("Arcadia::Component", PartDefinition.class);
 
-        assertThat(resolver.getComponentDefinition()).isSameAs(componentDefinition);
-        assertThat(resolver.getComponentDefinition()).isSameAs(componentDefinition);
+        assertThat(resolvedComponentDefinition).isSameAs(componentDefinition);
     }
 
     @Test
     void reportsMissingArcadiaComponentDefinition() {
         var resolver = new ArcadiaLibraryResolver(List.of(TestSysONModels.emptyArcadiaPackage()));
 
-        assertThatIllegalStateException().isThrownBy(resolver::getComponentDefinition)
+        assertThatIllegalStateException().isThrownBy(
+                () -> resolver.resolveDefinition("Arcadia::Component", PartDefinition.class))
                 .withMessageContaining("Arcadia::Component");
     }
 
@@ -44,7 +47,38 @@ class ArcadiaLibraryResolverTest {
     void reportsWrongArcadiaComponentType() {
         var resolver = new ArcadiaLibraryResolver(List.of(TestSysONModels.arcadiaPackageWithWrongComponentType()));
 
-        assertThatIllegalStateException().isThrownBy(resolver::getComponentDefinition)
+        assertThatIllegalStateException().isThrownBy(
+                () -> resolver.resolveDefinition("Arcadia::Component", PartDefinition.class))
+                .withMessageContaining("PartDefinition");
+    }
+
+    @Test
+    void resolvesAndCachesFunctionDefinitions() {
+        var function = SysmlFactory.eINSTANCE.createActionDefinition();
+        function.setDeclaredName("Function");
+        var arcadia = TestSysONModels.emptyArcadiaPackage();
+        TestSysONModels.addOwnedElement(arcadia, function);
+        var resolver = new ArcadiaLibraryResolver(List.of(arcadia));
+
+        assertThat(resolver.resolveDefinition("Arcadia::Function", ActionDefinition.class))
+                .isSameAs(function);
+    }
+
+    @Test
+    void reportsMissingAndWrongFunctionDefinitionTypes() {
+        var function = SysmlFactory.eINSTANCE.createActionDefinition();
+        function.setDeclaredName("Function");
+        var arcadia = TestSysONModels.emptyArcadiaPackage();
+        TestSysONModels.addOwnedElement(arcadia, function);
+        var resolver = new ArcadiaLibraryResolver(List.of(arcadia));
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> resolver.resolveDefinition("Arcadia::ExchangeItem",
+                        org.eclipse.syson.sysml.ItemDefinition.class))
+                .withMessageContaining("Arcadia::ExchangeItem");
+        assertThatIllegalStateException()
+                .isThrownBy(() -> resolver.resolveDefinition("Arcadia::Function",
+                        org.eclipse.syson.sysml.PartDefinition.class))
                 .withMessageContaining("PartDefinition");
     }
 }

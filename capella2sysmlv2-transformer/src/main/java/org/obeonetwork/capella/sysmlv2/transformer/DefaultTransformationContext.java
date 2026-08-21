@@ -12,11 +12,7 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-
-import org.eclipse.emf.ecore.EObject;
 
 public final class DefaultTransformationContext implements TransformationContext {
 
@@ -31,8 +27,6 @@ public final class DefaultTransformationContext implements TransformationContext
     private final DeferredReferenceResolver deferredReferenceResolver;
 
     private final ArcadiaModelStructure modelStructure;
-
-    private final List<EObject> generatedElements = new ArrayList<>();
 
     public DefaultTransformationContext(TransformationOptions options, LibraryResolver libraryResolver,
             ArcadiaModelStructure modelStructure) {
@@ -79,13 +73,4 @@ public final class DefaultTransformationContext implements TransformationContext
         return this.modelStructure;
     }
 
-    @Override
-    public void registerGenerated(EObject target) {
-        this.generatedElements.add(Objects.requireNonNull(target, "target must not be null"));
-    }
-
-    @Override
-    public List<EObject> generatedElements() {
-        return List.copyOf(this.generatedElements);
-    }
 }

@@ -12,71 +12,85 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.PartDefinition;
+import org.eclipse.syson.sysml.Type;
 
 public final class ArcadiaLibraryResolver implements LibraryResolver {
-
     private static final String ARCADIA_PACKAGE = "Arcadia";
-
-    private static final String COMPONENT_DEFINITION = "Component";
 
     private final Collection<? extends EObject> arcadiaLibraryRoots;
 
-    private PartDefinition componentDefinition;
+    private final Map<String, Element> definitions = new HashMap<>();
 
     public ArcadiaLibraryResolver(Collection<? extends EObject> arcadiaLibraryRoots) {
         this.arcadiaLibraryRoots = List.copyOf(Objects.requireNonNull(arcadiaLibraryRoots,
                 "arcadiaLibraryRoots must not be null"));
     }
 
+    /**
+     * Resolves an Arcadia library definition and verifies its expected SysON type.
+     *
+     * @param qualifiedName
+     *            the qualified Arcadia name
+     * @param expectedType
+     *            the expected SysON type
+     * @param <T>
+     *            the resolved type
+     * @return the resolved definition
+     */
     @Override
-    public PartDefinition getComponentDefinition() {
-        if (this.componentDefinition == null) {
-            this.componentDefinition = this.resolveComponentDefinition();
+    public <T extends Type> T resolveDefinition(String qualifiedName, Class<T> expectedType) {
+        Objects.requireNonNull(qualifiedName, "qualifiedName must not be null");
+        Objects.requireNonNull(expectedType, "expectedType must not be null");
+        var definition = definitions.computeIfAbsent(qualifiedName, this::resolveDefinition);
+        if (!expectedType.isInstance(definition)) {
+            throw new IllegalStateException(qualifiedName + " must be a SysON "
+                    + expectedType.getSimpleName() + " but was " + definition.eClass().getName());
         }
-        return this.componentDefinition;
+        return expectedType.cast(definition);
     }
 
-    private PartDefinition resolveComponentDefinition() {
-        var arcadia = findElementNamed(this.arcadiaLibraryRoots, ARCADIA_PACKAGE);
-        if (arcadia == null) {
-            throw new IllegalStateException("Unable to resolve Arcadia package while looking for Arcadia::Component");
-        }
-        var component = findElementNamed(arcadia.eContents(), COMPONENT_DEFINITION);
-        if (component == null) {
-            throw new IllegalStateException("Unable to resolve required Arcadia definition: Arcadia::Component");
-        }
-        if (!(component instanceof PartDefinition partDefinition)) {
-            throw new IllegalStateException("Arcadia::Component must be a SysON PartDefinition but was "
-                    + component.eClass().getName());
-        }
-        return partDefinition;
+    private Element resolveDefinition(String qualifiedName) {
+        var prefix = ARCADIA_PACKAGE + "::";
+        var name = Optional.of(qualifiedName)
+                .filter(value -> value.startsWith(prefix) && value.length() > prefix.length())
+                .map(value -> value.substring(prefix.length()))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Expected an Arcadia qualified name but got: " + qualifiedName));
+        var arcadia = findElementNamed(arcadiaLibraryRoots, ARCADIA_PACKAGE)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unable to resolve Arcadia package while looking for " + qualifiedName));
+        return findElementNamed(arcadia.eContents(), name)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unable to resolve required Arcadia definition: " + qualifiedName));
     }
 
-    private static Element findElementNamed(Collection<? extends EObject> roots, String name) {
-        var queue = new ArrayDeque<EObject>(roots);
-        while (!queue.isEmpty()) {
-            var current = queue.removeFirst();
-            if (current instanceof Element element && name.equals(elementName(element))) {
-                return element;
-            }
-            queue.addAll(current.eContents());
-        }
-        return null;
+    private static Optional<Element> findElementNamed(Collection<? extends EObject> roots, String name) {
+        return roots.stream()
+                .flatMap(ArcadiaLibraryResolver::descendants)
+                .filter(Element.class::isInstance)
+                .map(Element.class::cast)
+                .filter(element -> name.equals(elementName(element)))
+                .findFirst();
+    }
+
+    private static Stream<EObject> descendants(EObject object) {
+        return Stream.concat(Stream.of(object), object.eContents().stream()
+                .flatMap(ArcadiaLibraryResolver::descendants));
     }
 
     private static String elementName(Element element) {
-        var declaredName = element.getDeclaredName();
-        if (declaredName != null && !declaredName.isBlank()) {
-            return declaredName;
-        }
-        return element.getName();
+        return Optional.ofNullable(element.getDeclaredName())
+                .filter(name -> !name.isBlank())
+                .orElseGet(element::getName);
     }
 }
