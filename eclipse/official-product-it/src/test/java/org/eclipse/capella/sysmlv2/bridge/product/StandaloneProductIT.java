@@ -48,10 +48,5 @@ class StandaloneProductIT {
                 "-consolelog", sampleArchive.toString(), applicationOutput.toString()));
 
         assertTransformation(execution, applicationOutput);
-        assertTrue(execution.output().contains("IFE derived reference: Part[ce1400b3-f97e-4c62-8187-562b72134923] "
-                + "-> LogicalComponent[724d6db9-9175-450b-8f05-023fcffec79c]; inverse references: 1"),
-                execution.output());
-        assertTrue(execution.output().contains("cross-referencer: "
-                + "org.eclipse.sirius.common.tools.api.util.SiriusCrossReferenceAdapter"), execution.output());
     }
 }

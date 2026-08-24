@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
@@ -48,8 +47,6 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
 public final class EquinoxTransformationService implements TransformationService {
-    private static final Logger LOGGER = Logger.getLogger("EquinoxTransformationService");
-
     @Override
     public TransformationSummary transform(TransformationRequest request) {
         var outputDirectory = prepareOutputDirectory(
@@ -57,8 +54,6 @@ public final class EquinoxTransformationService implements TransformationService
         var extractedProject = extractProject(
                 request.inputZip(), outputDirectory);
         try (var model = loadModel(extractedProject)) {
-            new IfeDerivedReferenceProbe().evaluate(model)
-                    .ifPresent(probe -> LOGGER.info(probe.report()));
             var logicalComponents = findLogicalComponents(
                     model.root());
             var arcadiaLibrary = loadArcadiaLibrary();
