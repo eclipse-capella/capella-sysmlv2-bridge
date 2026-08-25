@@ -20,6 +20,7 @@ import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.SUCCESS;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,11 @@ class Capella2SysMLV2CommandTest {
         var outputFile = Path.of("output/model.sysml.xmi");
         var command = new Capella2SysMLV2Command(value -> {
             request.set(value);
-            return new TransformationSummary(3, 3, 0, outputFile,
+            return new TransformationSummary(List.of(
+                    new ElementCount("LogicalComponent", 3),
+                    new ElementCount("LogicalFunction", 2)), List.of(
+                            new ElementCount("PartUsage", 3),
+                            new ElementCount("ActionUsage", 2)), 0, outputFile,
                     new MappingCoverageSummary(new CoverageValue(1, 10),
                             new CoverageValue(1, 42),
                             new CoverageValue(1, 10)));
@@ -46,7 +51,9 @@ class Capella2SysMLV2CommandTest {
                 Path.of("project.zip"), Path.of("output")));
         assertThat(output.toString())
                 .contains("Source LogicalComponent count: 3")
-                .contains("Generated PartUsage count: 3").contains("Errors: 0")
+                .contains("Source LogicalFunction count: 2")
+                .contains("Generated PartUsage count: 3")
+                .contains("Generated ActionUsage count: 2").contains("Errors: 0")
                 .contains("Capella Transformation Coverage: 1/10 (10.00%)")
                 .contains("Arcadia SysML v2 Library Utilization: 1/42 (2.38%)")
                 .contains(

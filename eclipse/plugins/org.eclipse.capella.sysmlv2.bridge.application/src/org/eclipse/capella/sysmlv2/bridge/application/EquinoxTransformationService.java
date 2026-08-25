@@ -12,88 +12,51 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.application;
 
-import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.ARCADIA_LIBRARY_LOADING_FAILURE;
-import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.MODEL_LOADING_FAILURE;
-import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.PROJECT_PREPARATION_FAILURE;
 import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.TRANSFORMATION_FAILURE;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
+import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
+import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationReportingUtils;
+import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.syson.sysml.FeatureTyping;
-import org.eclipse.syson.sysml.PartUsage;
-import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
-import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationService;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
-import org.obeonetwork.capella.sysmlv2.loader.CapellaProjectArchiveExtractor;
-import org.obeonetwork.capella.sysmlv2.loader.ExtractedCapellaProject;
-import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
-import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
-import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageAnalyzer;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageWriter;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
-import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationResult;
 
 public final class EquinoxTransformationService implements TransformationService {
+
+    public record ModelTransformation(String modelName, List<EObject> sources,
+            List<EObject> arcadiaLibrary, List<ElementMapper> mappers,
+            TransformationResult result, int errorCount) {
+        public ModelTransformation {
+            Objects.requireNonNull(modelName, "modelName must not be null");
+            sources = List.copyOf(Objects.requireNonNull(sources, "sources must not be null"));
+            arcadiaLibrary = List.copyOf(Objects.requireNonNull(arcadiaLibrary, "arcadiaLibrary must not be null"));
+            mappers = List.copyOf(Objects.requireNonNull(mappers, "mappers must not be null"));
+            Objects.requireNonNull(result, "result must not be null");
+            Objects.requireNonNull(errorCount, "errorCount must not be null");
+        }
+    }
+
+    /**
+     * Executes the complete Capella-to-SysML v2 transformation workflow.
+     *
+     * @param request
+     *            input archive and output directory
+     * @return the generated transformation summary
+     */
     @Override
     public TransformationSummary transform(TransformationRequest request) {
-        var outputDirectory = prepareOutputDirectory(
-                request.outputDirectory());
-        var extractedProject = extractProject(
-                request.inputZip(), outputDirectory);
-        try (var model = loadModel(extractedProject)) {
-            var logicalComponents = findLogicalComponents(
-                    model.root());
-            var arcadiaLibrary = loadArcadiaLibrary();
-            var resolver = new ArcadiaLibraryResolver(arcadiaLibrary);
-            var mappers = CapellaMapperCatalog.createMappers();
-            var engine = new TransformationEngine(new TransformationDispatcher(
-                    new DefaultMapperRegistry(mappers)), resolver);
-            var modelName = modelName(
-                    extractedProject.modelPath().getFileName().toString());
-            var result = engine.transform(model.root(),
-                    new TransformationOptions(false, false, false, modelName,
-                            modelName));
-            var generatedPartUsages = (int) logicalComponents.stream()
-                    .map(result.traceability()::lookupTarget)
-                    .flatMap(java.util.Optional::stream).count();
-            var errors = (int) result.diagnostics().stream().filter(
-                    diagnostic -> diagnostic.severity().name().equals("ERROR"))
-                    .count();
-            if (errors > 0) {
-                throw new IllegalStateException("Transformation produced "
-                        + errors + " error diagnostic(s)");
-            }
-            var outputModel = outputDirectory
-                    .resolve(modelName + ".sysml.xmi");
-            var resourceSet = arcadiaLibrary.get(0).eResource()
-                    .getResourceSet();
-            var reloadedRoot = new TemporarySysMLXmiExporter()
-                    .exportAndReload(result.root(), resourceSet, outputModel);
-            validateReloadedModel(reloadedRoot, result.generatedElements());
-            var report = new TransformationCoverageAnalyzer().analyze(
-                    new CapellaSemanticPackageDiscovery().discover(), mappers,
-                    arcadiaLibrary, CapellaMapperCatalog.alignmentCatalog());
-            writeCoverageReport(report,
-                    outputDirectory.resolve(".capella2sysmlv2"));
-            var coverageSummary = new MappingCoverageSummary(
-                    coverageValue(report.metaclassesWithMapperMetric()),
-                    coverageValue(report.arcadiaUtilization().overallMetric()),
-                    coverageValue(report.confirmedAlignmentMetric()));
-            return new TransformationSummary(logicalComponents.size(),
-                    generatedPartUsages, errors, outputModel, coverageSummary);
+        try (var model = CapellaModelLoadingUtils.load(request)) {
+            var transformation = ModelTransformationUtils.transform(
+                    model.root(), model.root().getName());
+            return TransformationReportingUtils.generate(transformation,
+                    request.outputDirectory().toAbsolutePath().normalize());
         } catch (TransformationCommandException exception) {
             throw exception;
         } catch (RuntimeException exception) {
@@ -101,128 +64,5 @@ public final class EquinoxTransformationService implements TransformationService
                     "Transformation failed: " + exception.getMessage(),
                     exception);
         }
-    }
-
-    private static void writeCoverageReport(
-            org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageReport report,
-            Path reportDirectory) {
-        try {
-            new TransformationCoverageWriter().write(report, reportDirectory);
-        } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Cannot write semantic mapping coverage reports",
-                    exception);
-        }
-    }
-
-    private static CoverageValue coverageValue(
-            org.obeonetwork.capella.sysmlv2.transformer.CoverageMetric metric) {
-        return new CoverageValue(metric.numerator(), metric.denominator());
-    }
-
-    private static Path prepareOutputDirectory(Path outputDirectory) {
-        try {
-            var normalized = outputDirectory.toAbsolutePath().normalize();
-            Files.createDirectories(normalized);
-            return normalized;
-        } catch (IOException exception) {
-            throw new TransformationCommandException(PROJECT_PREPARATION_FAILURE,
-                    "Cannot create output directory: " + outputDirectory,
-                    exception);
-        }
-    }
-
-    private static ExtractedCapellaProject extractProject(Path inputZip,
-            Path outputDirectory) {
-        try {
-            var normalizedInputZip = inputZip.toAbsolutePath().normalize();
-            var inputRoot = InternalInputDirectory
-                    .prepareInputDirectory(outputDirectory);
-            if (normalizedInputZip.startsWith(inputRoot)) {
-                throw new IllegalArgumentException(
-                        "Input archive must be outside the internal working directory: "
-                                + normalizedInputZip);
-            }
-            var extractionDirectory = inputRoot.resolve("project");
-            InternalInputDirectory.resetInternalDirectory(extractionDirectory);
-            return new CapellaProjectArchiveExtractor()
-                    .extract(normalizedInputZip, extractionDirectory);
-        } catch (IOException | RuntimeException exception) {
-            throw new TransformationCommandException(PROJECT_PREPARATION_FAILURE,
-                    "Cannot prepare Capella project: " + exception.getMessage(),
-                    exception);
-        }
-    }
-
-    private static LoadedCapellaResource loadModel(
-            ExtractedCapellaProject extractedProject) {
-        try {
-            return (LoadedCapellaResource) new CapellaResourceLoader().load(
-                    new ModelLoadRequest(extractedProject.projectDirectory(),
-                            extractedProject.modelPath()));
-        } catch (RuntimeException exception) {
-            throw new TransformationCommandException(MODEL_LOADING_FAILURE,
-                    "Cannot load Capella model: " + exception.getMessage(),
-                    exception);
-        }
-    }
-
-    private static List<EObject> loadArcadiaLibrary() {
-        try {
-            return new BundledArcadiaLibraryLoader().load();
-        } catch (RuntimeException exception) {
-            throw new TransformationCommandException(ARCADIA_LIBRARY_LOADING_FAILURE,
-                    "Cannot load Arcadia library: " + exception.getMessage(),
-                    exception);
-        }
-    }
-
-    private static void validateReloadedModel(EObject root,
-            List<EObject> generatedElements) {
-        var persistedElements = allContents(root);
-        var expectedPartUsages = generatedElements.stream()
-                .filter(PartUsage.class::isInstance).count();
-        var persistedPartUsages = persistedElements.stream()
-                .filter(PartUsage.class::isInstance).count();
-        var arcadiaTypeReferences = persistedElements.stream()
-                .filter(FeatureTyping.class::isInstance)
-                .map(FeatureTyping.class::cast).map(FeatureTyping::getType)
-                .filter(java.util.Objects::nonNull)
-                .filter(type -> type.eResource() != null && "arcadialibrary"
-                        .equals(type.eResource().getURI().scheme()))
-                .count();
-        if (persistedPartUsages != expectedPartUsages
-                || arcadiaTypeReferences != expectedPartUsages) {
-            throw new IllegalStateException(
-                    "Reloaded XMI model does not preserve all generated PartUsage elements "
-                            + "and Arcadia type references");
-        }
-    }
-
-    private static List<EObject> allContents(EObject root) {
-        var elements = new ArrayList<EObject>();
-        elements.add(root);
-        root.eAllContents().forEachRemaining(elements::add);
-        return List.copyOf(elements);
-    }
-
-    private static List<LogicalComponent> findLogicalComponents(EObject root) {
-        var result = new ArrayList<LogicalComponent>();
-        if (root instanceof LogicalComponent component) {
-            result.add(component);
-        }
-        var contents = root.eAllContents();
-        while (contents.hasNext()) {
-            var candidate = contents.next();
-            if (candidate instanceof LogicalComponent component) {
-                result.add(component);
-            }
-        }
-        return List.copyOf(result);
-    }
-
-    private static String modelName(String fileName) {
-        var extension = fileName.lastIndexOf('.');
-        return extension > 0 ? fileName.substring(0, extension) : fileName;
     }
 }

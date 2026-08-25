@@ -3,7 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Capella SysML v2 Bridge Application
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.application;singleton:=true
 Bundle-Version: 0.1.0.qualifier
-Export-Package: org.eclipse.capella.sysmlv2.bridge.application
+Export-Package: org.eclipse.capella.sysmlv2.bridge.application,
+ org.eclipse.capella.sysmlv2.bridge.application.loading,
+ org.eclipse.capella.sysmlv2.bridge.application.reporting,
+ org.eclipse.capella.sysmlv2.bridge.application.transformation
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,

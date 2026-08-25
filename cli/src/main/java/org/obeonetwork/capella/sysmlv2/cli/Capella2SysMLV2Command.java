@@ -64,8 +64,13 @@ public final class Capella2SysMLV2Command {
             var result = this.transformationService.transform(
                     new TransformationRequest(Path.of(arguments[0]), Path.of(arguments[1])));
             out.accept("Transformation completed");
-            out.accept("Source LogicalComponent count: " + result.sourceLogicalComponentCount());
-            out.accept("Generated PartUsage count: " + result.generatedPartUsageCount());
+
+            result.sourceElementCounts().forEach(count -> out.accept("Source "
+                    + count.metaclassName() + " count: " + count.count()));
+            result.generatedElementCounts().forEach(
+                    count -> out.accept("Generated " + count.metaclassName()
+                            + " count: " + count.count()));
+
             out.accept("Errors: " + result.errorCount());
             out.accept("Capella Transformation Coverage: "
                     + result.mappingCoverage().capellaTransformation().display());
