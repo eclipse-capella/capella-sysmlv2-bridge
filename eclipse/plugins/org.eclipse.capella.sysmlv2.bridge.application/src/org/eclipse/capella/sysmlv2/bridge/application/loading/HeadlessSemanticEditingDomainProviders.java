@@ -10,7 +10,7 @@
  * Contributors:
  *     Obeo - initial API and implementation
  *******************************************************************************/
-package org.eclipse.capella.sysmlv2.bridge.application;
+package org.eclipse.capella.sysmlv2.bridge.application.loading;
 
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
@@ -34,26 +34,53 @@ public final class HeadlessSemanticEditingDomainProviders implements ISemanticEd
 
     private final ICrossReferencerProvider crossReferencerProvider = editingDomain -> new SiriusCrossReferenceAdapter();
 
+    /**
+     * Provides the adapter factories used by the headless editing domain.
+     *
+     * @return the adapter factory provider
+     */
     @Override
     public IAdapterFactoryProvider getAdapterFactoryProvider() {
         return this.adapterFactoryProvider;
     }
 
+    /**
+     * Provides the cross-referencer used by the headless editing domain.
+     *
+     * @return the cross-referencer provider
+     */
     @Override
     public ICrossReferencerProvider getCrossReferencerProvider() {
         return this.crossReferencerProvider;
     }
 
+    /**
+     * Returns the read-only delegation handler.
+     *
+     * @return {@code null}; headless mode has no delegation handler
+     */
     @Override
     public IReadOnlyDelegationHandler getReadOnlyDelegationHandler() {
         return null;
     }
 
+    /**
+     * Returns the transaction change recorder provider.
+     *
+     * @return {@code null}; transactions are not recorded in headless mode
+     */
     @Override
     public ITransactionChangeRecorderProvider getTransactionChangeRecorderProvider() {
         return null;
     }
 
+    /**
+     * Returns the resource factory registry used by the editing domain.
+     *
+     * @param registry
+     *            registry supplied by Sirius
+     * @return the unchanged registry
+     */
     @Override
     public Resource.Factory.Registry getResourceFactoryRegistry(Resource.Factory.Registry registry) {
         return registry;

@@ -10,7 +10,7 @@
  * Contributors:
  *     Obeo - initial API and implementation
  *******************************************************************************/
-package org.eclipse.capella.sysmlv2.bridge.application;
+package org.eclipse.capella.sysmlv2.bridge.application.loading;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,7 +20,7 @@ import org.obeonetwork.capella.sysmlv2.loader.LoadedCapellaModel;
 import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 
-final class LoadedCapellaResource implements LoadedCapellaModel {
+public final class LoadedCapellaResource implements LoadedCapellaModel {
 
     private final SemanticEditingDomain editingDomain;
 
@@ -40,26 +40,49 @@ final class LoadedCapellaResource implements LoadedCapellaModel {
         return this.editingDomain;
     }
 
+    /**
+     * Returns the semantic resources loaded from the Capella project.
+     *
+     * @return the semantic resources
+     */
     @Override
     public List<Resource> semanticResources() {
         return List.of(this.semanticResource);
     }
 
+    /**
+     * Returns the Capella project root.
+     *
+     * @return the project root
+     */
     @Override
     public Project root() {
         return this.project;
     }
 
+    /**
+     * Returns diagnostics describing the loaded resource.
+     *
+     * @return load diagnostics
+     */
     @Override
     public List<String> diagnostics() {
         return List.of("Capella Project loaded from " + this.semanticResource.getURI());
     }
 
+    /**
+     * Indicates whether this resource has been closed.
+     *
+     * @return {@code true} when the editing domain has been disposed
+     */
     @Override
     public boolean isClosed() {
         return this.closed.get();
     }
 
+    /**
+     * Closes the editing domain associated with this resource.
+     */
     @Override
     public void close() {
         if (this.closed.compareAndSet(false, true)) {

@@ -16,7 +16,7 @@
    <extension
          point="org.polarsys.capella.common.platform.sirius.ted.semanticEditingDomainProviders">
       <semanticEditingDomainProviders
-            class="org.eclipse.capella.sysmlv2.bridge.application.HeadlessSemanticEditingDomainProviders">
+            class="org.eclipse.capella.sysmlv2.bridge.application.loading.HeadlessSemanticEditingDomainProviders">
       </semanticEditingDomainProviders>
    </extension>
    <extension

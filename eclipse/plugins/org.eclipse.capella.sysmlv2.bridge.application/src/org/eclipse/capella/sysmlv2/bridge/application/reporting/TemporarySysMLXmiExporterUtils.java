@@ -10,7 +10,7 @@
  * Contributors:
  *     Obeo - initial API and implementation
  *******************************************************************************/
-package org.eclipse.capella.sysmlv2.bridge.application;
+package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -26,9 +26,28 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 
-public final class TemporarySysMLXmiExporter {
+public final class TemporarySysMLXmiExporterUtils {
 
-    public EObject exportAndReload(EObject root, ResourceSet resourceSet, Path outputFile) {
+    private TemporarySysMLXmiExporterUtils() {
+        /* This utility class should not be instantiated */
+    }
+
+    /**
+     * Exports a model root to XMI and reloads it from the resulting file.
+     *
+     * @param root
+     *            model root to export
+     * @param resourceSet
+     *            resource set used for export and reload
+     * @param outputFile
+     *            destination XMI file
+     * @return the reloaded model root
+     * @throws NullPointerException
+     *             if an argument is {@code null}
+     * @throws IllegalStateException
+     *             if export or reload fails
+     */
+    public static EObject exportAndReload(EObject root, ResourceSet resourceSet, Path outputFile) {
         Objects.requireNonNull(root, "root must not be null");
         Objects.requireNonNull(resourceSet, "resourceSet must not be null");
         Objects.requireNonNull(outputFile, "outputFile must not be null");

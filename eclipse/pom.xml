@@ -33,6 +33,7 @@
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.mappings</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.application</module>
         <module>tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests</module>
+        <module>tests/org.eclipse.capella.sysmlv2.bridge.application.tests</module>
         <module>features/org.eclipse.capella.sysmlv2.bridge.headless.feature</module>
         <module>product/org.eclipse.capella.sysmlv2.bridge.product</module>
     </modules>
