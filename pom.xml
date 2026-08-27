@@ -41,8 +41,8 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-        <picocli.version>4.7.6</picocli.version>
         <syson.version>2026.7.2</syson.version>
+        <capella.for.syson.version>2026.7.0</capella.for.syson.version>
     </properties>
 
     <repositories>
@@ -57,6 +57,11 @@
         <repository>
             <id>github-sirius-emfjson</id>
             <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
+        </repository>
+        <repository>
+            <id>github-capella-for-syson</id>
+            <!-- Temporary until the package is published by eclipse-capella. -->
+            <url>https://maven.pkg.github.com/tbezierslafosse/capella-for-syson</url>
         </repository>
     </repositories>
 

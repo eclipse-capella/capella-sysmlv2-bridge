@@ -33,10 +33,10 @@ Both commands must report the intended JDK 21 installation.
 
 == GitHub Packages
 
-The build consumes artifacts from the SysON, Sirius, Sirius EMF JSON, and Arcadia GitHub Packages repositories.
+The build consumes artifacts from the SysON, Sirius, Sirius EMF JSON, Arcadia, and Capella for SysON GitHub Packages repositories.
 GitHub Packages may require authentication even when the corresponding source repositories are public.
 
-Create a GitHub personal access token with the `read:packages` permission, then expose its account and token to Maven:
+Create a GitHub personal access token (classic) with the `read:packages` permission, and grant its account read access to the Capella for SysON package if required. Then expose its account and token to Maven:
 
 [source,bash]
 ----
@@ -305,7 +305,7 @@ Configure these Actions secrets in the GitHub repository:
 The GitHub account that owns the package access token.
 
 `MAVEN_GITHUB_TOKEN`::
-A token with `read:packages` access to the required SysON, Sirius, and Arcadia packages.
+A token with `read:packages` access to the required SysON, Sirius, Arcadia, and Capella for SysON packages. GitHub Packages requires a classic personal access token for Maven authentication.
 
 The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when publishing the release.
 

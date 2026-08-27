@@ -6,7 +6,12 @@ Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.capella.sysmlv2.bridge.transformer,
- org.polarsys.capella.core.data.gen
-Export-Package: org.eclipse.capella.sysmlv2.bridge.mappings,
+ org.polarsys.capella.core.data.gen,
+ org.slf4j.api
+Export-Package: org.eclipse.capella.model.services.transverse,
+ org.eclipse.capella.sysmlv2.bridge.mappings,
  org.eclipse.capella.sysmlv2.bridge.mappings.la
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings
+Bundle-ClassPath: target/dependency/capella-model-services-2026.7.0.jar,
+ .,
+ target/dependency/syson-model-services-2026.7.2.jar

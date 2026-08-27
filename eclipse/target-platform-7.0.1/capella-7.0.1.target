@@ -37,6 +37,7 @@
       <unit id="junit-platform-launcher" version="1.9.2"/>
       <unit id="org.opentest4j" version="1.2.0"/>
       <unit id="org.eclipse.equinox.registry" version="3.11.200.v20220817-1601"/>
+      <unit id="org.slf4j.api" version="1.7.30.v20221112-0806"/>
       <unit id="org.eclipse.emf.workspace" version="1.5.2.202208110935"/>
       <repository location="https://download.eclipse.org/releases/2023-03/"/>
     </location>

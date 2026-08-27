@@ -23,5 +23,10 @@
             <username>${env.MAVEN_GITHUB_USERNAME}</username>
             <password>${env.MAVEN_GITHUB_TOKEN}</password>
         </server>
+        <server>
+            <id>github-capella-for-syson</id>
+            <username>${env.MAVEN_GITHUB_USERNAME}</username>
+            <password>${env.MAVEN_GITHUB_TOKEN}</password>
+        </server>
     </servers>
 </settings>
