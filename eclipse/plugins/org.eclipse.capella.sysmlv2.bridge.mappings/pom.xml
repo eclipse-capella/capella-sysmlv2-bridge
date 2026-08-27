@@ -23,4 +23,40 @@
     </parent>
     <artifactId>org.eclipse.capella.sysmlv2.bridge.mappings</artifactId>
     <packaging>eclipse-plugin</packaging>
+
+    <dependencies>
+		<dependency>
+		  <groupId>org.eclipse.capella</groupId>
+		  <artifactId>capella-model-services</artifactId>
+		  <version>${capella.for.syson.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-model-services</artifactId>
+            <version>${syson.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+						<?m2e ignore?>
+                        <id>copy-embedded-runtime</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <includeArtifactIds>capella-model-services, syson-model-services</includeArtifactIds>
+                            <excludeTransitive>false</excludeTransitive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

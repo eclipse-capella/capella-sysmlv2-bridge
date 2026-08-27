@@ -12,8 +12,9 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
+import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
+import org.eclipse.capella.model.services.transverse.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.TypedCapellaMapperAdapter;
-import org.eclipse.capella.sysmlv2.bridge.mappings.services.logical.architecture.LARepresentationMutationService;
 import org.obeonetwork.capella.sysmlv2.transformer.MappingCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
 import org.polarsys.capella.core.data.la.LaPackage;
@@ -22,6 +23,9 @@ import org.polarsys.capella.core.data.la.LogicalComponent;
 public final class LogicalComponentMapper
         extends
         TypedCapellaMapperAdapter<LogicalComponent> {
+    private final LAMutationService laMutationService = new LAMutationService();
+
+    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
 
     public LogicalComponentMapper() {
         super(LaPackage.Literals.LOGICAL_COMPONENT, LogicalComponent.class);
@@ -36,18 +40,17 @@ public final class LogicalComponentMapper
     }
 
     @Override
-    protected void transformTyped(LogicalComponent source,
-            TransformationContext context) {
+    protected void transformTyped(LogicalComponent source, TransformationContext context) {
         var name = source.getName();
         if (name == null || name.isBlank()) {
             context.diagnostics().error(source, "LogicalComponent.name must be a non-blank string");
             return;
         }
 
-        var service = new LARepresentationMutationService(context);
-        var partUsage = service.createComponent(
-                context.modelStructure().logicalArchitecturePackage(),
-                source);
-        partUsage.setDeclaredName(name);
+        var target = laMutationService.createComponentLA(context.modelStructure().logicalArchitecturePackage());
+        context.traceability().register(source, target);
+
+        target.setDeclaredName(name);
+        transverseMutationService.setElementDescription(target, source.getDescription());
     }
 }

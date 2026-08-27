@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.eclipse.capella.model.services.transverse.TransverseQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
 import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
@@ -34,6 +35,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
 import org.polarsys.capella.core.data.la.LaFactory;
 
 class LogicalComponentMapperTest {
+    private final TransverseQueryService transverseQueryService = new TransverseQueryService();
 
     @Test
     void catalogRegistersOnlyImplementedMappers() {
@@ -50,8 +52,11 @@ class LogicalComponentMapperTest {
 
     @Test
     void mapsARealLogicalComponentIntoTheLogicalArchitectureStructure() {
+        var sourceName = "Cabin Server";
+        var sourceDescription = "This a the cabin server description";
         var source = LaFactory.eINSTANCE.createLogicalComponent();
-        source.setName("Cabin Server");
+        source.setName(sourceName);
+        source.setDescription(sourceDescription);
         var libraryResolver = new ArcadiaLibraryResolver(
                 new BundledArcadiaLibraryLoader().load());
         var arcadiaComponent = libraryResolver.resolveDefinition(
@@ -65,7 +70,8 @@ class LogicalComponentMapperTest {
 
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
-        assertEquals("Cabin Server", target.getDeclaredName());
+        assertEquals(sourceName, target.getDeclaredName());
+        assertEquals(sourceDescription, transverseQueryService.getArcadiaElementDescription(target));
         var typing = assertInstanceOf(FeatureTyping.class, target.getOwnedRelationship().get(0));
         assertSame(target, typing.getTypedFeature());
         assertSame(arcadiaComponent, typing.getType());
