@@ -144,7 +144,8 @@ Intermediate XMI persistence and reload validation
 ----
 
 The transformation layer does not initialize Equinox, load projects, or serialize textual SysML.
-Mappers obtain Arcadia concepts through `TransformationContext.libraryResolver()` and must not load the library directly.
+The engine resolves the definitions required by the generated model structure from the shared `ResourceSet`.
+It attaches the generated root to that same `ResourceSet` before dispatching mappers, allowing SysON services to discover Arcadia concepts through `SysONEContentAdapter`.
 
 Mapper lookup uses `MetaclassId(nsURI, className)` rather than runtime `EClass` identity or class names alone.
 The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a Capella semantic editing domain with a Sirius cross-reference adapter. It requires a typed Capella `Project` root and does not create an Eclipse workspace, load an `.aird` resource, or open a Sirius session.

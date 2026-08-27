@@ -127,8 +127,7 @@ Mapper identity is based on `MetaclassId(nsURI, className)`, not runtime `EClass
 * generated elements;
 * deferred reference resolution;
 * diagnostics;
-* transformation options;
-* access to the Arcadia library resolver.
+* transformation options.
 
 All source elements are transformed in one shared context and deferred references are resolved once.
 
@@ -136,8 +135,8 @@ All source elements are transformed in one shared context and deferred reference
 
 The Equinox transformer loads `arcadia/library/arcadia.json` from the official open-source Arcadia library artifact using Sirius EMF JSON.
 
-The current resolver locates the real `Arcadia::Component` definition.
-Mappers access it only through `TransformationContext.libraryResolver()`.
+The transformation engine locates required definitions such as `Arcadia::Component` directly in the shared `ResourceSet`.
+The generated root is attached to that resource set before mapper dispatch, so SysON services can discover the Arcadia library through `SysONEContentAdapter`.
 
 Generated models reference the external Arcadia resource and do not redefine the component concept.
 

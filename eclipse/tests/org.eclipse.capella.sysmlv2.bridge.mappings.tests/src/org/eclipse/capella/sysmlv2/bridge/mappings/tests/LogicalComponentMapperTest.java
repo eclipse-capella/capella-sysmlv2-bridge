@@ -14,6 +14,7 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,10 +25,8 @@ import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoade
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.OwningMembership;
-import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
 import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
@@ -57,13 +56,11 @@ class LogicalComponentMapperTest {
         var source = LaFactory.eINSTANCE.createLogicalComponent();
         source.setName(sourceName);
         source.setDescription(sourceDescription);
-        var libraryResolver = new ArcadiaLibraryResolver(
-                new BundledArcadiaLibraryLoader().load());
-        var arcadiaComponent = libraryResolver.resolveDefinition(
-                "Arcadia::Component", PartDefinition.class);
+        var arcadiaLibrary = new BundledArcadiaLibraryLoader().load();
+        var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
         var engine = new TransformationEngine(
                 new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
-                libraryResolver);
+                resourceSet);
 
         var result = engine.transform(source,
                 new TransformationOptions(false, false, false, "IFE", "In-Flight Entertainment System"));
@@ -74,11 +71,17 @@ class LogicalComponentMapperTest {
         assertEquals(sourceDescription, transverseQueryService.getArcadiaElementDescription(target));
         var typing = assertInstanceOf(FeatureTyping.class, target.getOwnedRelationship().get(0));
         assertSame(target, typing.getTypedFeature());
-        assertSame(arcadiaComponent, typing.getType());
+        assertEquals("Arcadia::Component", typing.getType().getQualifiedName());
         var membership = assertInstanceOf(OwningMembership.class, target.eContainer());
-        var structurePackage = assertInstanceOf(org.eclipse.syson.sysml.Package.class, membership.eContainer());
+        var system = assertInstanceOf(PartUsage.class, membership.eContainer());
+        assertEquals("system", system.getDeclaredName());
+        var systemMembership = assertInstanceOf(OwningMembership.class, system.eContainer());
+        var structurePackage = assertInstanceOf(org.eclipse.syson.sysml.Package.class,
+                systemMembership.eContainer());
         assertEquals("Structure", structurePackage.getDeclaredName());
         assertSame(result.root(), EcoreUtil.getRootContainer(target));
+        assertNotNull(result.root().eResource());
+        assertSame(resourceSet, result.root().eResource().getResourceSet());
         assertTrue(result.diagnostics().isEmpty());
     }
 }

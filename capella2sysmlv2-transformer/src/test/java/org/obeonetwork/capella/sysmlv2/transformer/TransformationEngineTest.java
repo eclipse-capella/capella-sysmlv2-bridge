@@ -38,7 +38,7 @@ class TransformationEngineTest {
         };
         var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
 
-        var result = new TransformationEngine(dispatcher, new TestLibraryResolver())
+        var result = new TransformationEngine(dispatcher, TestSysONModels.arcadiaLibrary().resourceSet())
                 .transform(source, TransformationOptions.defaults());
 
         assertThat(result.root()).isNotNull();
@@ -64,7 +64,7 @@ class TransformationEngineTest {
         };
         var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
 
-        new TransformationEngine(dispatcher, new TestLibraryResolver())
+        new TransformationEngine(dispatcher, TestSysONModels.arcadiaLibrary().resourceSet())
                 .transformAll(List.of(first, second), TransformationOptions.defaults());
 
         assertThat(contexts).hasSize(2);
@@ -109,7 +109,7 @@ class TransformationEngineTest {
         };
 
         new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))),
-                new TestLibraryResolver()).transform(container, TransformationOptions.defaults());
+                TestSysONModels.arcadiaLibrary().resourceSet()).transform(container, TransformationOptions.defaults());
 
         assertThat(transformed).containsExactly(child);
     }

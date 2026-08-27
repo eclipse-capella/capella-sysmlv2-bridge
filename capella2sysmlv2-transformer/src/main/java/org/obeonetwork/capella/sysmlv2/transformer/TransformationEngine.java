@@ -14,26 +14,20 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 
 import java.util.Objects;
 
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
 public final class TransformationEngine implements CapellaToSysMLTransformer {
 
     private final TransformationDispatcher dispatcher;
 
-    private final LibraryResolver libraryResolver;
+    private final ResourceSet resourceSet;
 
-    private final DefaultArcadiaModelStructureBuilder modelStructureBuilder;
-
-    public TransformationEngine(TransformationDispatcher dispatcher, LibraryResolver libraryResolver) {
-        this(dispatcher, libraryResolver, new DefaultArcadiaModelStructureBuilder());
-    }
-
-    public TransformationEngine(TransformationDispatcher dispatcher, LibraryResolver libraryResolver,
-            DefaultArcadiaModelStructureBuilder modelStructureBuilder) {
+    public TransformationEngine(TransformationDispatcher dispatcher, ResourceSet resourceSet) {
         this.dispatcher = Objects.requireNonNull(dispatcher, "dispatcher must not be null");
-        this.libraryResolver = Objects.requireNonNull(libraryResolver, "libraryResolver must not be null");
-        this.modelStructureBuilder = Objects.requireNonNull(modelStructureBuilder,
-                "modelStructureBuilder must not be null");
+        this.resourceSet = Objects.requireNonNull(resourceSet, "resourceSet must not be null");
     }
 
     @Override
@@ -55,8 +49,12 @@ public final class TransformationEngine implements CapellaToSysMLTransformer {
         Objects.requireNonNull(sources, "sources must not be null");
         Objects.requireNonNull(options, "options must not be null");
 
-        var modelStructure = this.modelStructureBuilder.build(options, this.libraryResolver);
-        var context = new DefaultTransformationContext(options, this.libraryResolver, modelStructure);
+        var modelStructure = new DefaultArcadiaModelStructureBuilder().build(options, this.resourceSet);
+        var targetResource = new ResourceImpl(URI.createURI(
+                "transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
+        this.resourceSet.getResources().add(targetResource);
+        targetResource.getContents().add(modelStructure.root());
+        var context = new DefaultTransformationContext(options, modelStructure);
         for (EObject source : sources) {
             this.dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
         }
