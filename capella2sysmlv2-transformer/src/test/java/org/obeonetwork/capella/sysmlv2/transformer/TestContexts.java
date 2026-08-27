@@ -19,8 +19,8 @@ final class TestContexts {
 
     static DefaultTransformationContext create() {
         var options = TransformationOptions.defaults();
-        var resolver = new TestLibraryResolver();
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, resolver);
-        return new DefaultTransformationContext(options, resolver, structure);
+        var library = TestSysONModels.arcadiaLibrary();
+        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
+        return new DefaultTransformationContext(options, structure);
     }
 }

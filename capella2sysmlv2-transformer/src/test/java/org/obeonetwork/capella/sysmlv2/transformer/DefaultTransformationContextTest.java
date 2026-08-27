@@ -20,13 +20,12 @@ class DefaultTransformationContextTest {
 
     @Test
     void wiresSharedRuntimeServices() {
-        var resolver = new TestLibraryResolver();
+        var library = TestSysONModels.arcadiaLibrary();
         var options = new TransformationOptions(true, false, true);
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, resolver);
-        var context = new DefaultTransformationContext(options, resolver, structure);
+        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
+        var context = new DefaultTransformationContext(options, structure);
 
         assertThat(context.options()).isSameAs(options);
-        assertThat(context.libraryResolver()).isSameAs(resolver);
         assertThat(context.modelStructure()).isSameAs(structure);
         assertThat(context.traceability()).isNotNull();
         assertThat(context.diagnostics()).isNotNull();

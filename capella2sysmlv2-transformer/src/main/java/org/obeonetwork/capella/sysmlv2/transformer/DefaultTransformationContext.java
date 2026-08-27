@@ -18,8 +18,6 @@ public final class DefaultTransformationContext implements TransformationContext
 
     private final TransformationOptions options;
 
-    private final LibraryResolver libraryResolver;
-
     private final Traceability traceability;
 
     private final Diagnostics diagnostics;
@@ -28,29 +26,17 @@ public final class DefaultTransformationContext implements TransformationContext
 
     private final ArcadiaModelStructure modelStructure;
 
-    public DefaultTransformationContext(TransformationOptions options, LibraryResolver libraryResolver,
-            ArcadiaModelStructure modelStructure) {
-        this(options, libraryResolver, modelStructure, new IdentityTraceability(), new DefaultDiagnostics());
-    }
-
-    public DefaultTransformationContext(TransformationOptions options, LibraryResolver libraryResolver,
-            ArcadiaModelStructure modelStructure, Traceability traceability, Diagnostics diagnostics) {
+    public DefaultTransformationContext(TransformationOptions options, ArcadiaModelStructure modelStructure) {
         this.options = Objects.requireNonNull(options, "options must not be null");
-        this.libraryResolver = Objects.requireNonNull(libraryResolver, "libraryResolver must not be null");
         this.modelStructure = Objects.requireNonNull(modelStructure, "modelStructure must not be null");
-        this.traceability = Objects.requireNonNull(traceability, "traceability must not be null");
-        this.diagnostics = Objects.requireNonNull(diagnostics, "diagnostics must not be null");
+        this.traceability = new IdentityTraceability();
+        this.diagnostics = new DefaultDiagnostics();
         this.deferredReferenceResolver = new DefaultDeferredReferenceResolver(this.diagnostics);
     }
 
     @Override
     public TransformationOptions options() {
         return this.options;
-    }
-
-    @Override
-    public LibraryResolver libraryResolver() {
-        return this.libraryResolver;
     }
 
     @Override

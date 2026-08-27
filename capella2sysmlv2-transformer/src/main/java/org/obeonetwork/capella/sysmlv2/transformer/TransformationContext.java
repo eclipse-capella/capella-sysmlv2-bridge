@@ -16,8 +16,6 @@ public interface TransformationContext {
 
     TransformationOptions options();
 
-    LibraryResolver libraryResolver();
-
     Traceability traceability();
 
     Diagnostics diagnostics();

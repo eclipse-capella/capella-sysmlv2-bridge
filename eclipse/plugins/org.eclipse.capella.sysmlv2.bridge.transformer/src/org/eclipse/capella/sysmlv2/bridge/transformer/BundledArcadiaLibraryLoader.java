@@ -21,6 +21,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.sirius.emfjson.resource.JsonResourceFactoryImpl;
 import org.eclipse.syson.sysml.SysmlPackage;
+import org.eclipse.syson.util.SysONEContentAdapter;
 
 public final class BundledArcadiaLibraryLoader {
 
@@ -34,6 +35,7 @@ public final class BundledArcadiaLibraryLoader {
 
         var resourceSet = new ResourceSetImpl();
         resourceSet.getPackageRegistry().put(SysmlPackage.eNS_URI, SysmlPackage.eINSTANCE);
+        resourceSet.eAdapters().add(new SysONEContentAdapter());
         var resource = new JsonResourceFactoryImpl().createResource(URI.createURI("arcadialibrary:/arcadia.json"));
         resourceSet.getResources().add(resource);
         try (input) {

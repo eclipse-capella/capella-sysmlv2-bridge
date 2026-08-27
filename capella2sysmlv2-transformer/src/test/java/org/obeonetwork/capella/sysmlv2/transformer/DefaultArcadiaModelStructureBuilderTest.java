@@ -13,21 +13,23 @@
 package org.obeonetwork.capella.sysmlv2.transformer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.PartUsage;
+import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
 
 class DefaultArcadiaModelStructureBuilderTest {
 
     @Test
     void createsDefaultArcadiaModelStructure() {
-        var resolver = new TestLibraryResolver();
+        var library = TestSysONModels.arcadiaLibrary();
         var options = new TransformationOptions(false, false, false, "TestModel", "Test Model");
 
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, resolver);
+        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
 
         assertThat(structure.root().getDeclaredName()).isEqualTo("TestModel");
         assertThat(structure.root().getOwnedElement())
@@ -35,11 +37,11 @@ class DefaultArcadiaModelStructureBuilderTest {
                 .containsExactly("Operational Analysis", "System Analysis", "Logical Architecture",
                         "Physical Architecture", "EPBS Architecture");
 
-        assertPerspective(structure.root(), "Operational Analysis", false, resolver);
-        assertPerspective(structure.root(), "System Analysis", true, resolver);
-        assertPerspective(structure.root(), "Logical Architecture", true, resolver);
-        assertPerspective(structure.root(), "Physical Architecture", true, resolver);
-        assertPerspective(structure.root(), "EPBS Architecture", true, resolver);
+        assertPerspective(structure.root(), "Operational Analysis", false, library);
+        assertPerspective(structure.root(), "System Analysis", true, library);
+        assertPerspective(structure.root(), "Logical Architecture", true, library);
+        assertPerspective(structure.root(), "Physical Architecture", true, library);
+        assertPerspective(structure.root(), "EPBS Architecture", true, library);
         assertThat(structure.logicalArchitecturePackage().getDeclaredName()).isEqualTo("Structure");
         assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
         assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
@@ -53,8 +55,28 @@ class DefaultArcadiaModelStructureBuilderTest {
         assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
     }
 
+    @Test
+    void reportsMissingArcadiaDefinition() {
+        var arcadia = TestSysONModels.emptyArcadiaPackage();
+        addFunctionDefinition(arcadia);
+
+        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
+                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
+                .withMessageContaining("Arcadia::Component");
+    }
+
+    @Test
+    void reportsWrongArcadiaDefinitionType() {
+        var arcadia = TestSysONModels.arcadiaPackageWithWrongComponentType();
+        addFunctionDefinition(arcadia);
+
+        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
+                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
+                .withMessageContaining("PartDefinition");
+    }
+
     private static void assertPerspective(Element root, String perspectiveName, boolean hasSystemPart,
-            TestLibraryResolver resolver) {
+            TestSysONModels.ArcadiaTestLibrary library) {
         var perspectivePackage = root.getOwnedElement().stream()
                 .filter(element -> perspectiveName.equals(element.getDeclaredName()))
                 .findFirst()
@@ -70,7 +92,7 @@ class DefaultArcadiaModelStructureBuilderTest {
                     assertThat(action.getDeclaredName()).isEqualTo("Root Function");
                     assertThat(action.getOwnedRelationship()).singleElement()
                             .isInstanceOfSatisfying(FeatureTyping.class,
-                                    typing -> assertThat(typing.getType()).isSameAs(resolver.functionDefinition()));
+                                    typing -> assertThat(typing.getType()).isSameAs(library.functionDefinition()));
                 });
 
         var structurePackage = ownedElementNamed(perspectivePackage, "Structure");
@@ -79,11 +101,17 @@ class DefaultArcadiaModelStructureBuilderTest {
                     part -> {
                         assertThat(part.getDeclaredName()).isEqualTo("system");
                         assertThat(part.getOwnedRelationship()).singleElement().isInstanceOfSatisfying(FeatureTyping.class,
-                                typing -> assertThat(typing.getType()).isSameAs(resolver.componentDefinition()));
+                                typing -> assertThat(typing.getType()).isSameAs(library.componentDefinition()));
                     });
         } else {
             assertThat(structurePackage.getOwnedElement()).isEmpty();
         }
+    }
+
+    private static void addFunctionDefinition(Element arcadia) {
+        var function = SysmlFactory.eINSTANCE.createActionDefinition();
+        function.setDeclaredName("Function");
+        TestSysONModels.addOwnedElement(arcadia, function);
     }
 
     private static Element ownedElementNamed(Element owner, String name) {

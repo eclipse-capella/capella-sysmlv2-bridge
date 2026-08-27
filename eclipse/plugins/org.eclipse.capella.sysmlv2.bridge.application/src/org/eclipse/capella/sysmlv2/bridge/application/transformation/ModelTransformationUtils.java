@@ -22,7 +22,6 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
-import org.obeonetwork.capella.sysmlv2.transformer.ArcadiaLibraryResolver;
 import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
@@ -50,10 +49,10 @@ public final class ModelTransformationUtils {
     public static ModelTransformation transform(EObject root, String modelName) {
         var sources = allContents(root);
         var arcadiaLibrary = loadArcadiaLibrary();
+        var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
         var mappers = CapellaMapperCatalog.createMappers();
         var engine = new TransformationEngine(new TransformationDispatcher(
-                new DefaultMapperRegistry(mappers)),
-                new ArcadiaLibraryResolver(arcadiaLibrary));
+                new DefaultMapperRegistry(mappers)), resourceSet);
         var result = engine.transform(root, new TransformationOptions(false,
                 false, false, modelName, modelName));
         var errorCount = (int) result.diagnostics().stream()

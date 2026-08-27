@@ -14,12 +14,16 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.syson.sysml.ActionDefinition;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.SysmlFactory;
+import org.eclipse.syson.sysml.Type;
 
 public final class DefaultArcadiaModelStructureBuilder {
 
@@ -31,17 +35,17 @@ public final class DefaultArcadiaModelStructureBuilder {
      *
      * @param options
      *            the transformation options
-     * @param libraryResolver
-     *            the Arcadia library resolver
+     * @param resourceSet
+     *            the resource set containing the Arcadia library
      * @return the generated model structure
      */
-    public ArcadiaModelStructure build(TransformationOptions options, LibraryResolver libraryResolver) {
+    public ArcadiaModelStructure build(TransformationOptions options, ResourceSet resourceSet) {
         Objects.requireNonNull(options, "options must not be null");
-        Objects.requireNonNull(libraryResolver, "libraryResolver must not be null");
+        Objects.requireNonNull(resourceSet, "resourceSet must not be null");
 
-        var componentDefinition = libraryResolver.resolveDefinition(
+        var componentDefinition = resolveDefinition(resourceSet,
                 "Arcadia::Component", PartDefinition.class);
-        var functionDefinition = libraryResolver.resolveDefinition(
+        var functionDefinition = resolveDefinition(resourceSet,
                 "Arcadia::Function", ActionDefinition.class);
         var root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
         root.setDeclaredName(options.modelShortName());
@@ -55,6 +59,29 @@ public final class DefaultArcadiaModelStructureBuilder {
         return new ArcadiaModelStructure(root, operationalAnalysis.structurePackage(), systemAnalysis.structurePackage(),
                 logicalArchitecture.structurePackage(), physicalArchitecture.structurePackage(),
                 epbsArchitecture.structurePackage());
+    }
+
+    private static <T extends Type> T resolveDefinition(ResourceSet resourceSet, String qualifiedName,
+            Class<T> expectedType) {
+        var definition = resourceSet.getResources().stream()
+                .flatMap(resource -> resource.getContents().stream())
+                .flatMap(DefaultArcadiaModelStructureBuilder::descendants)
+                .filter(Element.class::isInstance)
+                .map(Element.class::cast)
+                .filter(element -> qualifiedName.equals(element.getQualifiedName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unable to resolve required Arcadia definition: " + qualifiedName));
+        if (!expectedType.isInstance(definition)) {
+            throw new IllegalStateException(qualifiedName + " must be a SysON "
+                    + expectedType.getSimpleName() + " but was " + definition.eClass().getName());
+        }
+        return expectedType.cast(definition);
+    }
+
+    private static Stream<EObject> descendants(EObject object) {
+        return Stream.concat(Stream.of(object), object.eContents().stream()
+                .flatMap(DefaultArcadiaModelStructureBuilder::descendants));
     }
 
     private static PerspectiveStructure createPerspective(Element owner, String name, PartDefinition componentDefinition,

@@ -32,7 +32,10 @@ class StandaloneProductIT {
                 ? "bridge.product.windows.directory"
                 : "bridge.product.unix.directory";
         var product = Path.of(System.getProperty(productProperty)).toAbsolutePath();
-        var executable = product.resolve("capella2sysmlv2");
+        var executableName = System.getProperty("os.name").startsWith("Windows")
+                ? "capella2sysmlv2.exe"
+                : "capella2sysmlv2";
+        var executable = product.resolve(executableName);
 
         assertTrue(Files.isRegularFile(executable),
                 "Standalone launcher does not exist: " + executable);
