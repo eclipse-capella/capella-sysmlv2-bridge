@@ -33,7 +33,12 @@ class StandaloneProductIT {
                 : "bridge.product.unix.directory";
         var product = Path.of(System.getProperty(productProperty)).toAbsolutePath();
         var executable = product.resolve("capella2sysmlv2");
-        assertTrue(executable.toFile().setExecutable(true) || Files.isExecutable(executable),
+
+        assertTrue(Files.isRegularFile(executable),
+                "Standalone launcher does not exist: " + executable);
+
+        assertTrue(executable.toFile().setExecutable(true)
+                || Files.isExecutable(executable),
                 "Cannot make standalone launcher executable: " + executable);
 
         var sampleProject = Path.of(System.getProperty("capella.ife.project")).toAbsolutePath();

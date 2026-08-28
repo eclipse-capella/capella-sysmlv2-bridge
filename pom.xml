@@ -33,16 +33,16 @@
     </modules>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <assertj.version>3.27.3</assertj.version>
-        <junit.version>5.11.4</junit.version>
+        <junit.version>6.1.3</junit.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <picocli.version>4.7.6</picocli.version>
-        <syson.version>2025.2.12</syson.version>
+        <syson.version>2026.7.2</syson.version>
     </properties>
 
     <repositories>
@@ -88,7 +88,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
+    
     <build>
         <pluginManagement>
             <plugins>
@@ -124,10 +124,120 @@
 
     <profiles>
         <profile>
-            <id>capella-product</id>
+            <id>capella-product-7.1.0</id>
+            <properties>
+                <capella.target.version>7.1.0</capella.target.version>
+            </properties>
             <modules>
                 <module>eclipse</module>
+                <module>eclipse/target-platform-${capella.target.version}</module>
+                <module>eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}</module>
+                <module>eclipse/official-product-it</module>
             </modules>
+            <repositories>
+                <repository>
+                    <id>capella-7.1.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/capella/core/updates/releases/7.1.0/org.polarsys.capella.rcp.site/</url>
+                </repository>
+                <repository>
+                    <id>sirius-7.4.14</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/sirius/updates/releases/7.4.14/2023-03/</url>
+                </repository>
+                <repository>
+                    <id>eclipse-2023-03</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/releases/2023-03/</url>
+                </repository>
+                <repository>
+                    <id>kitalpha-7.0.1</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/kitalpha/updates/releases/runtime/7.0.1/</url>
+                </repository>
+                <repository>
+                    <id>diffmerge-0.15.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/diffmerge/releases/0.15.0/emf-diffmerge-site/</url>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
+            <id>capella-product-7.0.1</id>
+            <properties>
+                <capella.target.version>7.0.1</capella.target.version>
+            </properties>
+            <modules>
+                <module>eclipse/target-platform-${capella.target.version}</module>
+                <module>eclipse</module>
+                <module>eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}</module>
+                <module>eclipse/official-product-it</module>
+            </modules>
+            <repositories>
+                <repository>
+                    <id>capella-7.0.1</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/capella/core/updates/releases/7.0.1/org.polarsys.capella.rcp.site/</url>
+                </repository>
+                <repository>
+                    <id>sirius-7.4.5</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/sirius/updates/releases/7.4.5/2023-03/</url>
+                </repository>
+                <repository>
+                    <id>eclipse-2023-03</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/releases/2023-03/</url>
+                </repository>
+                <repository>
+                    <id>kitalpha-7.0.1</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/kitalpha/updates/releases/runtime/7.0.1/</url>
+                </repository>
+                <repository>
+                    <id>diffmerge-0.15.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/diffmerge/releases/0.15.0/emf-diffmerge-site/</url>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
+            <id>capella-product-6.1.0</id>
+            <properties>
+                <capella.target.version>6.1.0</capella.target.version>
+            </properties>
+            <modules>
+                <module>eclipse/target-platform-${capella.target.version}</module>
+                <module>eclipse</module>
+                <module>eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}</module>
+            </modules>
+            <repositories>
+                <repository>
+                    <id>capella-6.1.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/capella/core/updates/releases/6.1.0/org.polarsys.capella.rcp.site/</url>
+                </repository>
+                <repository>
+                    <id>sirius-7.1.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/sirius/updates/releases/7.1.0/2021-06/</url>
+                </repository>
+                <repository>
+                    <id>eclipse-2021-06</id>
+                    <layout>p2</layout>
+                    <url>http://download.eclipse.org/releases/2021-06</url>
+                </repository>
+                <repository>
+                    <id>kitalpha-6.1.0</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/kitalpha/updates/stable/runtime/6.1.0.20230322/</url>
+                </repository>
+                <repository>
+                    <id>diffmerge-0.14.1</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/diffmerge/stable/0.14.1-S20230321/emf-diffmerge-site/</url>
+                </repository>
+            </repositories>
         </profile>
     </profiles>
 </project>

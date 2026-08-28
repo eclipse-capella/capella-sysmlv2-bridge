@@ -50,8 +50,10 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
 public final class CapellaMapperCatalog {
 
     private static final String ARCADIA_FUNCTION = "Arcadia::Function";
-	private static final String ARCADIA_COMPONENT = "Arcadia::Component";
-	private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
+
+    private static final String ARCADIA_COMPONENT = "Arcadia::Component";
+
+    private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
 
     private CapellaMapperCatalog() {
     }

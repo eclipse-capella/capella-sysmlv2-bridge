@@ -24,9 +24,9 @@ public final class TransformationCoverageWriter {
     public static final String JSON_FILE_NAME = "mapping-coverage.json";
 
     public static final String MARKDOWN_FILE_NAME = "mapping-coverage.md";
-    
+
     public static final String METRIC_COVERAGE_PERCENTAGE = "| Metric | Coverage | Percentage |\n| --- | ---: | ---: |\n";
-    
+
     public static final String CLASS_NAME = "\", \"className\": \"";
 
     public void write(TransformationCoverageReport report, Path outputDirectory) throws IOException {

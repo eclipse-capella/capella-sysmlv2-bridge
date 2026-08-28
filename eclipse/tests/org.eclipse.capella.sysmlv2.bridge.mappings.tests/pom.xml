@@ -12,33 +12,78 @@
      Obeo - initial API and implementation
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.eclipse.capella.sysmlv2</groupId>
-        <artifactId>capella-sysmlv2-eclipse-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
-        <relativePath>../..</relativePath>
-    </parent>
-    <artifactId>org.eclipse.capella.sysmlv2.bridge.mappings.tests</artifactId>
-    <packaging>eclipse-test-plugin</packaging>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.eclipse.capella.sysmlv2</groupId>
+		<artifactId>capella-sysmlv2-eclipse-parent</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+		<relativePath>../..</relativePath>
+	</parent>
+	<artifactId>org.eclipse.capella.sysmlv2.bridge.mappings.tests</artifactId>
+	<packaging>eclipse-test-plugin</packaging>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.eclipse.tycho</groupId>
-                <artifactId>tycho-surefire-plugin</artifactId>
-                <version>${tycho.version}</version>
-                <configuration>
-                    <providerHint>junit5</providerHint>
-                    <useUIHarness>false</useUIHarness>
-                    <useUIThread>false</useUIThread>
-                    <systemProperties>
-                        <mapper.skeleton.output>${project.build.directory}/generated-mapper-sources</mapper.skeleton.output>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<dependencies>
+		<!-- The API is used at compile time of the bundle -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- The console and the engine are only required at test execution time -->
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-console</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<version>${tycho.version}</version>
+
+				<executions>
+					<execution>
+						<id>execute-integration-tests</id>
+						<goals>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				
+				<configuration>
+					<failIfNoTests>false</failIfNoTests>
+					<providerHint>junit5</providerHint>
+					<useUIHarness>false</useUIHarness>
+					<useUIThread>false</useUIThread>
+				</configuration>
+			</plugin>
+		</plugins>
+
+	</build>
 </project>

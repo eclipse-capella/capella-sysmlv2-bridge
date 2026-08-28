@@ -4,8 +4,10 @@ Bundle-Name: Capella SysML v2 Bridge Application Tests
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.application.tests
 Bundle-Version: 0.1.0.qualifier
 Fragment-Host: org.eclipse.capella.sysmlv2.bridge.application
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.junit,
- junit-jupiter-api,
  org.opentest4j
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Import-Package: org.junit.jupiter.api,
+ org.junit.jupiter.api.function
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.application.tests
+Bundle-ClassPath: .

@@ -21,7 +21,7 @@
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
-    <artifactId>org.eclipse.capella.sysmlv2.bridge.product</artifactId>
+    <artifactId>org.eclipse.capella.sysmlv2.bridge.product.7.1.0</artifactId>
     <packaging>eclipse-repository</packaging>
     <build>
         <plugins>
@@ -41,7 +41,7 @@
                 </executions>
                 <configuration>
                     <products>
-                        <product><id>org.eclipse.capella.sysmlv2.bridge.product</id></product>
+                        <product><id>org.eclipse.capella.sysmlv2.bridge.product.7.1.0</id></product>
                     </products>
                 </configuration>
             </plugin>

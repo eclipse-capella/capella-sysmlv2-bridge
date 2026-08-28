@@ -16,26 +16,30 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.obeonetwork.capella.sysmlv2</groupId>
+        <artifactId>capella-sysmlv2-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+
     <groupId>org.eclipse.capella.sysmlv2</groupId>
     <artifactId>capella-sysmlv2-eclipse-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
         <tycho.version>4.0.12</tycho.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <modules>
-        <module>target-platform</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.transformer</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.mappings</module>
         <module>plugins/org.eclipse.capella.sysmlv2.bridge.application</module>
         <module>tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests</module>
         <module>tests/org.eclipse.capella.sysmlv2.bridge.application.tests</module>
         <module>features/org.eclipse.capella.sysmlv2.bridge.headless.feature</module>
-        <module>product/org.eclipse.capella.sysmlv2.bridge.product</module>
     </modules>
 
     <repositories>
@@ -56,31 +60,6 @@
             <!-- Temporary until the package is published by eclipse-capella. -->
             <url>https://maven.pkg.github.com/obeo/arcadia-sysmlv2-lib</url>
         </repository>
-        <repository>
-            <id>capella-7.0.1</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/capella/core/updates/releases/7.0.1/org.polarsys.capella.rcp.site/</url>
-        </repository>
-        <repository>
-            <id>eclipse-2023-03</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2023-03/</url>
-        </repository>
-        <repository>
-            <id>sirius-7.4.5</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/sirius/updates/releases/7.4.5/2023-03/</url>
-        </repository>
-        <repository>
-            <id>kitalpha-7.0.1</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/kitalpha/updates/releases/runtime/7.0.1/</url>
-        </repository>
-        <repository>
-            <id>diffmerge-0.15.0</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/diffmerge/releases/0.15.0/emf-diffmerge-site/</url>
-        </repository>
     </repositories>
 
     <build>
@@ -99,92 +78,30 @@
                     <target>
                         <artifact>
                             <groupId>org.eclipse.capella.sysmlv2</groupId>
-                            <artifactId>capella-7.0.1-target</artifactId>
+                            <artifactId>capella-target-${capella.target.version}</artifactId>
                             <version>${project.version}</version>
-                            <classifier>capella-7.0.1</classifier>
+                            <classifier>capella-${capella.target.version}</classifier>
                         </artifact>
+	                    <executionEnvironmentDefault>JavaSE-21</executionEnvironmentDefault>
+	                    <dependency-resolution>
+	                        <optionalDependencies>ignore</optionalDependencies>
+	                    </dependency-resolution>
                     </target>
-                    <environments>
-                        <environment>
-                            <os>linux</os>
-                            <ws>gtk</ws>
-                            <arch>x86_64</arch>
-                        </environment>
-                        <environment>
-                            <os>win32</os>
-                            <ws>win32</ws>
-                            <arch>x86_64</arch>
-                        </environment>
-                    </environments>
-                    <executionEnvironmentDefault>JavaSE-17</executionEnvironmentDefault>
-                    <dependency-resolution>
-                        <optionalDependencies>ignore</optionalDependencies>
-                    </dependency-resolution>
+					<environments>
+						<environment>
+							<os>linux</os>
+							<ws>gtk</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<environment>
+							<os>win32</os>
+							<ws>win32</ws>
+							<arch>x86_64</arch>
+						</environment>
+					</environments>
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-	        <plugins>
-	            <plugin>
-	                <groupId>org.eclipse.m2e</groupId>
-	                <artifactId>lifecycle-mapping</artifactId>
-	                <version>1.0.0</version>
-	
-	                <configuration>
-	                    <lifecycleMappingMetadata>
-	                        <pluginExecutions>
-	                            <pluginExecution>
-	                                <pluginExecutionFilter>
-	                                    <groupId>org.eclipse.tycho</groupId>
-	                                    <artifactId>
-	                                        tycho-bnd-plugin
-	                                    </artifactId>
-	                                    <versionRange>
-	                                        [4.0.12,4.0.13)
-	                                    </versionRange>
-	                                    <goals>
-	                                        <goal>process</goal>
-	                                    </goals>
-	                                </pluginExecutionFilter>
-	
-	                                <action>
-	                                    <ignore/>
-	                                </action>
-	                            </pluginExecution>
-	                            <pluginExecution>
-		                            <pluginExecutionFilter>
-		                                <groupId>
-		                                    org.apache.maven.plugins
-		                                </groupId>
-		                                <artifactId>
-		                                    maven-clean-plugin
-		                                </artifactId>
-		                                <versionRange>
-		                                    [3.2.0,4.0.0)
-		                                </versionRange>
-		                                <goals>
-		                                    <goal>clean</goal>
-		                                </goals>
-		                            </pluginExecutionFilter>
-		
-		                            <action>
-		                                <ignore/>
-		                            </action>
-		                        </pluginExecution>
-	                        </pluginExecutions>
-	                    </lifecycleMappingMetadata>
-	                </configuration>
-	            </plugin>
-	        </plugins>
-	    </pluginManagement>
     </build>
 
-    <profiles>
-        <profile>
-            <id>capella-product-it</id>
-            <modules>
-                <module>official-product-it</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>

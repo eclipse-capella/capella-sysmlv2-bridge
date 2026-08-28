@@ -21,7 +21,6 @@
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
-    <artifactId>capella-7.0.1-target</artifactId>
+    <artifactId>capella-target-7.1.0</artifactId>
     <packaging>eclipse-target-definition</packaging>
-
 </project>

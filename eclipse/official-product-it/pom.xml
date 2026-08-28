@@ -25,8 +25,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <capella.source.commit>8e92bb0cb4bfa90ab08bac68c36ab273702d64b7</capella.source.commit>
-        <capella.ife.base.url>https://raw.githubusercontent.com/eclipse-capella/capella/${capella.source.commit}/samples/In-Flight%20Entertainment%20System</capella.ife.base.url>
+        <capella.ife.base.url>https://raw.githubusercontent.com/eclipse-capella/capella/v${capella.target.version}/samples/In-Flight%20Entertainment%20System</capella.ife.base.url>
         <maven.failsafe.version>3.5.2</maven.failsafe.version>
         <capella.java.executable>${java.home}/bin/java</capella.java.executable>
     </properties>
@@ -35,7 +34,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -80,11 +78,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven.failsafe.version}</version>
                 <configuration>
                     <systemPropertyVariables>
-                        <bridge.product.unix.directory>${project.parent.basedir}/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64</bridge.product.unix.directory>
-                        <bridge.product.windows.directory>${project.parent.basedir}/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product/win32/win32/x86_64</bridge.product.windows.directory>
+                        <bridge.product.unix.directory>${project.parent.basedir}/product/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}/target/products/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}/linux/gtk/x86_64</bridge.product.unix.directory>
+                        <bridge.product.windows.directory>${project.parent.basedir}/product/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}/target/products/org.eclipse.capella.sysmlv2.bridge.product.${capella.target.version}/win32/win32/x86_64</bridge.product.windows.directory>
                         <runtime.test.output>${project.build.directory}/runtime</runtime.test.output>
                         <capella.ife.project>${project.build.directory}/ife/In-Flight Entertainment System</capella.ife.project>
                         <capella.java.executable>${capella.java.executable}</capella.java.executable>

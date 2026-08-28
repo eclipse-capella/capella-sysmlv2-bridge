@@ -17,10 +17,10 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.services.transverse.Tr
 import static org.eclipse.capella.sysmlv2.bridge.mappings.services.transverse.TransverseQueryService.ARCADIA_PREFIX;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.services.transverse.TransverseMutationService;
-import org.eclipse.syson.services.ElementInitializerSwitch;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
+import org.eclipse.syson.sysml.metamodel.services.ElementInitializerSwitch;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 

@@ -76,59 +76,5 @@
 	        </plugin>
 	    </plugins>
 	
-	    <pluginManagement>
-	        <plugins>
-	            <plugin>
-	                <groupId>org.eclipse.m2e</groupId>
-	                <artifactId>lifecycle-mapping</artifactId>
-	                <version>1.0.0</version>
-	
-	                <configuration>
-	                    <lifecycleMappingMetadata>
-	                        <pluginExecutions>
-	                            <pluginExecution>
-	                                <pluginExecutionFilter>
-	                                    <groupId>org.eclipse.tycho</groupId>
-	                                    <artifactId>
-	                                        tycho-packaging-plugin
-	                                    </artifactId>
-	                                    <versionRange>
-	                                        [4.0.12,4.0.13)
-	                                    </versionRange>
-	                                    <goals>
-	                                        <goal>package-plugin</goal>
-	                                    </goals>
-	                                </pluginExecutionFilter>
-	
-	                                <action>
-	                                    <ignore/>
-	                                </action>
-	                            </pluginExecution>
-	
-	                            <pluginExecution>
-	                                <pluginExecutionFilter>
-	                                    <groupId>org.eclipse.tycho</groupId>
-	                                    <artifactId>
-	                                        tycho-bnd-plugin
-	                                    </artifactId>
-	                                    <versionRange>
-	                                        [4.0.12,4.0.13)
-	                                    </versionRange>
-	                                    <goals>
-	                                        <goal>process</goal>
-	                                    </goals>
-	                                </pluginExecutionFilter>
-	
-	                                <action>
-	                                    <ignore/>
-	                                </action>
-	                            </pluginExecution>
-	
-	                        </pluginExecutions>
-	                    </lifecycleMappingMetadata>
-	                </configuration>
-	            </plugin>
-	        </plugins>
-	    </pluginManagement>
 	</build>
 </project>
