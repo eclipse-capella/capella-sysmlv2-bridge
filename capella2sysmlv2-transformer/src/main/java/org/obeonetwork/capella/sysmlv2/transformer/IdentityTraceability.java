@@ -21,8 +21,10 @@ import org.eclipse.emf.ecore.EObject;
 public final class IdentityTraceability implements Traceability {
 
     private static final String TARGET_MUST_NOT_BE_NULL = "target must not be null";
-	private static final String SOURCE_MUST_NOT_BE_NULL = "source must not be null";
-	private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
+
+    private static final String SOURCE_MUST_NOT_BE_NULL = "source must not be null";
+
+    private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
 
     @Override
     public void register(EObject source, EObject target) {

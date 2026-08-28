@@ -16,12 +16,12 @@ import java.util.Locale;
 
 public record CoverageMetric(long numerator, long denominator) {
 
-	public CoverageMetric {
-		if (numerator < 0 || denominator < 0 || numerator > denominator) {
-			throw new IllegalArgumentException(
-					"Invalid coverage metric " + numerator + "/" + denominator);
-		}
-	}
+    public CoverageMetric {
+        if (numerator < 0 || denominator < 0 || numerator > denominator) {
+            throw new IllegalArgumentException(
+                    "Invalid coverage metric " + numerator + "/" + denominator);
+        }
+    }
 
     public double percentage() {
         return this.denominator == 0 ? 0.0 : this.numerator * 100.0 / this.denominator;

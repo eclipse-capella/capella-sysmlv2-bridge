@@ -7,7 +7,7 @@ Export-Package: org.eclipse.capella.sysmlv2.bridge.application,
  org.eclipse.capella.sysmlv2.bridge.application.loading,
  org.eclipse.capella.sysmlv2.bridge.application.reporting,
  org.eclipse.capella.sysmlv2.bridge.application.transformation
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,

@@ -15,7 +15,7 @@ For implemented capabilities and planned work, see link:project-status.adoc[Proj
 
 The development environment requires:
 
-* JDK 17;
+* JDK 21;
 * Maven 3.9 or later;
 * Git;
 * network access to Maven Central, Eclipse p2 repositories, and GitHub Packages;
@@ -29,7 +29,7 @@ java -version
 mvn -version
 ----
 
-Both commands must report the intended JDK 17 installation.
+Both commands must report the intended JDK 21 installation.
 
 == GitHub Packages
 
@@ -56,12 +56,6 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
-[NOTE]
-====
-The build temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private `obeo/arcadia-sysmlv2-lib` GitHub Packages repository.
-Once the artifact is published by `eclipse-capella/arcadia-sysmlv2-lib`, the repository URL must be switched to the official location.
-====
-
 To verify package access without reusing the local Maven cache:
 
 [source,bash]
@@ -71,7 +65,7 @@ mvn --settings .github/maven-settings.xml \
   -Dmaven.repo.local="$TEST_M2" \
   org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get \
   -Dartifact=org.eclipse.arcadia:arcadia-library:0.0.3 \
-  -DremoteRepositories=github-arcadia::default::https://maven.pkg.github.com/obeo/arcadia-sysmlv2-lib
+  -DremoteRepositories=github-arcadia::default::https://maven.pkg.github.com/eclipse-capella/arcadia-sysmlv2-lib
 ----
 
 == Repository Structure
@@ -320,16 +314,16 @@ The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` only when p
 The workflow performs the following operations:
 
 . validates semantic-version tags and their ancestry from `main`;
-. executes the complete Maven, Tycho, and standalone product build with Java 17;
+. executes the complete Maven, Tycho, and standalone product build with Java 21;
 . materializes the Linux and Windows products;
 . renames the archives to stable public asset names;
 . runs the IFE scenario from the Linux archive without `DISPLAY`;
 . runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary, Arcadia references, and Java 17 runtime;
+. verifies the `23/23/0` summary, Arcadia references, and Java 21 runtime;
 . uploads diagnostic logs after failures;
 . creates the GitHub Release for tags only and only after every preceding job succeeds.
 
-The complete Java 17 qualification command used by the workflow is:
+The complete Java 21 qualification command used by the workflow is:
 
 [source,bash]
 ----

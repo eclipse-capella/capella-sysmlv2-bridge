@@ -27,10 +27,10 @@ Build and contribution instructions are maintained in link:developer-guide.adoc[
 |Component |Version or constraint
 
 |Java
-|17
+|21
 
 |Capella
-|7.0.1
+|7.1.0, 7.0.1, 6.1.0
 
 |SysON
 |2025.2.12

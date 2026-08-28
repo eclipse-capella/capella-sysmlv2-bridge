@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde?>
+<target name="Capella 7.1.0" sequenceNumber="1">
+  <locations>
+    <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+      <unit id="org.eclipse.equinox.executable.feature.group" version="3.8.2000.v20221201-0912"/>
+      <unit id="org.eclipse.core.runtime" version="3.26.100.v20221021-0005"/>
+      <unit id="org.eclipse.equinox.app" version="1.6.200.v20220720-2012"/>
+      <unit id="org.eclipse.emf.ecore" version="2.33.0.v20230226-0921"/>
+      <unit id="org.eclipse.emf.ecore.xmi" version="2.18.0.v20230211-1150"/>
+      <unit id="org.eclipse.emf.edit" version="2.18.0.v20230211-1150"/>
+      <unit id="org.eclipse.emf.transaction" version="1.9.2.202208110935"/>
+      <unit id="org.eclipse.emf.workspace" version="1.5.2.202208110935"/>
+      <unit id="org.eclipse.emf.validation" version="1.8.1.202208271102"/>
+      <unit id="org.eclipse.emf.common" version="2.28.0.v20230223-0922"/>
+      <unit id="org.junit" version="4.13.2.v20211018-1956"/>
+      <unit id="junit-jupiter-api" version="5.9.2"/>
+      <unit id="junit-jupiter-engine" version="5.9.2"/>
+      <unit id="junit-platform-commons" version="1.9.2"/>
+      <unit id="junit-platform-engine" version="1.9.2"/>
+      <unit id="junit-platform-launcher" version="1.9.2"/>
+      <unit id="org.opentest4j" version="1.2.0"/>
+      <unit id="org.eclipse.equinox.registry" version="3.11.200.v20220817-1601"/>
+      <repository location="https://download.eclipse.org/releases/2023-03/"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+      <unit id="org.polarsys.kitalpha.emde" version="7.0.1.202501061415"/>
+      <unit id="org.polarsys.kitalpha.emde.model" version="7.0.1.202501061415"/>
+      <unit id="org.polarsys.kitalpha.emde.xmi" version="7.0.1.202501061415"/>
+      <repository location="https://download.eclipse.org/kitalpha/updates/releases/runtime/7.0.1/"/>
+    </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="https://download.eclipse.org/capella/core/updates/releases/7.1.0/org.polarsys.capella.rcp.site/"/>
+		  <unit id="org.polarsys.capella.cdo.mock.feature.feature.group" version="7.1.0.202606231255"/>
+		  <unit id="org.polarsys.capella.core.sirius.elk.feature.feature.group" version="7.1.0.202606231255"/>
+		  <unit id="org.polarsys.capella.doc.feature.feature.group" version="7.1.0.202606231255"/>
+		  <unit id="org.polarsys.capella.rcp.feature.group" version="7.1.0.202606231255"/>
+		  <unit id="org.polarsys.capella.rcp.source.feature.group" version="7.1.0.202606231255"/>
+		  <unit id="org.polarsys.capella.viatra.core.feature.feature.group" version="7.1.0.202606231255"/>
+	  </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="https://download.eclipse.org/sirius/updates/releases/7.4.14/2023-03/"/>
+		  <unit id="org.eclipse.sirius.aql.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.diagram.elk.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.doc.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.interpreter.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.model.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.properties.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.acceleo.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.aql.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.eef.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.ui.acceleo.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.ui.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.xtext.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.runtime.ocl.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.samples.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.samples.properties.feature.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.acceleo.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.aql.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.feature.group" version="7.4.14.202512030914"/>
+		  <unit id="org.eclipse.sirius.specifier.properties.feature.feature.group" version="7.4.14.202512030914"/>
+	  </location>
+  </locations>
+</target>

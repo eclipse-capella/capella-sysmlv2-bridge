@@ -19,7 +19,7 @@ public record TransformationOptions(boolean generateUUIDs, boolean preserveIds, 
 
     private static final String MODEL = "Model";
 
-	public TransformationOptions {
+    public TransformationOptions {
         Objects.requireNonNull(modelShortName, "modelShortName must not be null");
         Objects.requireNonNull(modelName, "modelName must not be null");
     }

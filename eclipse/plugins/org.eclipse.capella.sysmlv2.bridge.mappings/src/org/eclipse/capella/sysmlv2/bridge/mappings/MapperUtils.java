@@ -6,17 +6,17 @@ import org.polarsys.capella.common.data.modellingcore.AbstractNamedElement;
 
 public class MapperUtils {
 
-	private MapperUtils() {
-	}
+    private MapperUtils() {
+    }
 
-	public static void transformName(AbstractNamedElement source,
-			Element target, TransformationContext context) {
-		var name = source.getName();
-		if (name == null || name.isBlank()) {
-			context.diagnostics().error(source,
-					"LogicalComponent.name must be a non-blank string");
-		} else {
-			target.setDeclaredName(name);
-		}
-	}
+    public static void transformName(AbstractNamedElement source,
+            Element target, TransformationContext context) {
+        var name = source.getName();
+        if (name == null || name.isBlank()) {
+            context.diagnostics().error(source,
+                    "LogicalComponent.name must be a non-blank string");
+        } else {
+            target.setDeclaredName(name);
+        }
+    }
 }

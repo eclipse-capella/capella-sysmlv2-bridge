@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Capella SysML v2 Bridge Mappings
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.mappings
 Bundle-Version: 0.1.0.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.capella.sysmlv2.bridge.transformer,
  org.polarsys.capella.core.data.gen

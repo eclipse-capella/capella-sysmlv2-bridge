@@ -39,25 +39,53 @@ jobs:
             exit 1
           fi
 
-      - name: Set up Java 17
+      - name: Configure package registries
+        run: |
+          cat > .github/maven-settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                  <id>github-sirius-emfjson</id>
+                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
+                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                  <id>github-sirius-web</id>
+                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
+                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                  <id>github-syson</id>
+                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
+                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                  <id>github-arcadia</id>
+                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
+                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
           cache: maven
-
-      - name: Qualify build and Linux product
+                
+      - name: Qualify build and Linux and Windows products for Capella 7.1.0
         run: >-
           mvn --batch-mode --no-transfer-progress
           --settings .github/maven-settings.xml
-          -Pcapella-product,capella-product-it
+          -Pcapella-product-7.1.0
           clean verify
-
+          
       - name: Upload build qualification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-qualification-evidence
+          name: build-qualification-evidence-7.1.0
           path: |
             eclipse/official-product-it/target/failsafe-reports/
             eclipse/official-product-it/target/runtime/
@@ -68,14 +96,76 @@ jobs:
         shell: bash
         run: |
           install -D \
-            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product-linux.gtk.x86_64.tar.gz \
-            dist/capella2sysmlv2-linux-x86_64.tar.gz
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.1.0/target/products/org.eclipse.capella.sysmlv2.bridge.product.7.1.0-linux.gtk.x86_64.tar.gz \
+            dist/capella2sysmlv2-Capella.7.1.0-linux-x86_64.tar.gz
           install -D \
-            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/org.eclipse.capella.sysmlv2.bridge.product-win32.win32.x86_64.zip \
-            dist/capella2sysmlv2-windows-x86_64.zip
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.1.0/target/products/org.eclipse.capella.sysmlv2.bridge.product.7.1.0-win32.win32.x86_64.zip \
+            dist/capella2sysmlv2-Capella.7.1.0-windows-x86_64.zip
           install -D \
             eclipse/official-product-it/target/runtime/standalone/ife.zip \
             dist/InFlightEntertainmentSystem.zip
+
+      - name: Qualify build and Linux and Windows products for Capella 7.0.1
+        run: >-
+          mvn --batch-mode --no-transfer-progress
+          --settings .github/maven-settings.xml
+          -Pcapella-product-7.0.1
+          clean verify
+
+      - name: Upload build qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-qualification-evidence-7.0.1
+          path: |
+            eclipse/official-product-it/target/failsafe-reports/
+            eclipse/official-product-it/target/runtime/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Prepare distributions
+        shell: bash
+        run: |
+          install -D \
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/target/products/org.eclipse.capella.sysmlv2.bridge.product.7.0.1-linux.gtk.x86_64.tar.gz \
+            dist/capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz
+          install -D \
+            eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/target/products/org.eclipse.capella.sysmlv2.bridge.product.7.0.1-win32.win32.x86_64.zip \
+            dist/capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip
+          install -D \
+            eclipse/official-product-it/target/runtime/standalone/ife.zip \
+            dist/InFlightEntertainmentSystem.zip
+
+      # - name: Qualify build and Linux and Windows products for Capella 6.1.0
+      #   run: >-
+      #     mvn --batch-mode --no-transfer-progress
+      #     --settings .github/maven-settings.xml
+      #     -Pcapella-product-6.1.0
+      #     clean verify
+
+      # - name: Upload build qualification evidence
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-qualification-evidence
+      #     path: |
+      #       eclipse/official-product-it/target/failsafe-reports/
+      #       eclipse/official-product-it/target/runtime/
+      #     if-no-files-found: ignore
+      #     retention-days: 7
+
+      # - name: Prepare distributions
+      #   shell: bash
+      #   run: |
+      #     install -D \
+      #       eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.6.1.0/target/products/org.eclipse.capella.sysmlv2.bridge.product.6.1.0-linux.gtk.x86_64.tar.gz \
+      #       dist/capella2sysmlv2-Capella.6.1.0-linux-x86_64.tar.gz
+      #     install -D \
+      #       eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.6.1.0/target/products/org.eclipse.capella.sysmlv2.bridge.product.6.1.0-win32.win32.x86_64.zip \
+      #       dist/capella2sysmlv2-Capella.6.1.0-windows-x86_64.zip
+      #     install -D \
+      #       eclipse/official-product-it/target/runtime/standalone/ife.zip \
+      #       dist/InFlightEntertainmentSystem.zip
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -92,11 +182,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Download distributions
         uses: actions/download-artifact@v4
@@ -107,7 +197,7 @@ jobs:
       - name: Extract Linux product
         run: |
           mkdir product
-          tar -xzf dist/capella2sysmlv2-linux-x86_64.tar.gz -C product
+          tar -xzf dist/capella2sysmlv2-Capella.7.1.0-linux-x86_64.tar.gz -C product
           chmod +x product/capella2sysmlv2
 
       - name: Transform IFE sample
@@ -157,11 +247,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Download distributions
         uses: actions/download-artifact@v4
@@ -171,7 +261,7 @@ jobs:
 
       - name: Extract Windows product
         shell: pwsh
-        run: Expand-Archive -Path dist/capella2sysmlv2-windows-x86_64.zip -DestinationPath product
+        run: Expand-Archive -Path dist/capella2sysmlv2-Capella.7.1.0-windows-x86_64.zip -DestinationPath product
 
       - name: Transform IFE sample
         shell: pwsh
@@ -258,11 +348,16 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          # To add to the following 'run' section
+          # dist/capella2sysmlv2-Capella.6.1.0-linux-x86_64.tar.gz
+          # dist/capella2sysmlv2-Capella.6.1.0-windows-x86_64.zip
         run: >-
           gh release create "$GITHUB_REF_NAME"
-          dist/capella2sysmlv2-linux-x86_64.tar.gz
-          dist/capella2sysmlv2-windows-x86_64.zip
+          dist/capella2sysmlv2-Capella.7.1.0-linux-x86_64.tar.gz
+          dist/capella2sysmlv2-Capella.7.1.0-windows-x86_64.zip
+          dist/capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz
+          dist/capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip
           --repo "$GITHUB_REPOSITORY"
           --verify-tag
           --generate-notes
-          --title "capella2sysmlv2 $GITHUB_REF_NAME"
+          --title "Capella SysMLv2 Bridge $GITHUB_REF_NAME"

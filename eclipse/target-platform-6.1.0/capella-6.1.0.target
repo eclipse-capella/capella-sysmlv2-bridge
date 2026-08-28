@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde?>
+<target includeMode="feature" name="Capella 6.1.0" sequenceNumber="1">
+  <locations>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="https://download.eclipse.org/capella/core/updates/releases/6.1.0/org.polarsys.capella.rcp.site/"/>
+		  <unit id="org.polarsys.capella.cdo.mock.feature.feature.group" version="6.1.0.202303291413"/>
+		  <unit id="org.polarsys.capella.doc.feature.feature.group" version="6.1.0.202303291413"/>
+		  <unit id="org.polarsys.capella.rcp.feature.group" version="6.1.0.202303291413"/>
+		  <unit id="org.polarsys.capella.viatra.core.feature.feature.group" version="6.1.0.202303291413"/>
+	  </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="https://download.eclipse.org/kitalpha/updates/stable/runtime/6.1.0.20230322/"/>
+		  <unit id="org.polarsys.kitalpha.accuracy.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.integration.amalgam.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.integration.emde.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.integration.sirius.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.metadata.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.runtime.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.ad.ui.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.cadence.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.common.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.composer.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.doc.gen.business.core.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.emde.explorer.contextual.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.emde.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.emde.genchain.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.emde.ui.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.massactions.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.model.common.commands.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.model.common.scrutiny.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.model.common.share.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.model.detachment.contrib.viewpoints.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.model.detachment.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.patterns.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.report.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.report.ui.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.resourcereuse.emfscheme.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.resourcereuse.emfscheme.ui.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.resourcereuse.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.resourcereuse.ui.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.richtext.widget.doc.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.richtext.widget.ext.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.richtext.widget.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.richtext.widget.tools.ext.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.runtime.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.sirius.rotativeimage.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.sirius.typeinterpreter.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.transposer.diffmerge.feature.feature.group" version="6.1.0.202303220900"/>
+		  <unit id="org.polarsys.kitalpha.transposer.feature.feature.group" version="6.1.0.202303220900"/>
+	  </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="http://download.eclipse.org/releases/2021-06"/>
+		  <unit id="org.eclipse.sdk.feature.group" version="4.20.0.v20210611-1636"/>
+	      <unit id="org.eclipse.emf.sdk.feature.group" version="2.26.0.v20210506-1425"/>
+	      <unit id="org.eclipse.viatra.query.sdk.feature.source.feature.group" version="2.5.0.202012091732"/>
+	      <unit id="org.eclipse.egit.mylyn.feature.group" version="5.12.0.202106070339-r"/>
+	      <unit id="org.eclipse.mylyn_feature.feature.group" version="3.25.2.v20200814-0512"/>
+	      <unit id="org.eclipse.mylyn.context_feature.feature.group" version="3.25.2.v20200828-1617"/>
+	      <unit id="org.eclipse.mylyn.team_feature.feature.group" version="3.25.2.v20200828-1617"/>
+	      <unit id="org.eclipse.mylyn.ide_feature.feature.group" version="3.25.2.v20200828-1617"/>
+		  <unit id="org.eclipse.test.feature.group" version="3.7.1500.v20210428-1559"/>
+		  <unit id="org.junit.jupiter.api" version="5.7.1.v20210222-1948"/>
+		  <unit id="org.junit.jupiter.engine" version="5.7.1.v20210222-1948"/>
+		  <unit id="org.junit.platform.commons" version="1.7.1.v20210222-1948"/>
+		  <unit id="org.junit.platform.engine" version="1.7.1.v20210222-1948"/>
+		  <unit id="org.junit.platform.launcher" version="1.7.1.v20210222-1948"/>
+		  <unit id="org.opentest4j" version="1.2.0.v20190826-0900"/>
+	  </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="slicer" includeSource="false" type="InstallableUnit">
+		  <repository location="https://download.eclipse.org/sirius/updates/releases/7.1.0/2021-06/"/>
+		  <unit id="org.eclipse.sirius.aql.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.diagram.elk.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.doc.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.interpreter.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.model.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.properties.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.acceleo.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.aql.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.eef.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.ui.acceleo.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.ui.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.ide.xtext.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.runtime.ocl.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.samples.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.samples.properties.feature.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.acceleo.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.aql.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.specifier.ide.ui.feature.group" version="7.1.0.202303020853"/>
+		  <unit id="org.eclipse.sirius.specifier.properties.feature.feature.group" version="7.1.0.202303020853"/>
+	  </location>
+  </locations>
+</target>
