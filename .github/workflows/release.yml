@@ -38,35 +38,7 @@ jobs:
             echo "Release tag must reference a commit from main" >&2
             exit 1
           fi
-
-      - name: Configure package registries
-        run: |
-          cat > .github/maven-settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                  <id>github-sirius-emfjson</id>
-                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
-                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
-              </server>
-              <server>
-                  <id>github-sirius-web</id>
-                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
-                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
-              </server>
-              <server>
-                  <id>github-syson</id>
-                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
-                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
-              </server>
-              <server>
-                  <id>github-arcadia</id>
-                  <username>${{ secrets.MAVEN_GITHUB_USERNAME }}</username>
-                  <password>${{ secrets.MAVEN_GITHUB_TOKEN }}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
+          
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
