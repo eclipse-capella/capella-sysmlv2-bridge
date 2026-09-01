@@ -11,7 +11,10 @@ Require-Bundle: org.eclipse.emf.ecore,
 Import-Package: org.apache.commons.logging
 Export-Package: org.eclipse.capella.model.transverse.services,
  org.eclipse.capella.sysmlv2.bridge.mappings,
- org.eclipse.capella.sysmlv2.bridge.mappings.la
+ org.eclipse.capella.sysmlv2.bridge.mappings.ctx,
+ org.eclipse.capella.sysmlv2.bridge.mappings.la,
+ org.eclipse.capella.sysmlv2.bridge.mappings.oa,
+ org.eclipse.capella.sysmlv2.bridge.mappings.pa
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings
 Bundle-ClassPath: target/dependency/capella-model-services-2026.7.1.jar,
  target/dependency/capella-model-transverse-services-2026.7.1.jar,

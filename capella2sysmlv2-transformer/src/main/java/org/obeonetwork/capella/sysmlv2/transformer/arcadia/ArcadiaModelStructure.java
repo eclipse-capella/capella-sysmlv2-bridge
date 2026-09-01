@@ -83,6 +83,16 @@ public record ArcadiaModelStructure(OccurrenceDefinition root, Package operation
                 PartUsage.class);
     }
 
+    public PartUsage getPhysicalArchitectureSystemPart() {
+        return ownedElementNamed(physicalArchitecturePackage, "system",
+                PartUsage.class);
+    }
+
+    public PartUsage getSystemAnalysisSystemPart() {
+        return ownedElementNamed(systemAnalysisPackage, "system",
+                PartUsage.class);
+    }
+
     private Package getLogicalArchitecturePackageNamed(
             String name) {
         var perspective = (Element) logicalArchitecturePackage
