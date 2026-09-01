@@ -18,26 +18,37 @@ import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.sirius.emfjson.resource.JsonResourceFactoryImpl;
+import org.eclipse.syson.application.configuration.SysONDefaultLibrariesConfiguration;
+import org.eclipse.syson.application.configuration.SysONLoadDefaultLibrariesOnApplicationStartConfiguration;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.util.SysONEContentAdapter;
 
-public final class BundledArcadiaLibraryLoader {
-
+public final class CapellaForSysonResourceSet {
     private static final String ARCADIA_RESOURCE = "/arcadia/library/arcadia.json";
 
-    public List<EObject> load() {
-        var input = BundledArcadiaLibraryLoader.class.getResourceAsStream(ARCADIA_RESOURCE);
+    private final ResourceSet resourceSet;
+
+    private final List<EObject> arcadiaLibrary;
+
+    public CapellaForSysonResourceSet() {
+        var defaultLibrariesConfiguration = new SysONDefaultLibrariesConfiguration(
+                new SysONLoadDefaultLibrariesOnApplicationStartConfiguration());
+        this.resourceSet = defaultLibrariesConfiguration.getLibrariesResourceSet();
+        this.resourceSet.getPackageRegistry().put(SysmlPackage.eNS_URI, SysmlPackage.eINSTANCE);
+        this.resourceSet.eAdapters().add(new SysONEContentAdapter());
+        this.arcadiaLibrary = loadBundledArcadiaLibrary();
+    }
+
+    private List<EObject> loadBundledArcadiaLibrary() {
+        var input = CapellaForSysonResourceSet.class.getResourceAsStream(ARCADIA_RESOURCE);
         if (input == null) {
             throw new IllegalStateException("Bundled Arcadia library is missing: " + ARCADIA_RESOURCE);
         }
 
-        var resourceSet = new ResourceSetImpl();
-        resourceSet.getPackageRegistry().put(SysmlPackage.eNS_URI, SysmlPackage.eINSTANCE);
-        resourceSet.eAdapters().add(new SysONEContentAdapter());
         var resource = new JsonResourceFactoryImpl().createResource(URI.createURI("arcadialibrary:/arcadia.json"));
-        resourceSet.getResources().add(resource);
+        this.resourceSet.getResources().add(resource);
         try (input) {
             resource.load(input, Map.of());
         } catch (IOException exception) {
@@ -47,5 +58,13 @@ public final class BundledArcadiaLibraryLoader {
             throw new IllegalStateException("Bundled Arcadia SysML v2 library is empty");
         }
         return List.copyOf(resource.getContents());
+    }
+
+    public ResourceSet getResourceSet() {
+        return this.resourceSet;
+    }
+
+    public List<EObject> getArcadiaLibrary() {
+        return this.arcadiaLibrary;
     }
 }

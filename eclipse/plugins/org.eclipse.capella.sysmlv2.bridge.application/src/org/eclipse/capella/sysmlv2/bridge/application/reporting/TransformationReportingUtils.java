@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
+import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
@@ -62,12 +63,11 @@ public final class TransformationReportingUtils {
             Path outputDirectory) {
         var outputModel = outputDirectory
                 .resolve(transformation.modelName() + ".sysml.xmi");
-        persistAndValidate(transformation.result(),
-                transformation.arcadiaLibrary(), outputModel);
+        persistAndValidate(transformation.result(), transformation.targetModel(), outputModel);
 
         var report = new TransformationCoverageAnalyzer().analyze(
                 CapellaSemanticPackageDiscoveryUtils.discover(),
-                transformation.mappers(), transformation.arcadiaLibrary(),
+                transformation.mappers(), transformation.targetModel().getArcadiaLibrary(),
                 CapellaMapperCatalog.alignmentCatalog());
 
         writeCoverageReport(report,
@@ -84,11 +84,10 @@ public final class TransformationReportingUtils {
     }
 
     private static void persistAndValidate(TransformationResult result,
-            List<EObject> arcadiaLibrary, Path outputModel) {
+            CapellaForSysonResourceSet targetModel, Path outputModel) {
         var expectedModel = snapshot(result.root());
-        var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
         var reloadedRoot = TemporarySysMLXmiExporterUtils.exportAndReload(
-                result.root(), resourceSet, outputModel);
+                result.root(), targetModel.getResourceSet(), outputModel);
         validateReloadedModel(expectedModel, reloadedRoot);
     }
 

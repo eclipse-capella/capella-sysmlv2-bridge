@@ -20,6 +20,7 @@ import java.util.Objects;
 import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
 import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationReportingUtils;
 import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
+import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
@@ -31,12 +32,12 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationResult;
 public final class EquinoxTransformationService implements TransformationService {
 
     public record ModelTransformation(String modelName, List<EObject> sources,
-            List<EObject> arcadiaLibrary, List<ElementMapper> mappers,
+            CapellaForSysonResourceSet targetModel, List<ElementMapper> mappers,
             TransformationResult result, int errorCount) {
         public ModelTransformation {
             Objects.requireNonNull(modelName, "modelName must not be null");
             sources = List.copyOf(Objects.requireNonNull(sources, "sources must not be null"));
-            arcadiaLibrary = List.copyOf(Objects.requireNonNull(arcadiaLibrary, "arcadiaLibrary must not be null"));
+            Objects.requireNonNull(targetModel, "targetModel must not be null");
             mappers = List.copyOf(Objects.requireNonNull(mappers, "mappers must not be null"));
             Objects.requireNonNull(result, "result must not be null");
             Objects.requireNonNull(errorCount, "errorCount must not be null");

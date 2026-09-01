@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
+import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
@@ -48,11 +48,10 @@ public final class ModelTransformationUtils {
      */
     public static ModelTransformation transform(EObject root, String modelName) {
         var sources = allContents(root);
-        var arcadiaLibrary = loadArcadiaLibrary();
-        var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
+        var targetModel = loadCapellaForSysonResourceSet();
         var mappers = CapellaMapperCatalog.createMappers();
         var engine = new TransformationEngine(new TransformationDispatcher(
-                new DefaultMapperRegistry(mappers)), resourceSet);
+                new DefaultMapperRegistry(mappers)), targetModel.getResourceSet());
         var result = engine.transform(root, new TransformationOptions(false,
                 false, false, modelName, modelName));
         var errorCount = (int) result.diagnostics().stream()
@@ -63,17 +62,17 @@ public final class ModelTransformationUtils {
             throw new IllegalStateException("Transformation produced "
                     + errorCount + " error diagnostic(s)");
         }
-        return new ModelTransformation(modelName, sources, arcadiaLibrary,
+        return new ModelTransformation(modelName, sources, targetModel,
                 mappers, result, errorCount);
     }
 
-    private static List<EObject> loadArcadiaLibrary() {
+    private static CapellaForSysonResourceSet loadCapellaForSysonResourceSet() {
         try {
-            return new BundledArcadiaLibraryLoader().load();
+            return new CapellaForSysonResourceSet();
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(
                     ARCADIA_LIBRARY_LOADING_FAILURE,
-                    "Cannot load Arcadia library: " + exception.getMessage(),
+                    "Cannot load Capella for Syson resourceset: " + exception.getMessage(),
                     exception);
         }
     }

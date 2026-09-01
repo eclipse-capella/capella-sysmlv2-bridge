@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.eclipse.capella.model.services.transverse.TransverseQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
-import org.eclipse.capella.sysmlv2.bridge.transformer.BundledArcadiaLibraryLoader;
+import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.OwningMembership;
@@ -56,8 +56,8 @@ class LogicalComponentMapperTest {
         var source = LaFactory.eINSTANCE.createLogicalComponent();
         source.setName(sourceName);
         source.setDescription(sourceDescription);
-        var arcadiaLibrary = new BundledArcadiaLibraryLoader().load();
-        var resourceSet = arcadiaLibrary.get(0).eResource().getResourceSet();
+        var targetModel = new CapellaForSysonResourceSet();
+        var resourceSet = targetModel.getResourceSet();
         var engine = new TransformationEngine(
                 new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
                 resourceSet);
