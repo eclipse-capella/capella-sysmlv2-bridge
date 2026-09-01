@@ -12,12 +12,17 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTION;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.oa.EntityMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalComponentMapper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
@@ -31,12 +36,12 @@ import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.oa.OaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 
+/**
+ * Catalog of the Capella element mappers supported by the bridge.
+ *
+ * @author Raphaël Pagé
+ */
 public final class CapellaMapperCatalog {
-
-    private static final String ARCADIA_FUNCTION = "Arcadia::Function";
-
-    private static final String ARCADIA_COMPONENT = "Arcadia::Component";
-
     private static final List<EPackage> CAPELLA_PACKAGES = List.of(CtxPackage.eINSTANCE, FaPackage.eINSTANCE,
             InformationPackage.eINSTANCE, LaPackage.eINSTANCE, OaPackage.eINSTANCE, PaPackage.eINSTANCE);
 
@@ -46,7 +51,7 @@ public final class CapellaMapperCatalog {
     }
 
     public static List<ElementMapper<?, ?>> createMappers() {
-        return List.of(new LogicalComponentMapper());
+        return List.of(new LogicalComponentMapper(), new EntityMapper(), new SystemComponentMapper(), new PhysicalComponentMapper());
     }
 
     public static Map<String, List<MapperBacklogEntry>> backlogByPackage() {
@@ -59,7 +64,6 @@ public final class CapellaMapperCatalog {
         result.addAll(List.of(
                 candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
-                candidate(CtxPackage.Literals.SYSTEM_COMPONENT, ARCADIA_COMPONENT),
                 candidate(CtxPackage.Literals.SYSTEM_FUNCTION, ARCADIA_FUNCTION),
                 candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
                 candidate(FaPackage.Literals.COMPONENT_PORT, "Arcadia::ComponentPort"),
@@ -70,10 +74,8 @@ public final class CapellaMapperCatalog {
                 candidate(InformationPackage.Literals.EXCHANGE_ITEM, "Arcadia::ExchangeItem"),
                 candidate(LaPackage.Literals.LOGICAL_FUNCTION, ARCADIA_FUNCTION),
                 candidate(OaPackage.Literals.COMMUNICATION_MEAN, "Arcadia::ComponentExchange"),
-                candidate(OaPackage.Literals.ENTITY, ARCADIA_COMPONENT),
                 candidate(OaPackage.Literals.OPERATIONAL_ACTIVITY, ARCADIA_FUNCTION),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain"),
-                candidate(PaPackage.Literals.PHYSICAL_COMPONENT, ARCADIA_COMPONENT),
                 candidate(PaPackage.Literals.PHYSICAL_FUNCTION, ARCADIA_FUNCTION)));
         return List.copyOf(result);
     }
@@ -126,7 +128,6 @@ public final class CapellaMapperCatalog {
                 entry("oa", "OperationalActivityMapper", OaPackage.Literals.OPERATIONAL_ACTIVITY),
                 entry("oa", "OperationalProcessMapper", OaPackage.Literals.OPERATIONAL_PROCESS)));
         result.put("pa", List.of(
-                entry("pa", "PhysicalComponentMapper", PaPackage.Literals.PHYSICAL_COMPONENT),
                 entry("pa", "PhysicalFunctionMapper", PaPackage.Literals.PHYSICAL_FUNCTION)));
         return result;
     }

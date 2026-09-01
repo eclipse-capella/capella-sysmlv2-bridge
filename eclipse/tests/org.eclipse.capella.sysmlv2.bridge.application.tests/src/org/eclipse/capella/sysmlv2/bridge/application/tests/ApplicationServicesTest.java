@@ -89,6 +89,9 @@ class ApplicationServicesTest {
         assertTrue(Files.isRegularFile(summary.outputModel()));
         assertTrue(Files.isRegularFile(outputDirectory.resolve(
                 ".capella2sysmlv2/mapping-coverage.json")));
+        var coverageReport = Files.readString(outputDirectory.resolve(
+                ".capella2sysmlv2/mapping-coverage.md"));
+        assertTrue(coverageReport.contains("abstract -> SysML::Feature::isAbstract"));
     }
 
     @Test

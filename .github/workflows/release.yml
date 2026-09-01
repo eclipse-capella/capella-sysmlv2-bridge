@@ -180,7 +180,10 @@ jobs:
             -vm "$JAVA_HOME/bin/java" \
             dist/InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
           grep -F "Source LogicalComponent count: 23" run.log
-          grep -F "Generated PartUsage count: 23" run.log
+          grep -F "Source Entity count: 8" run.log
+          grep -F "Source SystemComponent count: 5" run.log
+          grep -F "Source PhysicalComponent count: 64" run.log
+          grep -F "Generated PartUsage count: 100" run.log
           grep -F "Errors: 0" run.log
           grep -F "Capella Transformation Coverage:" run.log
           grep -F "Arcadia SysML v2 Library Utilization:" run.log
@@ -250,7 +253,10 @@ jobs:
           $log = $lines -join "`n"
           @(
             "Source LogicalComponent count: 23",
-            "Generated PartUsage count: 23",
+            "Source Entity count: 8",
+            "Source SystemComponent count: 5",
+            "Source PhysicalComponent count: 64",
+            "Generated PartUsage count: 100",
             "Errors: 0",
             "Capella Transformation Coverage:",
             "Arcadia SysML v2 Library Utilization:",

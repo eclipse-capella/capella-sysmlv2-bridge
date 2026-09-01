@@ -20,34 +20,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.model.transverse.services.TransverseQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
 import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 import org.polarsys.capella.core.data.la.LaFactory;
 
 class LogicalComponentMapperTest {
     private final TransverseQueryService transverseQueryService = new TransverseQueryService();
-
-    @Test
-    void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(1, CapellaMapperCatalog.createMappers().size());
-        var backlog = CapellaMapperCatalog.backlogByPackage();
-        assertEquals(java.util.List.of("ctx", "fa", "information", "la", "oa", "pa"),
-                java.util.List.copyOf(backlog.keySet()));
-        assertEquals(java.util.List.of("ComponentExchangeMapper", "ComponentPortMapper", "FunctionInputPortMapper",
-                "FunctionOutputPortMapper", "FunctionalChainMapper", "FunctionalExchangeMapper"),
-                backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
-        assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
-                .noneMatch(org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper.class::isInstance));
-    }
 
     @Test
     void mapsARealLogicalComponentIntoTheLogicalArchitectureStructure() {
@@ -56,6 +42,7 @@ class LogicalComponentMapperTest {
         var source = LaFactory.eINSTANCE.createLogicalComponent();
         source.setName(sourceName);
         source.setDescription(sourceDescription);
+        source.setAbstract(true);
         var targetModel = new CapellaForSysonResourceSet();
         var resourceSet = targetModel.getResourceSet();
         var engine = new TransformationEngine(
@@ -68,6 +55,7 @@ class LogicalComponentMapperTest {
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
         assertEquals(sourceName, target.getDeclaredName());
+        assertTrue(target.isIsAbstract());
         assertEquals(sourceDescription, transverseQueryService.getArcadiaElementDescription(target));
         var typing = assertInstanceOf(FeatureTyping.class, target.getOwnedRelationship().get(0));
         assertSame(target, typing.getTypedFeature());
