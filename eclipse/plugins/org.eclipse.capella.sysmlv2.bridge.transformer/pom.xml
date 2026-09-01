@@ -45,6 +45,16 @@
             <version>${syson.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-application-configuration</artifactId>
+            <version>${syson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.arcadia</groupId>
             <artifactId>arcadia-library</artifactId>
             <version>0.0.3</version>
@@ -59,6 +69,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.sirius</groupId>
+            <artifactId>sirius-components-emf</artifactId>
+            <version>${sirius-web.version}</version>
         </dependency>
     </dependencies>
 
@@ -76,7 +91,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella2sysmlv2-transformer,syson-services,syson-sysml-metamodel,syson-sysml-metamodel-services,arcadia-library,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3</includeArtifactIds>
+                            <includeArtifactIds>sirius-components-emf,syson-application-configuration,spring-core,capella2sysmlv2-transformer,syson-services,syson-sysml-metamodel,syson-sysml-metamodel-services,arcadia-library,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

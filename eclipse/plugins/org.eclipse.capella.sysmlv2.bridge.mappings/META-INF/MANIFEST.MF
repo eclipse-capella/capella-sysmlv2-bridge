@@ -8,6 +8,7 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.capella.sysmlv2.bridge.transformer,
  org.polarsys.capella.core.data.gen,
  org.slf4j.api
+Import-Package: org.apache.commons.logging
 Export-Package: org.eclipse.capella.model.services.transverse,
  org.eclipse.capella.sysmlv2.bridge.mappings,
  org.eclipse.capella.sysmlv2.bridge.mappings.la
