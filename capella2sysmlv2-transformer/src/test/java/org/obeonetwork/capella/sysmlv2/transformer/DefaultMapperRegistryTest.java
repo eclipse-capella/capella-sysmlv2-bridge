@@ -21,49 +21,48 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class DefaultMapperRegistryTest {
 
-    private static final MetaclassId TYPE = new MetaclassId(
+    private static final EObject SOURCE = TestEObjects.create(
             "http://example.org/capella", "LogicalComponent");
 
     @Test
-    void findsMapperByMetaclassId() {
-        var mapper = mapper(TYPE);
+    void findsMapperBySourceClass() {
+        var mapper = mapper();
         var registry = new DefaultMapperRegistry(List.of(mapper));
 
-        assertThat(registry.get(TYPE)).contains(mapper);
+        assertThat(registry.get(SOURCE)).contains(mapper);
     }
 
     @Test
-    void returnsEmptyForUnknownMetaclassId() {
-        var registry = new DefaultMapperRegistry(List.of(mapper(TYPE)));
+    void returnsEmptyForUnknownSourceClass() {
+        var registry = new DefaultMapperRegistry(List.of());
 
-        assertThat(registry.get(new MetaclassId("http://example.org/capella",
-                "LogicalFunction"))).isEmpty();
+        assertThat(registry.get(SOURCE)).isEmpty();
     }
 
     @Test
     void rejectsDuplicateMapperRegistration() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new DefaultMapperRegistry(
-                        List.of(mapper(TYPE), mapper(TYPE))))
+                        List.of(mapper(), mapper())))
                 .withMessageContaining("Duplicate mapper registration");
     }
 
-    private static ElementMapper mapper(MetaclassId sourceType) {
-        return new ElementMapper() {
+    private static ElementMapper<EObject, EObject> mapper() {
+        return new ElementMapper<>(EObject.class, "SysML::Element") {
             @Override
-            public MetaclassId sourceType() {
-                return sourceType;
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of();
             }
 
             @Override
-            public void transform(EObject source,
+            protected EObject createTarget(EObject source,
                     TransformationContext context) {
-                // nothing to do by default
+                return null;
             }
         };
     }

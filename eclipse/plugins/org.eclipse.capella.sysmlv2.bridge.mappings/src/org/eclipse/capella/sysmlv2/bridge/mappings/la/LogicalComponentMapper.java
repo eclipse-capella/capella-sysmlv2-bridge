@@ -12,45 +12,38 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
+import java.util.List;
+
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
-import org.eclipse.capella.sysmlv2.bridge.mappings.TypedCapellaMapperAdapter;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MappingCoverage;
+import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.PartUsage;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
-import org.polarsys.capella.core.data.la.LaPackage;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
-public final class LogicalComponentMapper
-        extends
-        TypedCapellaMapperAdapter<LogicalComponent> {
+public final class LogicalComponentMapper extends ElementMapper<LogicalComponent, PartUsage> {
     private final LAMutationService laMutationService = new LAMutationService();
 
     private final TransverseMutationService transverseMutationService = new TransverseMutationService();
 
     public LogicalComponentMapper() {
-        super(LaPackage.Literals.LOGICAL_COMPONENT, LogicalComponent.class);
+        super(LogicalComponent.class, "Arcadia::Component");
     }
 
     @Override
-    public MappingCoverage coverage() {
-        return MappingCoverage.mapped("name", "description")
-                .mappingTo("name", "SysML::Element::declaredName")
-                .mappingTo("description", "doc description /* */")
-                .usingArcadiaConcepts("Arcadia::Component");
+    public List<? extends FeatureMapping<? super LogicalComponent, ? super PartUsage>> getFeatureMappings() {
+        return List.of(
+                new FeatureMapping<>("name", "SysML::Element::declaredName", (NamedElement source, Element target) -> target.setDeclaredName(source.getName())),
+
+                new FeatureMapping<>("description", "doc description /* */",
+                        (NamedElement source, Element target) -> transverseMutationService.setElementDescription(target, source.getDescription())));
     }
 
     @Override
-    protected void transformTyped(LogicalComponent source, TransformationContext context) {
-        var name = source.getName();
-        if (name == null || name.isBlank()) {
-            context.diagnostics().error(source, "LogicalComponent.name must be a non-blank string");
-            return;
-        }
-
-        var target = laMutationService.createComponentLA(context.modelStructure().logicalArchitecturePackage());
-        context.traceability().register(source, target);
-
-        target.setDeclaredName(name);
-        transverseMutationService.setElementDescription(target, source.getDescription());
+    protected PartUsage createTarget(LogicalComponent source, TransformationContext context) {
+        return laMutationService.createComponentLA(context.modelStructure().logicalArchitecturePackage());
     }
 }

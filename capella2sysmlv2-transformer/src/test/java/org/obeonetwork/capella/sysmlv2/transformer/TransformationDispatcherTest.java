@@ -15,6 +15,7 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.emf.ecore.EObject;
@@ -22,17 +23,16 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 
 class TransformationDispatcherTest {
-
     @Test
-    void dispatchesToMapperRegisteredForRuntimeMetaclassId() {
+    void dispatchesToMapperRegisteredForRuntimeClass() {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
         var dispatchedSource = new AtomicReference<EObject>();
-        var mapper = mapper(MetaclassId.of(source.eClass()), dispatchedSource);
+        var mapper = mapper(dispatchedSource);
         var context = TestContexts.create();
 
         new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))).dispatch(source, context);
@@ -55,16 +55,44 @@ class TransformationDispatcherTest {
         });
     }
 
-    private static ElementMapper mapper(MetaclassId sourceType, AtomicReference<EObject> dispatchedSource) {
-        return new ElementMapper() {
+    @Test
+    void transformsFeaturesAndRegistersTargetAfterCreation() {
+        var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
+        var target = TestEObjects.create("http://example.org/sysml", "PartUsage");
+        var featureTransformed = new AtomicBoolean();
+        var mapping = new FeatureMapping<EObject, EObject>("name", "declaredName",
+                (mappedSource, mappedTarget) -> featureTransformed.set(
+                        mappedSource == source && mappedTarget == target));
+        var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::PartUsage") {
             @Override
-            public MetaclassId sourceType() {
-                return sourceType;
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of(mapping);
             }
 
             @Override
-            public void transform(EObject source, TransformationContext context) {
+            protected EObject createTarget(EObject mappedSource, TransformationContext context) {
+                return target;
+            }
+        };
+        var context = TestContexts.create();
+
+        new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))).dispatch(source, context);
+
+        assertThat(featureTransformed).isTrue();
+        assertThat(context.traceability().lookupTarget(source)).contains(target);
+    }
+
+    private static ElementMapper<EObject, EObject> mapper(AtomicReference<EObject> dispatchedSource) {
+        return new ElementMapper<>(EObject.class, "SysML::Element") {
+            @Override
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of();
+            }
+
+            @Override
+            protected EObject createTarget(EObject source, TransformationContext context) {
                 dispatchedSource.set(source);
+                return null;
             }
         };
     }

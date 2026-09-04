@@ -14,17 +14,15 @@ package org.eclipse.capella.sysmlv2.bridge.application.transformation;
 
 import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.ARCADIA_LIBRARY_LOADING_FAILURE;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 public final class ModelTransformationUtils {
@@ -47,7 +45,7 @@ public final class ModelTransformationUtils {
      *             if the transformation reports errors
      */
     public static ModelTransformation transform(EObject root, String modelName) {
-        var sources = allContents(root);
+        var sources = EObjectUtils.allContents(root);
         var targetModel = loadCapellaForSysonResourceSet();
         var mappers = CapellaMapperCatalog.createMappers();
         var engine = new TransformationEngine(new TransformationDispatcher(
@@ -77,10 +75,4 @@ public final class ModelTransformationUtils {
         }
     }
 
-    private static List<EObject> allContents(EObject root) {
-        var elements = new ArrayList<EObject>();
-        elements.add(root);
-        root.eAllContents().forEachRemaining(elements::add);
-        return List.copyOf(elements);
-    }
 }

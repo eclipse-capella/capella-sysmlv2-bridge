@@ -15,12 +15,14 @@ package org.obeonetwork.capella.sysmlv2.transformer.reporting;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.emf.ecore.EClass;
+
 /**
  * Alignment of a Capella metaclass with a SysML or Arcadia concept.
  *
  * @author Raphaël Pagé
  */
-public record MetaclassAlignment(MetaclassId sourceType, String target, AlignmentStatus status,
+public record MetaclassAlignment(EClass sourceType, String target, AlignmentStatus status,
         List<FeatureAlignment> featureAlignments) {
 
     public MetaclassAlignment {
@@ -28,9 +30,5 @@ public record MetaclassAlignment(MetaclassId sourceType, String target, Alignmen
         Objects.requireNonNull(status, "status must not be null");
         featureAlignments = List.copyOf(Objects.requireNonNull(featureAlignments,
                 "featureAlignments must not be null"));
-    }
-
-    public MetaclassAlignment(MetaclassId sourceType, String target, AlignmentStatus status) {
-        this(sourceType, target, status, List.of());
     }
 }

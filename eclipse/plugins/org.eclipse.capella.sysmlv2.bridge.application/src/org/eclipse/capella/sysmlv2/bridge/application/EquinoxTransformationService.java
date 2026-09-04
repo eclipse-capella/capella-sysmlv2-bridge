@@ -32,7 +32,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
 public final class EquinoxTransformationService implements TransformationService {
 
     public record ModelTransformation(String modelName, List<EObject> sources,
-            CapellaForSysonResourceSet targetModel, List<ElementMapper> mappers,
+            CapellaForSysonResourceSet targetModel, List<ElementMapper<?, ?>> mappers,
             TransformationResult result, int errorCount) {
         public ModelTransformation {
             Objects.requireNonNull(modelName, "modelName must not be null");

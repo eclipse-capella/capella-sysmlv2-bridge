@@ -16,8 +16,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+
+import org.eclipse.emf.ecore.EAttribute;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
 
 /**
  * Writes coverage reports in JSON and Markdown formats.
@@ -34,6 +40,9 @@ public final class TransformationCoverageWriter {
 
     public static final String CLASS_NAME = "\", \"className\": \"";
 
+    /**
+     * Writes both report formats to the supplied directory.
+     */
     public void write(TransformationCoverageReport report, Path outputDirectory) throws IOException {
         Objects.requireNonNull(report, "report must not be null");
         Objects.requireNonNull(outputDirectory, "outputDirectory must not be null");
@@ -42,7 +51,7 @@ public final class TransformationCoverageWriter {
         Files.writeString(outputDirectory.resolve(MARKDOWN_FILE_NAME), this.toMarkdown(report), StandardCharsets.UTF_8);
     }
 
-    String toJson(TransformationCoverageReport report) {
+    private String toJson(TransformationCoverageReport report) {
         var result = new StringBuilder("{\n");
         appendCapellaJson(result, report);
         result.append(",\n");
@@ -52,11 +61,11 @@ public final class TransformationCoverageWriter {
         return result.append("\n}\n").toString();
     }
 
-    String toMarkdown(TransformationCoverageReport report) {
+    private String toMarkdown(TransformationCoverageReport report) {
         var result = new StringBuilder("# Semantic Mapping Coverage\n\n");
         result.append("## Capella Transformation Coverage\n\n")
                 .append("Inventory: **").append(report.packageCount()).append(" packages, ")
-                .append(report.metaclasses().size()).append(" EClasses, ")
+                .append(report.metaclassCoverages().size()).append(" EClasses, ")
                 .append(report.concreteMetaclassCount()).append(" concrete metaclasses**.\n\n")
                 .append(METRIC_COVERAGE_PERCENTAGE);
         appendMetricRow(result, "Concrete metaclasses with mapper", report.metaclassesWithMapperMetric());
@@ -65,10 +74,11 @@ public final class TransformationCoverageWriter {
         appendMetricRow(result, "Addressed structural features", report.addressedFeaturesMetric());
         result.append("\n| Package nsURI | Metaclass | Kind | Mapper status | Mapped | Ignored | Remaining |\n")
                 .append("| --- | --- | --- | --- | --- | --- | --- |\n");
-        for (var coverage : report.metaclasses()) {
-            result.append("| ").append(escapeMarkdown(coverage.metaclass().id().nsURI())).append(" | ")
-                    .append(escapeMarkdown(coverage.metaclass().id().className())).append(" | ")
-                    .append(coverage.metaclass().abstractType() ? "abstract" : "concrete").append(" | ")
+
+        for (var coverage : report.metaclassCoverages()) {
+            result.append("| ").append(escapeMarkdown(coverage.metaclass().getEPackage().getNsURI()))
+                    .append(" | ").append(escapeMarkdown(coverage.metaclass().getName())).append(" | ")
+                    .append(coverage.metaclass().isAbstract() ? "abstract" : "concrete").append(" | ")
                     .append(coverage.status()).append(" | ")
                     .append(escapeMarkdown(featureMappings(coverage))).append(" | ")
                     .append(escapeMarkdown(String.join(", ", coverage.ignoredFeatures()))).append(" | ")
@@ -96,9 +106,10 @@ public final class TransformationCoverageWriter {
                 .append(report.unassessedAlignmentCount()).append("**.\n\n")
                 .append("| Package nsURI | Capella metaclass | Status | Target | Feature alignment |\n")
                 .append("| --- | --- | --- | --- | --- |\n");
+
         for (var alignment : report.alignments()) {
-            result.append("| ").append(escapeMarkdown(alignment.sourceType().nsURI())).append(" | ")
-                    .append(escapeMarkdown(alignment.sourceType().className())).append(" | ")
+            result.append("| ").append(escapeMarkdown(alignment.sourceType().getEPackage().getNsURI())).append(" | ")
+                    .append(escapeMarkdown(alignment.sourceType().getName())).append(" | ")
                     .append(alignment.status()).append(" | ")
                     .append(escapeMarkdown(nullToEmpty(alignment.target()))).append(" | ")
                     .append(escapeMarkdown(formatFeatureAlignments(alignment))).append(" |\n");
@@ -110,7 +121,7 @@ public final class TransformationCoverageWriter {
         result.append("  \"capellaTransformationCoverage\": {\n")
                 .append("    \"label\": \"Capella Transformation Coverage\",\n")
                 .append("    \"inventory\": {\"packages\": ").append(report.packageCount())
-                .append(", \"eClasses\": ").append(report.metaclasses().size())
+                .append(", \"eClasses\": ").append(report.metaclassCoverages().size())
                 .append(", \"concreteMetaclasses\": ").append(report.concreteMetaclassCount()).append("},\n")
                 .append("    \"metrics\": {\n");
         appendJsonMetric(result, "metaclassesWithMapper", report.metaclassesWithMapperMetric(), true);
@@ -118,20 +129,24 @@ public final class TransformationCoverageWriter {
         appendJsonMetric(result, "mappedFeatures", report.mappedFeaturesMetric(), true);
         appendJsonMetric(result, "addressedFeatures", report.addressedFeaturesMetric(), false);
         result.append("    },\n    \"metaclasses\": [\n");
-        for (int index = 0; index < report.metaclasses().size(); index++) {
-            var coverage = report.metaclasses().get(index);
-            result.append("      {\"nsURI\": \"").append(escapeJson(coverage.metaclass().id().nsURI()))
-                    .append(CLASS_NAME).append(escapeJson(coverage.metaclass().id().className()))
-                    .append("\", \"abstract\": ").append(coverage.metaclass().abstractType())
-                    .append(", \"superTypes\": ").append(jsonMetaclassIds(coverage.metaclass().superTypes()))
-                    .append(", \"features\": ").append(jsonFeatures(coverage.metaclass().features()))
+        for (int index = 0; index < report.metaclassCoverages().size(); index++) {
+            var coverage = report.metaclassCoverages().get(index);
+            result.append("      {\"nsURI\": \"")
+                    .append(escapeJson(coverage.metaclass().getEPackage().getNsURI()))
+                    .append(CLASS_NAME).append(escapeJson(coverage.metaclass().getName()))
+                    .append("\", \"abstract\": ").append(coverage.metaclass().isAbstract())
+                    .append(", \"superTypes\": ").append(jsonEClasses(coverage.metaclass().getESuperTypes().stream()
+                            .sorted(Comparator.comparing((EClass type) -> type.getEPackage().getNsURI())
+                                    .thenComparing(EClass::getName))
+                            .toList()))
+                    .append(", \"features\": ").append(jsonFeatures(coverage.metaclass()))
                     .append(", \"status\": \"").append(coverage.status()).append("\", \"mapperClass\": ")
                     .append(jsonNullable(coverage.mapperClass())).append(", \"mappedFeatures\": ")
                     .append(jsonArray(coverage.mappedFeatures())).append(", \"ignoredFeatures\": ")
                     .append(jsonArray(coverage.ignoredFeatures())).append(", \"remainingFeatures\": ")
                     .append(jsonArray(coverage.remainingFeatures())).append(", \"featureTargets\": ")
                     .append(jsonMap(coverage.featureTargets())).append("}")
-                    .append(index + 1 < report.metaclasses().size() ? ",\n" : "\n");
+                    .append(index + 1 < report.metaclassCoverages().size() ? ",\n" : "\n");
         }
         result.append("    ]\n  }");
     }
@@ -162,8 +177,9 @@ public final class TransformationCoverageWriter {
                 .append(",\n    \"alignments\": [\n");
         for (int index = 0; index < report.alignments().size(); index++) {
             var alignment = report.alignments().get(index);
-            result.append("      {\"nsURI\": \"").append(escapeJson(alignment.sourceType().nsURI()))
-                    .append(CLASS_NAME).append(escapeJson(alignment.sourceType().className()))
+            result.append("      {\"nsURI\": \"")
+                    .append(escapeJson(alignment.sourceType().getEPackage().getNsURI()))
+                    .append(CLASS_NAME).append(escapeJson(alignment.sourceType().getName()))
                     .append("\", \"status\": \"").append(alignment.status()).append("\", \"target\": ")
                     .append(jsonNullable(alignment.target())).append(", \"featureAlignments\": [");
             for (int featureIndex = 0; featureIndex < alignment.featureAlignments().size(); featureIndex++) {
@@ -263,37 +279,44 @@ public final class TransformationCoverageWriter {
         return result.append('}').toString();
     }
 
-    private static String jsonMetaclassIds(Iterable<MetaclassId> values) {
+    private static String jsonEClasses(Iterable<EClass> values) {
         var result = new StringBuilder("[");
         var first = true;
         for (var value : values) {
             if (!first) {
                 result.append(", ");
             }
-            result.append("{\"nsURI\": \"").append(escapeJson(value.nsURI()))
-                    .append(CLASS_NAME).append(escapeJson(value.className())).append("\"}");
+            result.append("{\"nsURI\": \"").append(escapeJson(value.getEPackage().getNsURI()))
+                    .append(CLASS_NAME).append(escapeJson(value.getName())).append("\"}");
             first = false;
         }
         return result.append(']').toString();
     }
 
-    private static String jsonFeatures(Iterable<StructuralFeatureDescriptor> features) {
+    private static String jsonFeatures(EClass eClass) {
         var result = new StringBuilder("[");
         var first = true;
+        var features = eClass.getEAllStructuralFeatures().stream()
+                .sorted(Comparator.comparing(EStructuralFeature::getName)
+                        .thenComparing(feature -> feature.getEContainingClass().getEPackage().getNsURI())
+                        .thenComparing(feature -> feature.getEContainingClass().getName()))
+                .toList();
         for (var feature : features) {
             if (!first) {
                 result.append(", ");
             }
-            result.append("{\"name\": \"").append(escapeJson(feature.name()))
+            result.append("{\"name\": \"").append(escapeJson(feature.getName()))
                     .append("\", \"declaringType\": {\"nsURI\": \"")
-                    .append(escapeJson(feature.declaringType().nsURI())).append(CLASS_NAME)
-                    .append(escapeJson(feature.declaringType().className())).append("\"}, \"kind\": \"")
-                    .append(feature.kind()).append("\", \"lowerBound\": ").append(feature.lowerBound())
-                    .append(", \"upperBound\": ").append(feature.upperBound())
-                    .append(", \"containment\": ").append(feature.containment())
-                    .append(", \"derived\": ").append(feature.derived())
-                    .append(", \"transient\": ").append(feature.transientFeature())
-                    .append(", \"changeable\": ").append(feature.changeable()).append('}');
+                    .append(escapeJson(feature.getEContainingClass().getEPackage().getNsURI())).append(CLASS_NAME)
+                    .append(escapeJson(feature.getEContainingClass().getName())).append("\"}, \"kind\": \"")
+                    .append(feature instanceof EAttribute ? "ATTRIBUTE" : "REFERENCE")
+                    .append("\", \"lowerBound\": ").append(feature.getLowerBound())
+                    .append(", \"upperBound\": ").append(feature.getUpperBound())
+                    .append(", \"containment\": ")
+                    .append(feature instanceof EReference reference && reference.isContainment())
+                    .append(", \"derived\": ").append(feature.isDerived())
+                    .append(", \"transient\": ").append(feature.isTransient())
+                    .append(", \"changeable\": ").append(feature.isChangeable()).append('}');
             first = false;
         }
         return result.append(']').toString();

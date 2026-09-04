@@ -14,7 +14,7 @@ package org.obeonetwork.capella.sysmlv2.transformer.mapping;
 
 import java.util.Optional;
 
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.eclipse.emf.ecore.EObject;
 
 /**
  * Mapper registry used to resolve a mapper for a source metaclass.
@@ -23,5 +23,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
  */
 public interface MapperRegistry {
 
-    Optional<ElementMapper> get(MetaclassId sourceType);
+    /**
+     * Returns the mapper supporting the supplied source element, if any.
+     */
+    Optional<ElementMapper<?, ?>> get(EObject sourceType);
 }

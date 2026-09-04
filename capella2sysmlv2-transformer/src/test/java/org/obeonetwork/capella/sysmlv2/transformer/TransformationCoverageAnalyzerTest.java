@@ -16,14 +16,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MappingCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassCoverage;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -33,12 +33,11 @@ class TransformationCoverageAnalyzerTest {
     @Test
     void calculatesCoverageFromMetamodelAndJavaMapperDeclarations() {
         var ePackage = TestMetamodels.logicalArchitecture();
-        var sourceType = MetaclassId
-                .of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
-        var mapper = mapper(sourceType, MappingCoverage.mapped("name"));
 
-        var report = new TransformationCoverageAnalyzer()
-                .analyze(List.of(ePackage), List.of(mapper));
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, "name");
+
+        var report = TransformationCoverageAnalyzer
+                .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of());
 
         assertThat(report.concreteMetaclassCount()).isEqualTo(2);
         assertThat(report.partialMetaclassCount()).isEqualTo(1);
@@ -62,56 +61,74 @@ class TransformationCoverageAnalyzerTest {
     @Test
     void rejectsMapperFeatureAbsentFromMetamodel() {
         var ePackage = TestMetamodels.logicalArchitecture();
-        var sourceType = MetaclassId
-                .of(TestMetamodels.eClass(ePackage, "LogicalComponent"));
-        var mapper = mapper(sourceType,
-                MappingCoverage.mapped("missingFeature"));
+
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, "missingFeature");
 
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> new TransformationCoverageAnalyzer()
-                        .analyze(List.of(ePackage), List.of(mapper)))
+                .isThrownBy(() -> TransformationCoverageAnalyzer
+                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
                 .withMessageContaining("Unknown mapped features")
                 .withMessageContaining("missingFeature");
     }
 
     @Test
     void rejectsMapperForMetaclassAbsentFromMetamodel() {
-        var mapper = mapper(
-                new MetaclassId("http://example.org/missing", "Missing"),
-                MappingCoverage.none());
+        var mapper = mapper(EObject.class);
 
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> new TransformationCoverageAnalyzer().analyze(
+                .isThrownBy(() -> TransformationCoverageAnalyzer.analyze(
                         List.of(TestMetamodels.logicalArchitecture()),
-                        List.of(mapper)))
+                        List.of(mapper), List.of(), List.of()))
                 .withMessageContaining("absent from the metamodel");
+    }
+
+    @Test
+    void rejectsFeatureDeclaredAsMappedAndIgnored() {
+        var ePackage = TestMetamodels.logicalArchitecture();
+
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, Set.of("name"), "name");
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> TransformationCoverageAnalyzer
+                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
+                .withMessageContaining("both mapped and ignored");
     }
 
     private static MetaclassCoverage coverageFor(
             TransformationCoverageReport report, String className) {
         return report
-                .metaclasses().stream().filter(coverage -> coverage.metaclass()
-                        .id().className().equals(className))
+                .metaclassCoverages().stream().filter(coverage -> coverage.metaclass()
+                        .getName().equals(className))
                 .findFirst().orElseThrow();
     }
 
-    private static ElementMapper mapper(MetaclassId sourceType,
-            MappingCoverage coverage) {
-        return new ElementMapper() {
+    @SafeVarargs
+    private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
+            String... mappedFeatures) {
+        return mapper(sourceClass, Set.of(), mappedFeatures);
+    }
+
+    private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
+            Set<String> ignoredFeatures, String... mappedFeatures) {
+        var mappings = java.util.Arrays.stream(mappedFeatures)
+                .map(feature -> new FeatureMapping<T, EObject>(feature, feature, (source, target) -> {
+                }))
+                .toList();
+        return new ElementMapper<>(sourceClass, "SysML::Element") {
             @Override
-            public MetaclassId sourceType() {
-                return sourceType;
+            public List<FeatureMapping<T, EObject>> getFeatureMappings() {
+                return mappings;
             }
 
             @Override
-            public MappingCoverage coverage() {
-                return coverage;
+            public Set<String> getIgnoredFeatures() {
+                return ignoredFeatures;
             }
 
             @Override
-            public void transform(EObject source,
+            protected EObject createTarget(T source,
                     TransformationContext context) {
-                // nothing to do by default
+                return null;
             }
         };
     }
