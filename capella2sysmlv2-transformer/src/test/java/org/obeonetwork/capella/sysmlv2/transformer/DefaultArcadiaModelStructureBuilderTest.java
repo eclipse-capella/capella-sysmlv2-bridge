@@ -21,6 +21,8 @@ import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 class DefaultArcadiaModelStructureBuilderTest {
 

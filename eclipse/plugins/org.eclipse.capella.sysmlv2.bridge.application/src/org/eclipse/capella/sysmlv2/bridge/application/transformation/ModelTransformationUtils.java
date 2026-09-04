@@ -22,10 +22,10 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
-import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 public final class ModelTransformationUtils {
 

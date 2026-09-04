@@ -19,6 +19,12 @@ import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 class TransformationEngineTest {
 

@@ -19,6 +19,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 
 class TransformationDispatcherTest {
 

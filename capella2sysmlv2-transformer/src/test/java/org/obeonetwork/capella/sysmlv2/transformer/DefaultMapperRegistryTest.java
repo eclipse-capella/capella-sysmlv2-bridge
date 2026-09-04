@@ -19,6 +19,10 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class DefaultMapperRegistryTest {
 

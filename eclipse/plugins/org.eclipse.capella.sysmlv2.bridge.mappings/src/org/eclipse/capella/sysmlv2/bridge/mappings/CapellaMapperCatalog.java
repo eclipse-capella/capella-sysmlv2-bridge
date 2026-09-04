@@ -18,10 +18,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.AlignmentStatus;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.FeatureAlignment;
-import org.obeonetwork.capella.sysmlv2.transformer.MetaclassAlignment;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
 import org.polarsys.capella.core.data.ctx.Capability;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.ctx.Mission;
@@ -135,17 +136,17 @@ public final class CapellaMapperCatalog {
 
     private static MetaclassAlignment confirmed(org.eclipse.emf.ecore.EClass sourceType, String target,
             FeatureAlignment... featureAlignments) {
-        return new MetaclassAlignment(org.obeonetwork.capella.sysmlv2.transformer.MetaclassId.of(sourceType), target,
+        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
                 AlignmentStatus.CONFIRMED, List.of(featureAlignments));
     }
 
     private static MetaclassAlignment candidate(org.eclipse.emf.ecore.EClass sourceType, String target) {
-        return new MetaclassAlignment(org.obeonetwork.capella.sysmlv2.transformer.MetaclassId.of(sourceType), target,
+        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
                 AlignmentStatus.CANDIDATE);
     }
 
     private static MetaclassAlignment standard(org.eclipse.emf.ecore.EClass sourceType, String target) {
-        return new MetaclassAlignment(org.obeonetwork.capella.sysmlv2.transformer.MetaclassId.of(sourceType), target,
+        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
                 AlignmentStatus.SYSML_STANDARD);
     }
 }

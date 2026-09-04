@@ -27,10 +27,10 @@ import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationDispatcher;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 import org.polarsys.capella.core.data.la.LaFactory;
 
 class LogicalComponentMapperTest {
@@ -46,7 +46,7 @@ class LogicalComponentMapperTest {
                 "FunctionOutputPortMapper", "FunctionalChainMapper", "FunctionalExchangeMapper"),
                 backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
         assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
-                .noneMatch(org.obeonetwork.capella.sysmlv2.transformer.ElementMapper.class::isInstance));
+                .noneMatch(org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper.class::isInstance));
     }
 
     @Test

@@ -19,6 +19,14 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MappingCoverage;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassCoverage;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class TransformationCoverageAnalyzerTest {
 
