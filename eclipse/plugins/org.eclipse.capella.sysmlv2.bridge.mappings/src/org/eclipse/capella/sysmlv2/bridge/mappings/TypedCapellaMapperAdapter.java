@@ -16,9 +16,9 @@ import java.util.Objects;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 public abstract class TypedCapellaMapperAdapter<T extends EObject> implements ElementMapper {
 

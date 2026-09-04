@@ -16,7 +16,7 @@ import java.util.Objects;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
 
 public record MapperBacklogEntry(String packageName, String mapperName, MetaclassId sourceType,
         Class<? extends EObject> sourceJavaType) {

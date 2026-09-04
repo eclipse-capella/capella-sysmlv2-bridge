@@ -17,6 +17,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DefaultDiagnostics;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultDeferredReferenceResolver;
 
 class DefaultDeferredReferenceResolverTest {
 

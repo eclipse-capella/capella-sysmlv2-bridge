@@ -15,6 +15,9 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DefaultDiagnostics;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 
 class DefaultDiagnosticsTest {
 

@@ -26,8 +26,8 @@ import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationService;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationResult;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 public final class EquinoxTransformationService implements TransformationService {
 

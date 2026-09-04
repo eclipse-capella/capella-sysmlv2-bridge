@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MappingCoverage;
 
 class MappingCoverageTest {
 

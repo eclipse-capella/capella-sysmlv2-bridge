@@ -13,6 +13,8 @@
 package org.obeonetwork.capella.sysmlv2.transformer;
 
 import org.eclipse.emf.ecore.EObject;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 public interface CapellaToSysMLTransformer {
 

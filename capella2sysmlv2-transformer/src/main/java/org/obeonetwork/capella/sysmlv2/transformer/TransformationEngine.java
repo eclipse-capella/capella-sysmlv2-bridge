@@ -18,6 +18,11 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.DefaultTransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 public final class TransformationEngine implements CapellaToSysMLTransformer {
 

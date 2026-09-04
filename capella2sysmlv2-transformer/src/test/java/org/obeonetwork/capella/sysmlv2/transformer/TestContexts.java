@@ -12,6 +12,10 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.DefaultTransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+
 final class TestContexts {
 
     private TestContexts() {

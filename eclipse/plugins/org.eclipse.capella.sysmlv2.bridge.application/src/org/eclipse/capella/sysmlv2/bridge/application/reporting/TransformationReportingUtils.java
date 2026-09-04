@@ -29,12 +29,12 @@ import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
 import org.obeonetwork.capella.sysmlv2.cli.ElementCount;
 import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
-import org.obeonetwork.capella.sysmlv2.transformer.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.MetaclassId;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageAnalyzer;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageReport;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationCoverageWriter;
-import org.obeonetwork.capella.sysmlv2.transformer.TransformationResult;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 public final class TransformationReportingUtils {
 
@@ -103,7 +103,7 @@ public final class TransformationReportingUtils {
     }
 
     private static CoverageValue coverageValue(
-            org.obeonetwork.capella.sysmlv2.transformer.CoverageMetric metric) {
+            org.obeonetwork.capella.sysmlv2.transformer.reporting.CoverageMetric metric) {
         return new CoverageValue(metric.numerator(), metric.denominator());
     }
 

@@ -17,6 +17,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.CapellaMetamodelInventory;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.StructuralFeatureDescriptor;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.StructuralFeatureKind;
 
 class CapellaMetamodelInventoryTest {
 
