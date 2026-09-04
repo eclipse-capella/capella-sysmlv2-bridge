@@ -14,32 +14,34 @@ package org.obeonetwork.capella.sysmlv2.transformer.mapping;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.eclipse.emf.ecore.EObject;
 
 public final class DefaultMapperRegistry implements MapperRegistry {
 
-    private final Map<MetaclassId, ElementMapper> mappers;
+    private final List<ElementMapper<?, ?>> mappers;
 
-    public DefaultMapperRegistry(Collection<? extends ElementMapper> mappers) {
+    public DefaultMapperRegistry(Collection<? extends ElementMapper<?, ?>> mappers) {
         Objects.requireNonNull(mappers, "mappers must not be null");
-        var registeredMappers = new LinkedHashMap<MetaclassId, ElementMapper>();
-        for (ElementMapper mapper : mappers) {
+        var registeredMappers = new LinkedHashMap<Class<?>, ElementMapper<?, ?>>();
+        for (ElementMapper<?, ?> mapper : mappers) {
             Objects.requireNonNull(mapper, "mapper must not be null");
-            var previous = registeredMappers.putIfAbsent(mapper.sourceType(), mapper);
+            var previous = registeredMappers.putIfAbsent(mapper.getSourceClass(), mapper);
             if (previous != null) {
-                throw new IllegalArgumentException("Duplicate mapper registration for " + mapper.sourceType());
+                throw new IllegalArgumentException("Duplicate mapper registration for " + mapper.getSourceClass());
             }
         }
-        this.mappers = Map.copyOf(registeredMappers);
+        this.mappers = List.copyOf(registeredMappers.values());
     }
 
     @Override
-    public Optional<ElementMapper> get(MetaclassId sourceType) {
-        Objects.requireNonNull(sourceType, "sourceType must not be null");
-        return Optional.ofNullable(this.mappers.get(sourceType));
+    public Optional<ElementMapper<?, ?>> get(EObject source) {
+        Objects.requireNonNull(source, "source must not be null");
+        return this.mappers.stream()
+                .filter(mapper -> mapper.getSourceClass().isInstance(source))
+                .findFirst();
     }
 }

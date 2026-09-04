@@ -21,25 +21,25 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 class TransformationEngineTest {
-
     @Test
     void returnsDiagnosticsFromContext() {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
-        var mapper = new ElementMapper() {
+        var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public MetaclassId sourceType() {
-                return MetaclassId.of(source.eClass());
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of();
             }
 
             @Override
-            public void transform(EObject source, TransformationContext context) {
+            protected EObject createTarget(EObject source, TransformationContext context) {
                 context.diagnostics().warning(source, "test diagnostic");
+                return null;
             }
         };
         var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
@@ -55,23 +55,24 @@ class TransformationEngineTest {
     @Test
     void transformsMultipleSourcesInOneSharedContext() {
         var first = TestEObjects.create("http://example.org/capella", "LogicalComponent");
-        var second = TestEObjects.create("http://example.org/capella", "LogicalComponent");
+        var second = first.eClass().getEPackage().getEFactoryInstance().create(first.eClass());
         var contexts = new java.util.ArrayList<TransformationContext>();
-        var mapper = new ElementMapper() {
+        var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public MetaclassId sourceType() {
-                return MetaclassId.of(first.eClass());
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of();
             }
 
             @Override
-            public void transform(EObject source, TransformationContext context) {
+            protected EObject createTarget(EObject source, TransformationContext context) {
                 contexts.add(context);
+                return null;
             }
         };
         var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
-
-        new TransformationEngine(dispatcher, TestSysONModels.arcadiaLibrary().resourceSet())
-                .transformAll(List.of(first, second), TransformationOptions.defaults());
+        var context = TestContexts.create();
+        dispatcher.dispatch(first, context);
+        dispatcher.dispatch(second, context);
 
         assertThat(contexts).hasSize(2);
         assertThat(contexts.get(0)).isSameAs(contexts.get(1));
@@ -81,6 +82,7 @@ class TransformationEngineTest {
     void traversesContainedSourcesSupportedByTheRegistry() {
         var ecore = EcoreFactory.eINSTANCE;
         var ePackage = ecore.createEPackage();
+
         ePackage.setNsURI("http://example.org/capella");
         ePackage.setNsPrefix("capella");
         ePackage.setName("capella");
@@ -102,21 +104,22 @@ class TransformationEngineTest {
         var values = (java.util.List<EObject>) container.eGet(children);
         values.add(child);
         var transformed = new java.util.ArrayList<EObject>();
-        var mapper = new ElementMapper() {
+        var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public MetaclassId sourceType() {
-                return MetaclassId.of(mappedClass);
+            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+                return List.of();
             }
 
             @Override
-            public void transform(EObject source, TransformationContext context) {
+            protected EObject createTarget(EObject source, TransformationContext context) {
                 transformed.add(source);
+                return null;
             }
         };
 
         new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))),
                 TestSysONModels.arcadiaLibrary().resourceSet()).transform(container, TransformationOptions.defaults());
 
-        assertThat(transformed).containsExactly(child);
+        assertThat(transformed).containsExactly(container, child);
     }
 }

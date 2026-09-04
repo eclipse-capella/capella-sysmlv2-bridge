@@ -15,8 +15,8 @@ package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 import java.util.Objects;
 
 import org.eclipse.emf.ecore.EObject;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
 
 /**
  * Dispatches source elements to registered mappers.
@@ -24,26 +24,35 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
  * @author Raphaël Pagé
  */
 public final class TransformationDispatcher {
-
     private final MapperRegistry mapperRegistry;
 
     public TransformationDispatcher(MapperRegistry mapperRegistry) {
         this.mapperRegistry = Objects.requireNonNull(mapperRegistry, "mapperRegistry must not be null");
     }
 
+    /**
+     * Returns whether a mapper is registered for the source element.
+     */
     public boolean supports(EObject source) {
         Objects.requireNonNull(source, "source must not be null");
-        return this.mapperRegistry.get(MetaclassId.of(source.eClass())).isPresent();
+        return this.mapperRegistry.get(source).isPresent();
     }
 
+    /**
+     * Dispatches the source element to its mapper.
+     */
     public void dispatch(EObject source, TransformationContext context) {
         Objects.requireNonNull(source, "source must not be null");
         Objects.requireNonNull(context, "context must not be null");
 
-        var sourceType = MetaclassId.of(source.eClass());
-        this.mapperRegistry.get(sourceType).ifPresentOrElse(
-                mapper -> mapper.transform(source, context),
+        this.mapperRegistry.get(source).ifPresentOrElse(
+                mapper -> transform(mapper, source, context),
                 () -> context.diagnostics().warning(source,
-                        "No mapper registered for " + sourceType));
+                        "No mapper registered for " + source.eClass().getName()));
+    }
+
+    private static <S extends EObject> void transform(ElementMapper<S, ?> mapper, EObject source,
+            TransformationContext context) {
+        mapper.transform(mapper.getSourceClass().cast(source), context);
     }
 }

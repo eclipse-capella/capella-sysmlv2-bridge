@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.eclipse.emf.ecore.EClass;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
 
 /**
@@ -23,14 +24,9 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  *
  * @author Raphaël Pagé
  */
-public record MetaclassCoverage(MetaclassDescriptor metaclass, MappingStatus status, String mapperClass,
+public record MetaclassCoverage(EClass metaclass, MappingStatus status, String mapperClass,
         List<String> mappedFeatures, List<String> ignoredFeatures, List<String> remainingFeatures,
         Map<String, String> featureTargets) {
-
-    public MetaclassCoverage(MetaclassDescriptor metaclass, MappingStatus status, String mapperClass,
-            List<String> mappedFeatures, List<String> ignoredFeatures, List<String> remainingFeatures) {
-        this(metaclass, status, mapperClass, mappedFeatures, ignoredFeatures, remainingFeatures, Map.of());
-    }
 
     public MetaclassCoverage {
         Objects.requireNonNull(metaclass, "metaclass must not be null");

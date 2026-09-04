@@ -12,41 +12,24 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassId;
-import org.polarsys.capella.core.data.ctx.Capability;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
-import org.polarsys.capella.core.data.ctx.Mission;
-import org.polarsys.capella.core.data.ctx.SystemComponent;
-import org.polarsys.capella.core.data.ctx.SystemFunction;
-import org.polarsys.capella.core.data.fa.ComponentExchange;
-import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.fa.FaPackage;
-import org.polarsys.capella.core.data.fa.FunctionInputPort;
-import org.polarsys.capella.core.data.fa.FunctionOutputPort;
-import org.polarsys.capella.core.data.fa.FunctionalChain;
-import org.polarsys.capella.core.data.fa.FunctionalExchange;
-import org.polarsys.capella.core.data.information.ExchangeItem;
 import org.polarsys.capella.core.data.information.InformationPackage;
 import org.polarsys.capella.core.data.la.LaPackage;
-import org.polarsys.capella.core.data.la.LogicalFunction;
-import org.polarsys.capella.core.data.oa.CommunicationMean;
-import org.polarsys.capella.core.data.oa.Entity;
 import org.polarsys.capella.core.data.oa.OaPackage;
-import org.polarsys.capella.core.data.oa.OperationalActivity;
-import org.polarsys.capella.core.data.oa.OperationalProcess;
 import org.polarsys.capella.core.data.pa.PaPackage;
-import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.pa.PhysicalFunction;
 
 public final class CapellaMapperCatalog {
 
@@ -54,12 +37,15 @@ public final class CapellaMapperCatalog {
 
     private static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
+    private static final List<EPackage> CAPELLA_PACKAGES = List.of(CtxPackage.eINSTANCE, FaPackage.eINSTANCE,
+            InformationPackage.eINSTANCE, LaPackage.eINSTANCE, OaPackage.eINSTANCE, PaPackage.eINSTANCE);
+
     private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
 
     private CapellaMapperCatalog() {
     }
 
-    public static List<ElementMapper> createMappers() {
+    public static List<ElementMapper<?, ?>> createMappers() {
         return List.of(new LogicalComponentMapper());
     }
 
@@ -67,11 +53,10 @@ public final class CapellaMapperCatalog {
         return BACKLOG;
     }
 
-    public static List<MetaclassAlignment> alignmentCatalog() {
-        return List.of(
-                confirmed(LaPackage.Literals.LOGICAL_COMPONENT, ARCADIA_COMPONENT,
-                        new FeatureAlignment("name", "SysML::Element::declaredName",
-                                AlignmentStatus.SYSML_STANDARD)),
+    public static List<MetaclassAlignment> getAlignmentCatalog() {
+        var result = new ArrayList<MetaclassAlignment>();
+        createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
+        result.addAll(List.of(
                 candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
                 candidate(CtxPackage.Literals.SYSTEM_COMPONENT, ARCADIA_COMPONENT),
@@ -89,64 +74,73 @@ public final class CapellaMapperCatalog {
                 candidate(OaPackage.Literals.OPERATIONAL_ACTIVITY, ARCADIA_FUNCTION),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain"),
                 candidate(PaPackage.Literals.PHYSICAL_COMPONENT, ARCADIA_COMPONENT),
-                candidate(PaPackage.Literals.PHYSICAL_FUNCTION, ARCADIA_FUNCTION));
+                candidate(PaPackage.Literals.PHYSICAL_FUNCTION, ARCADIA_FUNCTION)));
+        return List.copyOf(result);
+    }
+
+    private static MetaclassAlignment alignment(ElementMapper<?, ?> mapper) {
+        var features = mapper.getFeatureMappings().stream()
+                .sorted(java.util.Comparator.comparing(feature -> feature.capellaFeature()))
+                .map(feature -> {
+                    AlignmentStatus alignment;
+                    if (feature.sysmlFeature().startsWith("Arcadia::")) {
+                        alignment = AlignmentStatus.CONFIRMED;
+                    } else {
+                        alignment = AlignmentStatus.SYSML_STANDARD;
+                    }
+                    return new FeatureAlignment(feature.capellaFeature(), feature.sysmlFeature(), alignment);
+                })
+                .toList();
+        return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTarget(), AlignmentStatus.CONFIRMED, features);
+    }
+
+    private static EClass findCorrespondingEClass(Class<?> sourceClass) {
+        return CAPELLA_PACKAGES.stream()
+                .flatMap(ePackage -> ePackage.getEClassifiers().stream())
+                .filter(EClass.class::isInstance)
+                .map(EClass.class::cast)
+                .filter(eClass -> sourceClass.equals(eClass.getInstanceClass()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Mapper source class is absent from the Capella metamodel: " + sourceClass.getName()));
     }
 
     private static Map<String, List<MapperBacklogEntry>> createBacklog() {
         var result = new LinkedHashMap<String, List<MapperBacklogEntry>>();
         result.put("ctx", List.of(
-                entry("ctx", "CapabilityMapper", CtxPackage.Literals.CAPABILITY, Capability.class),
-                entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION, Mission.class),
-                entry("ctx", "SystemComponentMapper", CtxPackage.Literals.SYSTEM_COMPONENT, SystemComponent.class),
-                entry("ctx", "SystemFunctionMapper", CtxPackage.Literals.SYSTEM_FUNCTION, SystemFunction.class)));
+                entry("ctx", "CapabilityMapper", CtxPackage.Literals.CAPABILITY),
+                entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION),
+                entry("ctx", "SystemFunctionMapper", CtxPackage.Literals.SYSTEM_FUNCTION)));
         result.put("fa", List.of(
-                entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE, ComponentExchange.class),
-                entry("fa", "ComponentPortMapper", FaPackage.Literals.COMPONENT_PORT, ComponentPort.class),
-                entry("fa", "FunctionInputPortMapper", FaPackage.Literals.FUNCTION_INPUT_PORT, FunctionInputPort.class),
-                entry("fa", "FunctionOutputPortMapper", FaPackage.Literals.FUNCTION_OUTPUT_PORT,
-                        FunctionOutputPort.class),
-                entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN, FunctionalChain.class),
-                entry("fa", "FunctionalExchangeMapper", FaPackage.Literals.FUNCTIONAL_EXCHANGE,
-                        FunctionalExchange.class)));
+                entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE),
+                entry("fa", "ComponentPortMapper", FaPackage.Literals.COMPONENT_PORT),
+                entry("fa", "FunctionInputPortMapper", FaPackage.Literals.FUNCTION_INPUT_PORT),
+                entry("fa", "FunctionOutputPortMapper", FaPackage.Literals.FUNCTION_OUTPUT_PORT),
+                entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN),
+                entry("fa", "FunctionalExchangeMapper", FaPackage.Literals.FUNCTIONAL_EXCHANGE)));
         result.put("information", List.of(
-                entry("information", "ExchangeItemMapper", InformationPackage.Literals.EXCHANGE_ITEM,
-                        ExchangeItem.class)));
+                entry("information", "ExchangeItemMapper", InformationPackage.Literals.EXCHANGE_ITEM)));
         result.put("la", List.of(
-                entry("la", "LogicalFunctionMapper", LaPackage.Literals.LOGICAL_FUNCTION, LogicalFunction.class)));
+                entry("la", "LogicalFunctionMapper", LaPackage.Literals.LOGICAL_FUNCTION)));
         result.put("oa", List.of(
-                entry("oa", "CommunicationMeanMapper", OaPackage.Literals.COMMUNICATION_MEAN,
-                        CommunicationMean.class),
-                entry("oa", "EntityMapper", OaPackage.Literals.ENTITY, Entity.class),
-                entry("oa", "OperationalActivityMapper", OaPackage.Literals.OPERATIONAL_ACTIVITY,
-                        OperationalActivity.class),
-                entry("oa", "OperationalProcessMapper", OaPackage.Literals.OPERATIONAL_PROCESS,
-                        OperationalProcess.class)));
+                entry("oa", "CommunicationMeanMapper", OaPackage.Literals.COMMUNICATION_MEAN),
+                entry("oa", "OperationalActivityMapper", OaPackage.Literals.OPERATIONAL_ACTIVITY),
+                entry("oa", "OperationalProcessMapper", OaPackage.Literals.OPERATIONAL_PROCESS)));
         result.put("pa", List.of(
-                entry("pa", "PhysicalComponentMapper", PaPackage.Literals.PHYSICAL_COMPONENT,
-                        PhysicalComponent.class),
-                entry("pa", "PhysicalFunctionMapper", PaPackage.Literals.PHYSICAL_FUNCTION,
-                        PhysicalFunction.class)));
-        return Collections.unmodifiableMap(result);
+                entry("pa", "PhysicalComponentMapper", PaPackage.Literals.PHYSICAL_COMPONENT),
+                entry("pa", "PhysicalFunctionMapper", PaPackage.Literals.PHYSICAL_FUNCTION)));
+        return result;
     }
 
     private static MapperBacklogEntry entry(String packageName, String mapperName,
-            org.eclipse.emf.ecore.EClass sourceType, Class<? extends org.eclipse.emf.ecore.EObject> sourceJavaType) {
-        return new MapperBacklogEntry(packageName, mapperName, sourceType, sourceJavaType);
+            EClass sourceType) {
+        return new MapperBacklogEntry(packageName, mapperName, sourceType);
     }
 
-    private static MetaclassAlignment confirmed(org.eclipse.emf.ecore.EClass sourceType, String target,
-            FeatureAlignment... featureAlignments) {
-        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
-                AlignmentStatus.CONFIRMED, List.of(featureAlignments));
+    private static MetaclassAlignment candidate(EClass sourceType, String target) {
+        return new MetaclassAlignment(sourceType, target, AlignmentStatus.CANDIDATE, List.of());
     }
 
-    private static MetaclassAlignment candidate(org.eclipse.emf.ecore.EClass sourceType, String target) {
-        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
-                AlignmentStatus.CANDIDATE);
-    }
-
-    private static MetaclassAlignment standard(org.eclipse.emf.ecore.EClass sourceType, String target) {
-        return new MetaclassAlignment(MetaclassId.of(sourceType), target,
-                AlignmentStatus.SYSML_STANDARD);
+    private static MetaclassAlignment standard(EClass sourceType, String target) {
+        return new MetaclassAlignment(sourceType, target, AlignmentStatus.SYSML_STANDARD, List.of());
     }
 }
