@@ -13,7 +13,7 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
-import org.eclipse.capella.model.services.transverse.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.TypedCapellaMapperAdapter;
 import org.obeonetwork.capella.sysmlv2.transformer.MappingCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationContext;
