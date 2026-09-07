@@ -42,7 +42,7 @@
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <syson.version>2026.7.2</syson.version>
-        <capella.for.syson.version>2026.7.0</capella.for.syson.version>
+        <capella.for.syson.version>2026.7.1</capella.for.syson.version>
         <sirius-web.version>2026.7.3</sirius-web.version>
         <spring.version>7.0.8</spring.version>
     </properties>
