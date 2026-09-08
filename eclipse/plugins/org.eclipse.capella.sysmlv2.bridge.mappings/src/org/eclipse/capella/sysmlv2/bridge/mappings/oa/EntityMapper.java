@@ -52,14 +52,10 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     @Override
     protected PartUsage createTarget(Entity source, TransformationContext context) {
         var parent = MapperUtils.findTargetParent(context, source,
-                Element.class, context.modelStructure().getOperationalAnalysisStructurePackage());
+                Element.class, context.modelStructure().operationalAnalysisPackage());
 
-        PartUsage target;
-        if (source.isActor()) {
-            target = transverseMutationService.createActor(parent);
-        } else {
-            target = transverseMutationService.createComponent(parent);
-        }
+        var target = source.isActor() ? transverseMutationService.createActor(parent)
+                : transverseMutationService.createComponent(parent);
 
         if (target == null) {
             context.diagnostics().error(source, "Unable to create an Operational Entity");

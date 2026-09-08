@@ -24,8 +24,6 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.Package;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -56,23 +54,13 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
     @Override
     protected PartUsage createTarget(LogicalComponent source, TransformationContext context) {
         var parent = MapperUtils.findTargetParent(context, source,
-                Element.class, context.modelStructure().getLogicalArchitectureStructurePackage());
+                PartUsage.class, context.modelStructure().getLogicalArchitectureSystemPart());
 
-        PartUsage target;
-        if (source.isActor()) {
-            target = transverseMutationService.createActor(parent);
-        } else {
-            if (parent instanceof Package) {
-                // this should only be the case for the "System" component, which represents the root of the system.
-                // we can't call createComponentLA here since its prerequisite is that "System" already exists
-                target = transverseMutationService.createComponent(parent);
-            } else {
-                target = laMutationService.createComponentLA(parent);
-            }
-        }
+        var target = source.isActor() ? transverseMutationService.createActor(parent)
+                : laMutationService.createComponentLA(parent);
 
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create a Logical Component");
+            context.diagnostics().error(source, "Unable to create an Logical Component");
             return null;
         }
         // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing

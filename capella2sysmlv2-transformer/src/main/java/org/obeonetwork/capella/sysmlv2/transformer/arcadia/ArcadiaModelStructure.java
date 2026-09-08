@@ -14,9 +14,11 @@ package org.obeonetwork.capella.sysmlv2.transformer.arcadia;
 
 import java.util.Objects;
 
+import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.OccurrenceDefinition;
 import org.eclipse.syson.sysml.Package;
+import org.eclipse.syson.sysml.PartUsage;
 
 /**
  * Holds the package structure for a given Sysmlv2 Capella project.
@@ -33,32 +35,10 @@ import org.eclipse.syson.sysml.Package;
  *            The package corresponding to the Physical Architecture perspective
  * @param epbsArchitecturePackage
  *            The package corresponding to the EPBS perspective
- * 
  * @author Raphaël Pagé
  */
 public record ArcadiaModelStructure(OccurrenceDefinition root, Package operationalAnalysisPackage, Package systemAnalysisPackage, Package logicalArchitecturePackage,
         Package physicalArchitecturePackage, Package epbsArchitecturePackage) {
-    public static final String REQUIREMENTS_PACKAGE = "Requirements";
-
-    public static final String STRUCTURE_PACKAGE = "Structure";
-
-    public static final String DATA_PACKAGE = "Data";
-
-    public static final String INTERFACES_PACKAGE = "Interfaces";
-
-    public static final String CAPABILITIES_PACKAGE = "Capabilities";
-
-    public static final String FUNCTIONS_PACKAGE = "Functions";
-
-    public static final String OPERATIONAL_ANALYSIS_PERSPECTIVE = "Operational Analysis";
-
-    public static final String SYSTEM_ANALYSIS_PERSPECTIVE = "System Analysis";
-
-    public static final String LOGICAL_ARCHITECTURE_PERSPECTIVE = "Logical Architecture";
-
-    public static final String PHYSICAL_ARCHITECTURE_PERSPECTIVE = "Physical Architecture";
-
-    public static final String EPBS_ARCHITECTURE_PERSPECTIVE = "EPBS Architecture";
 
     /**
      * Validates the generated model structure.
@@ -77,104 +57,54 @@ public record ArcadiaModelStructure(OccurrenceDefinition root, Package operation
                 "epbsArchitecturePackage must not be null");
     }
 
-    public Package getOperationalAnalysisFunctionsPackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, FUNCTIONS_PACKAGE);
-    }
-
-    public Package getOperationalAnalysisCapabilitiesPackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, CAPABILITIES_PACKAGE);
-    }
-
-    public Package getOperationalAnalysisInterfacesPackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, INTERFACES_PACKAGE);
-    }
-
-    public Package getOperationalAnalysisDataPackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, DATA_PACKAGE);
-    }
-
-    public Package getOperationalAnalysisStructurePackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, STRUCTURE_PACKAGE);
-    }
-
-    public Package getOperationalAnalysisRequirementsPackage() {
-        return getSubPackageNamed(operationalAnalysisPackage, REQUIREMENTS_PACKAGE);
-    }
-
-    public Package getSystemAnalysisFunctionsPackage() {
-        return getSubPackageNamed(systemAnalysisPackage, FUNCTIONS_PACKAGE);
+    public Package getLogicalArchitectureFunctionsPackage() {
+        return getLogicalArchitecturePackageNamed("Functions");
     }
 
     public Package getSystemAnalysisCapabilitiesPackage() {
-        return getSubPackageNamed(systemAnalysisPackage, CAPABILITIES_PACKAGE);
-    }
-
-    public Package getSystemAnalysisInterfacesPackage() {
-        return getSubPackageNamed(systemAnalysisPackage, INTERFACES_PACKAGE);
-    }
-
-    public Package getSystemAnalysisDataPackage() {
-        return getSubPackageNamed(systemAnalysisPackage, DATA_PACKAGE);
-    }
-
-    public Package getSystemAnalysisStructurePackage() {
-        return getSubPackageNamed(systemAnalysisPackage, STRUCTURE_PACKAGE);
-    }
-
-    public Package getSystemAnalysisRequirementsPackage() {
-        return getSubPackageNamed(systemAnalysisPackage, REQUIREMENTS_PACKAGE);
-    }
-
-    public Package getLogicalArchitectureFunctionsPackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, FUNCTIONS_PACKAGE);
-    }
-
-    public Package getLogicalArchitectureCapabilitiesPackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, CAPABILITIES_PACKAGE);
-    }
-
-    public Package getLogicalArchitectureInterfacesPackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, INTERFACES_PACKAGE);
+        return getSystemAnalysisPackageNamed("Capabilities");
     }
 
     public Package getLogicalArchitectureDataPackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, DATA_PACKAGE);
+        return getLogicalArchitecturePackageNamed("Data");
     }
 
-    public Package getLogicalArchitectureStructurePackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, STRUCTURE_PACKAGE);
+    public Package getLogicalArchitectureInterfacesPackage() {
+        return getLogicalArchitecturePackageNamed("Interfaces");
     }
 
-    public Package getLogicalArchitectureRequirementsPackage() {
-        return getSubPackageNamed(logicalArchitecturePackage, REQUIREMENTS_PACKAGE);
+    public ActionUsage getLogicalArchitectureRootFunction() {
+        return ownedElementNamed(getLogicalArchitectureFunctionsPackage(),
+                "Root Function", ActionUsage.class);
     }
 
-    public Package getPhysicalArchitectureFunctionsPackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, FUNCTIONS_PACKAGE);
+    public PartUsage getLogicalArchitectureSystemPart() {
+        return ownedElementNamed(logicalArchitecturePackage, "system",
+                PartUsage.class);
     }
 
-    public Package getPhysicalArchitectureCapabilitiesPackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, CAPABILITIES_PACKAGE);
+    public PartUsage getPhysicalArchitectureSystemPart() {
+        return ownedElementNamed(physicalArchitecturePackage, "system",
+                PartUsage.class);
     }
 
-    public Package getPhysicalArchitectureInterfacesPackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, INTERFACES_PACKAGE);
+    public PartUsage getSystemAnalysisSystemPart() {
+        return ownedElementNamed(systemAnalysisPackage, "system",
+                PartUsage.class);
     }
 
-    public Package getPhysicalArchitectureDataPackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, DATA_PACKAGE);
+    private Package getLogicalArchitecturePackageNamed(
+            String name) {
+        var perspective = (Element) logicalArchitecturePackage
+                .eContainer().eContainer();
+        return ownedElementNamed(perspective, name, Package.class);
     }
 
-    public Package getPhysicalArchitectureStructurePackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, STRUCTURE_PACKAGE);
-    }
-
-    public Package getPhysicalArchitectureRequirementsPackage() {
-        return getSubPackageNamed(physicalArchitecturePackage, REQUIREMENTS_PACKAGE);
-    }
-
-    private Package getSubPackageNamed(Package parentPackage, String name) {
-        return ownedElementNamed(parentPackage, name, Package.class);
+    private Package getSystemAnalysisPackageNamed(
+            String name) {
+        var perspective = (Element) systemAnalysisPackage.eContainer().eContainer();
+        return ownedElementNamed(perspective, name,
+                Package.class);
     }
 
     private static <T extends Element> T ownedElementNamed(Element owner,
