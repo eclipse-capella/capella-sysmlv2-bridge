@@ -14,6 +14,17 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.CAPABILITIES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.DATA_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.EPBS_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.FUNCTIONS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.INTERFACES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.LOGICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.OPERATIONAL_ANALYSIS_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.PHYSICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.REQUIREMENTS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.STRUCTURE_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.SYSTEM_ANALYSIS_PERSPECTIVE;
 
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
@@ -36,25 +47,62 @@ class DefaultArcadiaModelStructureBuilderTest {
         assertThat(structure.root().getDeclaredName()).isEqualTo("TestModel");
         assertThat(structure.root().getOwnedElement())
                 .extracting(Element::getDeclaredName)
-                .containsExactly("Operational Analysis", "System Analysis", "Logical Architecture",
-                        "Physical Architecture", "EPBS Architecture");
+                .containsExactly(OPERATIONAL_ANALYSIS_PERSPECTIVE, SYSTEM_ANALYSIS_PERSPECTIVE,
+                        LOGICAL_ARCHITECTURE_PERSPECTIVE, PHYSICAL_ARCHITECTURE_PERSPECTIVE,
+                        EPBS_ARCHITECTURE_PERSPECTIVE);
 
-        assertPerspective(structure.root(), "Operational Analysis", false, library);
-        assertPerspective(structure.root(), "System Analysis", true, library);
-        assertPerspective(structure.root(), "Logical Architecture", true, library);
-        assertPerspective(structure.root(), "Physical Architecture", true, library);
-        assertPerspective(structure.root(), "EPBS Architecture", true, library);
-        assertThat(structure.logicalArchitecturePackage().getDeclaredName()).isEqualTo("Structure");
-        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
-        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
-        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
-        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
-        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
-        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
-        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
-        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
-        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
-        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
+        assertPerspective(structure.root(), OPERATIONAL_ANALYSIS_PERSPECTIVE, false, library);
+        assertPerspective(structure.root(), SYSTEM_ANALYSIS_PERSPECTIVE, true, library);
+        assertPerspective(structure.root(), LOGICAL_ARCHITECTURE_PERSPECTIVE, true, library);
+        assertPerspective(structure.root(), PHYSICAL_ARCHITECTURE_PERSPECTIVE, true, library);
+        assertPerspective(structure.root(), EPBS_ARCHITECTURE_PERSPECTIVE, true, library);
+
+        assertStandardPackages(structure.operationalAnalysis());
+        assertStandardPackages(structure.systemAnalysis());
+        assertStandardPackages(structure.logicalArchitecture());
+        assertStandardPackages(structure.physicalArchitecture());
+        assertThat(structure.operationalAnalysis().systemPart()).isEmpty();
+        assertThat(structure.systemAnalysis().systemPart()).isPresent();
+        assertThat(structure.logicalArchitecture().systemPart()).isPresent();
+        assertThat(structure.physicalArchitecture().systemPart()).isPresent();
+        assertThat(structure.epbsArchitecture().systemPart()).isPresent();
+    }
+
+    @Test
+    void findsRootElementsAfterTheirNamesAreUpdated() {
+        var library = TestSysONModels.arcadiaLibrary();
+        var structure = new DefaultArcadiaModelStructureBuilder().build(
+                TransformationOptions.defaults(), library.resourceSet());
+
+        var operationalRootFunction = structure.operationalAnalysis().rootFunction();
+        var systemRootFunction = structure.systemAnalysis().rootFunction();
+        var logicalRootFunction = structure.logicalArchitecture().rootFunction();
+        var physicalRootFunction = structure.physicalArchitecture().rootFunction();
+        var systemActor = addActorFirst(structure.systemAnalysis().structurePackage());
+        var logicalActor = addActorFirst(structure.logicalArchitecture().structurePackage());
+        var physicalActor = addActorFirst(structure.physicalArchitecture().structurePackage());
+        var systemPart = structure.systemAnalysis().systemPart().orElseThrow();
+        var logicalPart = structure.logicalArchitecture().systemPart().orElseThrow();
+        var physicalPart = structure.physicalArchitecture().systemPart().orElseThrow();
+
+        operationalRootFunction.setDeclaredName("Updated Operational Root Function");
+        systemRootFunction.setDeclaredName("Updated System Root Function");
+        logicalRootFunction.setDeclaredName("Updated Logical Root Function");
+        physicalRootFunction.setDeclaredName("Updated Physical Root Function");
+        systemPart.setDeclaredName("Updated System");
+        logicalPart.setDeclaredName("Updated Logical System");
+        physicalPart.setDeclaredName("Updated Physical System");
+
+        assertThat(structure.operationalAnalysis().rootFunction()).isSameAs(operationalRootFunction);
+        assertThat(structure.systemAnalysis().rootFunction()).isSameAs(systemRootFunction);
+        assertThat(structure.logicalArchitecture().rootFunction()).isSameAs(logicalRootFunction);
+        assertThat(structure.physicalArchitecture().rootFunction()).isSameAs(physicalRootFunction);
+        assertThat(structure.systemAnalysis().systemPart().orElseThrow()).isSameAs(systemPart);
+        assertThat(structure.logicalArchitecture().systemPart().orElseThrow()).isSameAs(logicalPart);
+        assertThat(structure.physicalArchitecture().systemPart().orElseThrow()).isSameAs(physicalPart);
+        assertThat(systemPart).isNotSameAs(systemActor);
+        assertThat(logicalPart).isNotSameAs(logicalActor);
+        assertThat(physicalPart).isNotSameAs(physicalActor);
     }
 
     @Test
@@ -116,10 +164,41 @@ class DefaultArcadiaModelStructureBuilderTest {
         TestSysONModels.addOwnedElement(arcadia, function);
     }
 
+    private static PartUsage addActorFirst(Element structurePackage) {
+        var actor = SysmlFactory.eINSTANCE.createPartUsage();
+        actor.setDeclaredName("Actor");
+
+        var actorAttribute = SysmlFactory.eINSTANCE.createReferenceUsage();
+        actorAttribute.setDeclaredName("isActor");
+        var attributeMembership = SysmlFactory.eINSTANCE.createFeatureMembership();
+        attributeMembership.getOwnedRelatedElement().add(actorAttribute);
+        actor.getOwnedRelationship().add(attributeMembership);
+
+        var value = SysmlFactory.eINSTANCE.createLiteralBoolean();
+        value.setValue(true);
+        var featureValue = SysmlFactory.eINSTANCE.createFeatureValue();
+        featureValue.getOwnedRelatedElement().add(value);
+        actorAttribute.getOwnedRelationship().add(featureValue);
+
+        var actorMembership = SysmlFactory.eINSTANCE.createOwningMembership();
+        actorMembership.getOwnedRelatedElement().add(actor);
+        structurePackage.getOwnedRelationship().add(0, actorMembership);
+        return actor;
+    }
+
     private static Element ownedElementNamed(Element owner, String name) {
         return owner.getOwnedElement().stream()
                 .filter(element -> name.equals(element.getDeclaredName()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private static void assertStandardPackages(org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaPerspectiveStructure structure) {
+        assertThat(new Element[] { structure.functionsPackage(), structure.capabilitiesPackage(),
+                structure.interfacesPackage(), structure.dataPackage(), structure.structurePackage(),
+                structure.requirementsPackage() })
+                        .extracting(Element::getDeclaredName)
+                        .containsExactly(FUNCTIONS_PACKAGE, CAPABILITIES_PACKAGE, INTERFACES_PACKAGE, DATA_PACKAGE,
+                                STRUCTURE_PACKAGE, REQUIREMENTS_PACKAGE);
     }
 }

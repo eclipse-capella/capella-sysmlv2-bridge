@@ -36,22 +36,36 @@ class LogicalComponentMapperTest {
     private final TransverseQueryService transverseQueryService = new TransverseQueryService();
 
     @Test
-    void mapsARealLogicalComponentIntoTheLogicalArchitectureStructure() {
+    void mapsTheLogicalArchitectureRootToTheExistingSystemAndMapsItsChildren() {
         var sourceName = "Cabin Server";
         var sourceDescription = "This a the cabin server description";
+        var architecture = LaFactory.eINSTANCE.createLogicalArchitecture();
+        var componentPackage = LaFactory.eINSTANCE.createLogicalComponentPkg();
+        architecture.setOwnedLogicalComponentPkg(componentPackage);
+        var root = LaFactory.eINSTANCE.createLogicalComponent();
+        root.setName("In-Flight Entertainment System");
+        root.setDescription("The logical system root");
+        root.setAbstract(true);
+        componentPackage.getOwnedLogicalComponents().add(root);
         var source = LaFactory.eINSTANCE.createLogicalComponent();
         source.setName(sourceName);
         source.setDescription(sourceDescription);
         source.setAbstract(true);
+        root.getOwnedLogicalComponents().add(source);
         var targetModel = new CapellaForSysonResourceSet();
         var resourceSet = targetModel.getResourceSet();
         var engine = new TransformationEngine(
                 new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
                 resourceSet);
 
-        var result = engine.transform(source,
+        var result = engine.transform(architecture,
                 new TransformationOptions(false, false, false, "IFE", "In-Flight Entertainment System"));
 
+        var system = assertInstanceOf(PartUsage.class,
+                result.traceability().lookupTarget(root).orElseThrow());
+        assertEquals("In-Flight Entertainment System", system.getDeclaredName());
+        assertEquals("The logical system root", transverseQueryService.getArcadiaElementDescription(system));
+        assertTrue(system.isIsAbstract());
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
         assertEquals(sourceName, target.getDeclaredName());
@@ -61,8 +75,7 @@ class LogicalComponentMapperTest {
         assertSame(target, typing.getTypedFeature());
         assertEquals("Arcadia::Component", typing.getType().getQualifiedName());
         var membership = assertInstanceOf(OwningMembership.class, target.eContainer());
-        var system = assertInstanceOf(PartUsage.class, membership.eContainer());
-        assertEquals("system", system.getDeclaredName());
+        assertSame(system, membership.eContainer());
         var systemMembership = assertInstanceOf(OwningMembership.class, system.eContainer());
         var structurePackage = assertInstanceOf(org.eclipse.syson.sysml.Package.class,
                 systemMembership.eContainer());

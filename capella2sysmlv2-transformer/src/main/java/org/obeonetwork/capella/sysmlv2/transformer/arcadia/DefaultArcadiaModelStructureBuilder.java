@@ -14,22 +14,56 @@ package org.obeonetwork.capella.sysmlv2.transformer.arcadia;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.syson.sysml.ActionDefinition;
+import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.OwningMembership;
+import org.eclipse.syson.sysml.Package;
 import org.eclipse.syson.sysml.PartDefinition;
+import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.eclipse.syson.sysml.Type;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
+/**
+ * Builds the standard Arcadia model structure used by a transformation.
+ * 
+ * @author Raphaël Pagé
+ */
 public final class DefaultArcadiaModelStructureBuilder {
+    public static final String REQUIREMENTS_PACKAGE = "Requirements";
 
-    private static final List<String> STANDARD_PACKAGES = List.of("Functions", "Capabilities", "Interfaces", "Data",
-            "Structure", "Requirements");
+    public static final String STRUCTURE_PACKAGE = "Structure";
+
+    public static final String DATA_PACKAGE = "Data";
+
+    public static final String INTERFACES_PACKAGE = "Interfaces";
+
+    public static final String CAPABILITIES_PACKAGE = "Capabilities";
+
+    public static final String FUNCTIONS_PACKAGE = "Functions";
+
+    public static final String OPERATIONAL_ANALYSIS_PERSPECTIVE = "Operational Analysis";
+
+    public static final String SYSTEM_ANALYSIS_PERSPECTIVE = "System Analysis";
+
+    public static final String LOGICAL_ARCHITECTURE_PERSPECTIVE = "Logical Architecture";
+
+    public static final String PHYSICAL_ARCHITECTURE_PERSPECTIVE = "Physical Architecture";
+
+    public static final String EPBS_ARCHITECTURE_PERSPECTIVE = "EPBS Architecture";
+
+    public static final String SYSTEM_ELEMENT = "system";
+
+    public static final String ROOT_FUNCTION = "Root Function";
+
+    private static final List<String> STANDARD_PACKAGES = List.of(FUNCTIONS_PACKAGE, CAPABILITIES_PACKAGE, INTERFACES_PACKAGE, DATA_PACKAGE,
+            STRUCTURE_PACKAGE, REQUIREMENTS_PACKAGE);
 
     /**
      * Builds the standard Arcadia model structure used by a transformation.
@@ -51,15 +85,14 @@ public final class DefaultArcadiaModelStructureBuilder {
         var root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
         root.setDeclaredName(options.modelShortName());
 
-        var operationalAnalysis = createPerspective(root, "Operational Analysis", componentDefinition, functionDefinition, false);
-        var systemAnalysis = createPerspective(root, "System Analysis", componentDefinition, functionDefinition, true);
-        var logicalArchitecture = createPerspective(root, "Logical Architecture", componentDefinition, functionDefinition, true);
-        var physicalArchitecture = createPerspective(root, "Physical Architecture", componentDefinition, functionDefinition, true);
-        var epbsArchitecture = createPerspective(root, "EPBS Architecture", componentDefinition, functionDefinition, true);
+        var operationalAnalysis = createPerspective(root, OPERATIONAL_ANALYSIS_PERSPECTIVE, componentDefinition, functionDefinition, false);
+        var systemAnalysis = createPerspective(root, SYSTEM_ANALYSIS_PERSPECTIVE, componentDefinition, functionDefinition, true);
+        var logicalArchitecture = createPerspective(root, LOGICAL_ARCHITECTURE_PERSPECTIVE, componentDefinition, functionDefinition, true);
+        var physicalArchitecture = createPerspective(root, PHYSICAL_ARCHITECTURE_PERSPECTIVE, componentDefinition, functionDefinition, true);
+        var epbsArchitecture = createPerspective(root, EPBS_ARCHITECTURE_PERSPECTIVE, componentDefinition, functionDefinition, true);
 
-        return new ArcadiaModelStructure(root, operationalAnalysis.structurePackage(), systemAnalysis.structurePackage(),
-                logicalArchitecture.structurePackage(), physicalArchitecture.structurePackage(),
-                epbsArchitecture.structurePackage());
+        return new ArcadiaModelStructure(root, operationalAnalysis, systemAnalysis,
+                logicalArchitecture, physicalArchitecture, epbsArchitecture);
     }
 
     private static <T extends Type> T resolveDefinition(ResourceSet resourceSet, String qualifiedName,
@@ -85,26 +118,44 @@ public final class DefaultArcadiaModelStructureBuilder {
                 .flatMap(DefaultArcadiaModelStructureBuilder::descendants));
     }
 
-    private static PerspectiveStructure createPerspective(Element owner, String name, PartDefinition componentDefinition,
+    private static ArcadiaPerspectiveStructure createPerspective(Element owner, String name, PartDefinition componentDefinition,
             ActionDefinition functionDefinition, boolean createSystemPart) {
         var perspectivePackage = createPackage(name);
         addOwnedElement(owner, perspectivePackage);
 
-        org.eclipse.syson.sysml.Package structurePackage = null;
+        Package functionsPackage = null;
+        Package capabilitiesPackage = null;
+        Package interfacesPackage = null;
+        Package dataPackage = null;
+        Package structurePackage = null;
+        Package requirementsPackage = null;
+        ActionUsage rootFunction = null;
+        PartUsage systemPart = null;
         for (var childName : STANDARD_PACKAGES) {
             var childPackage = createPackage(childName);
             addOwnedElement(perspectivePackage, childPackage);
-            if ("Functions".equals(childName)) {
-                addRootFunction(childPackage, functionDefinition);
-            } else if ("Structure".equals(childName)) {
-                structurePackage = childPackage;
+            switch (childName) {
+                case FUNCTIONS_PACKAGE -> {
+                    functionsPackage = childPackage;
+                    rootFunction = addRootFunction(childPackage, functionDefinition);
+                }
+                case CAPABILITIES_PACKAGE -> capabilitiesPackage = childPackage;
+                case INTERFACES_PACKAGE -> interfacesPackage = childPackage;
+                case DATA_PACKAGE -> dataPackage = childPackage;
+                case STRUCTURE_PACKAGE -> {
+                    structurePackage = childPackage;
+                    if (createSystemPart) {
+                        systemPart = addSystemPart(childPackage, componentDefinition);
+                    }
+                }
+                case REQUIREMENTS_PACKAGE -> requirementsPackage = childPackage;
+                default -> throw new IllegalStateException("Unexpected standard package: " + childName);
             }
         }
 
-        if (createSystemPart) {
-            addSystemPart(structurePackage, componentDefinition);
-        }
-        return new PerspectiveStructure(structurePackage);
+        return new ArcadiaPerspectiveStructure(perspectivePackage, functionsPackage,
+                capabilitiesPackage, interfacesPackage, dataPackage, structurePackage,
+                requirementsPackage, rootFunction, Optional.ofNullable(systemPart));
     }
 
     private static org.eclipse.syson.sysml.Package createPackage(String name) {
@@ -113,19 +164,20 @@ public final class DefaultArcadiaModelStructureBuilder {
         return sysmlPackage;
     }
 
-    private static void addRootFunction(Element owner, ActionDefinition functionDefinition) {
+    private static ActionUsage addRootFunction(Element owner, ActionDefinition functionDefinition) {
         var rootFunction = SysmlFactory.eINSTANCE.createActionUsage();
-        rootFunction.setDeclaredName("Root Function");
+        rootFunction.setDeclaredName(ROOT_FUNCTION);
         var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
         typing.setTypedFeature(rootFunction);
         typing.setType(functionDefinition);
         rootFunction.getOwnedRelationship().add(typing);
         addOwnedElement(owner, rootFunction);
+        return rootFunction;
     }
 
-    private static void addSystemPart(Element owner, PartDefinition componentDefinition) {
+    private static PartUsage addSystemPart(Element owner, PartDefinition componentDefinition) {
         var systemPart = SysmlFactory.eINSTANCE.createPartUsage();
-        systemPart.setDeclaredName("system");
+        systemPart.setDeclaredName(SYSTEM_ELEMENT);
 
         var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
         typing.setTypedFeature(systemPart);
@@ -133,6 +185,7 @@ public final class DefaultArcadiaModelStructureBuilder {
         systemPart.getOwnedRelationship().add(typing);
 
         addOwnedElement(owner, systemPart);
+        return systemPart;
     }
 
     static OwningMembership addOwnedElement(Element owner, Element ownedElement) {
@@ -140,8 +193,5 @@ public final class DefaultArcadiaModelStructureBuilder {
         membership.getOwnedRelatedElement().add(ownedElement);
         owner.getOwnedRelationship().add(membership);
         return membership;
-    }
-
-    private record PerspectiveStructure(org.eclipse.syson.sysml.Package structurePackage) {
     }
 }

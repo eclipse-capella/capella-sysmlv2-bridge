@@ -40,6 +40,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.ComponentArchitecture;
+import org.polarsys.capella.core.data.cs.ComponentPkg;
 
 /**
  * Describes an element discovered in the Arcadia library.
@@ -129,6 +131,15 @@ public class MapperUtils {
                             + target.eClass().getName());
         }
         return expectedType.cast(target);
+    }
+
+    /**
+     * Returns whether the component is the non-actor root of an architecture.
+     */
+    public static boolean isArchitectureRootComponent(Component source) {
+        var packageContainer = source.eContainer();
+        return !source.isActor() && packageContainer instanceof ComponentPkg componentPkg
+                && componentPkg.eContainer() instanceof ComponentArchitecture;
     }
 
 }
