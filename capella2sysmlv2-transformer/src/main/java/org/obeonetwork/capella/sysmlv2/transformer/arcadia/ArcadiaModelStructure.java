@@ -14,108 +14,40 @@ package org.obeonetwork.capella.sysmlv2.transformer.arcadia;
 
 import java.util.Objects;
 
-import org.eclipse.syson.sysml.ActionUsage;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.OccurrenceDefinition;
-import org.eclipse.syson.sysml.Package;
-import org.eclipse.syson.sysml.PartUsage;
 
 /**
- * Holds the package structure for a given Sysmlv2 Capella project.
+ * Holds references to the default model structure of a SysML v2 Arcadia model.
  *
  * @param root
- *            The top level of the model
- * @param operationalAnalysisPackage
- *            The package corresponding to the Operational Analysis perspective
- * @param systemAnalysisPackage
- *            The package corresponding to the System Analysis perspective
- * @param logicalArchitecturePackage
- *            The package corresponding to the Logical Architecture perspective
- * @param physicalArchitecturePackage
- *            The package corresponding to the Physical Architecture perspective
- * @param epbsArchitecturePackage
- *            The package corresponding to the EPBS perspective
+ *            top-level model element
+ * @param operationalAnalysis
+ *            Operational Analysis structure
+ * @param systemAnalysis
+ *            System Analysis structure
+ * @param logicalArchitecture
+ *            Logical Architecture structure
+ * @param physicalArchitecture
+ *            Physical Architecture structure
+ * @param epbsArchitecture
+ *            EPBS Architecture structure
+ * 
  * @author Raphaël Pagé
  */
-public record ArcadiaModelStructure(OccurrenceDefinition root, Package operationalAnalysisPackage, Package systemAnalysisPackage, Package logicalArchitecturePackage,
-        Package physicalArchitecturePackage, Package epbsArchitecturePackage) {
+public record ArcadiaModelStructure(OccurrenceDefinition root,
+        ArcadiaPerspectiveStructure operationalAnalysis,
+        ArcadiaPerspectiveStructure systemAnalysis,
+        ArcadiaPerspectiveStructure logicalArchitecture,
+        ArcadiaPerspectiveStructure physicalArchitecture,
+        ArcadiaPerspectiveStructure epbsArchitecture) {
 
-    /**
-     * Validates the generated model structure.
-     */
+    /** Validates that all model references are present. */
     public ArcadiaModelStructure {
         Objects.requireNonNull(root, "root must not be null");
-        Objects.requireNonNull(operationalAnalysisPackage,
-                "operationalAnalysisPackage must not be null");
-        Objects.requireNonNull(systemAnalysisPackage,
-                "systemAnalysisPackage must not be null");
-        Objects.requireNonNull(logicalArchitecturePackage,
-                "logicalArchitecturePackage must not be null");
-        Objects.requireNonNull(physicalArchitecturePackage,
-                "physicalArchitecturePackage must not be null");
-        Objects.requireNonNull(epbsArchitecturePackage,
-                "epbsArchitecturePackage must not be null");
-    }
-
-    public Package getLogicalArchitectureFunctionsPackage() {
-        return getLogicalArchitecturePackageNamed("Functions");
-    }
-
-    public Package getSystemAnalysisCapabilitiesPackage() {
-        return getSystemAnalysisPackageNamed("Capabilities");
-    }
-
-    public Package getLogicalArchitectureDataPackage() {
-        return getLogicalArchitecturePackageNamed("Data");
-    }
-
-    public Package getLogicalArchitectureInterfacesPackage() {
-        return getLogicalArchitecturePackageNamed("Interfaces");
-    }
-
-    public ActionUsage getLogicalArchitectureRootFunction() {
-        return ownedElementNamed(getLogicalArchitectureFunctionsPackage(),
-                "Root Function", ActionUsage.class);
-    }
-
-    public PartUsage getLogicalArchitectureSystemPart() {
-        return ownedElementNamed(logicalArchitecturePackage, "system",
-                PartUsage.class);
-    }
-
-    public PartUsage getPhysicalArchitectureSystemPart() {
-        return ownedElementNamed(physicalArchitecturePackage, "system",
-                PartUsage.class);
-    }
-
-    public PartUsage getSystemAnalysisSystemPart() {
-        return ownedElementNamed(systemAnalysisPackage, "system",
-                PartUsage.class);
-    }
-
-    private Package getLogicalArchitecturePackageNamed(
-            String name) {
-        var perspective = (Element) logicalArchitecturePackage
-                .eContainer().eContainer();
-        return ownedElementNamed(perspective, name, Package.class);
-    }
-
-    private Package getSystemAnalysisPackageNamed(
-            String name) {
-        var perspective = (Element) systemAnalysisPackage.eContainer().eContainer();
-        return ownedElementNamed(perspective, name,
-                Package.class);
-    }
-
-    private static <T extends Element> T ownedElementNamed(Element owner,
-            String name, Class<T> type) {
-        return owner.getOwnedRelationship().stream()
-                .flatMap(relationship -> relationship.getOwnedRelatedElement().stream())
-                .filter(type::isInstance)
-                .map(type::cast)
-                .filter(element -> name.equals(element.getDeclaredName()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Unable to find "
-                        + name + " under " + owner.getDeclaredName()));
+        Objects.requireNonNull(operationalAnalysis, "operationalAnalysis must not be null");
+        Objects.requireNonNull(systemAnalysis, "systemAnalysis must not be null");
+        Objects.requireNonNull(logicalArchitecture, "logicalArchitecture must not be null");
+        Objects.requireNonNull(physicalArchitecture, "physicalArchitecture must not be null");
+        Objects.requireNonNull(epbsArchitecture, "epbsArchitecture must not be null");
     }
 }

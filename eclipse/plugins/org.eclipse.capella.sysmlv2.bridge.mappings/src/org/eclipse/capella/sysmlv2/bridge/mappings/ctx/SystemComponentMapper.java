@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.system.analysis.SAMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -50,11 +51,19 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
 
     @Override
     protected PartUsage createTarget(SystemComponent source, TransformationContext context) {
-        var parent = MapperUtils.findTargetParent(context, source, PartUsage.class,
-                context.modelStructure().getSystemAnalysisSystemPart());
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return context.modelStructure().systemAnalysis().systemPart().orElseThrow();
+        }
 
-        var target = source.isActor() ? saMutationService.createActorSA(parent)
-                : saMutationService.createComponentSA(parent);
+        Element parent;
+        PartUsage target;
+        if (source.isActor()) {
+            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().systemAnalysis().structurePackage());
+            target = saMutationService.createActorSA(parent);
+        } else {
+            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().systemAnalysis().systemPart().orElseThrow());
+            target = saMutationService.createComponentSA(parent);
+        }
 
         if (target == null) {
             context.diagnostics().error(source, "Unable to create a System Component");

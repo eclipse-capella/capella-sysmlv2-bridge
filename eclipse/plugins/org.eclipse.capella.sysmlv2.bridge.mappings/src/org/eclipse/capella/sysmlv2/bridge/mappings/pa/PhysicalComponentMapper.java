@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -50,11 +51,19 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
 
     @Override
     protected PartUsage createTarget(PhysicalComponent source, TransformationContext context) {
-        var parent = MapperUtils.findTargetParent(context, source, PartUsage.class,
-                context.modelStructure().getPhysicalArchitectureSystemPart());
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return context.modelStructure().physicalArchitecture().systemPart().orElseThrow();
+        }
 
-        var target = source.isActor() ? transverseMutationService.createActor(parent)
-                : transverseMutationService.createComponent(parent);
+        Element parent;
+        PartUsage target;
+        if (source.isActor()) {
+            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().physicalArchitecture().structurePackage());
+            target = transverseMutationService.createActor(parent);
+        } else {
+            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
+            target = transverseMutationService.createComponent(parent);
+        }
 
         if (target == null) {
             context.diagnostics().error(source, "Unable to create a Physical Component");

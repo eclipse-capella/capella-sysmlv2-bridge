@@ -52,7 +52,7 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     @Override
     protected PartUsage createTarget(Entity source, TransformationContext context) {
         var parent = MapperUtils.findTargetParent(context, source,
-                Element.class, context.modelStructure().operationalAnalysisPackage());
+                Element.class, context.modelStructure().operationalAnalysis().perspectivePackage());
 
         var target = source.isActor() ? transverseMutationService.createActor(parent)
                 : transverseMutationService.createComponent(parent);

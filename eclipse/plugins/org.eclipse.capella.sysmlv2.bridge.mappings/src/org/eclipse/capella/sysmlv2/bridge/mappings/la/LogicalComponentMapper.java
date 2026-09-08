@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -53,16 +54,25 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
 
     @Override
     protected PartUsage createTarget(LogicalComponent source, TransformationContext context) {
-        var parent = MapperUtils.findTargetParent(context, source,
-                PartUsage.class, context.modelStructure().getLogicalArchitectureSystemPart());
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return context.modelStructure().logicalArchitecture().systemPart().orElseThrow();
+        }
 
-        var target = source.isActor() ? transverseMutationService.createActor(parent)
-                : laMutationService.createComponentLA(parent);
+        Element parent;
+        PartUsage target;
+        if (source.isActor()) {
+            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().logicalArchitecture().structurePackage());
+            target = transverseMutationService.createActor(parent);
+        } else {
+            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().logicalArchitecture().systemPart().orElseThrow());
+            target = laMutationService.createComponentLA(parent);
+        }
 
         if (target == null) {
             context.diagnostics().error(source, "Unable to create an Logical Component");
             return null;
         }
+
         // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing
         // context anymore
         // TODO : realizes
