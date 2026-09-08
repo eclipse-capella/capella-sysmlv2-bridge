@@ -61,8 +61,11 @@ class LogicalComponentMapperTest {
         assertSame(target, typing.getTypedFeature());
         assertEquals("Arcadia::Component", typing.getType().getQualifiedName());
         var membership = assertInstanceOf(OwningMembership.class, target.eContainer());
+        var system = assertInstanceOf(PartUsage.class, membership.eContainer());
+        assertEquals("system", system.getDeclaredName());
+        var systemMembership = assertInstanceOf(OwningMembership.class, system.eContainer());
         var structurePackage = assertInstanceOf(org.eclipse.syson.sysml.Package.class,
-                membership.eContainer());
+                systemMembership.eContainer());
         assertEquals("Structure", structurePackage.getDeclaredName());
         assertSame(result.root(), EcoreUtil.getRootContainer(target));
         assertNotNull(result.root().eResource());

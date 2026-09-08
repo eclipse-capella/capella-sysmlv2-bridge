@@ -22,10 +22,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.system.analysis.SAMutationService;
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.Package;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -40,8 +37,6 @@ import org.polarsys.capella.core.data.ctx.SystemComponent;
 public final class SystemComponentMapper extends ElementMapper<SystemComponent, PartUsage> {
     private final SAMutationService saMutationService = new SAMutationService();
 
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
-
     public SystemComponentMapper() {
         super(SystemComponent.class, ARCADIA_COMPONENT);
     }
@@ -55,21 +50,11 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
 
     @Override
     protected PartUsage createTarget(SystemComponent source, TransformationContext context) {
-        var parent = MapperUtils.findTargetParent(context, source, Element.class,
-                context.modelStructure().getSystemAnalysisStructurePackage());
+        var parent = MapperUtils.findTargetParent(context, source, PartUsage.class,
+                context.modelStructure().getSystemAnalysisSystemPart());
 
-        PartUsage target;
-        if (source.isActor()) {
-            target = saMutationService.createActorSA(parent);
-        } else {
-            if (parent instanceof Package) {
-                // this should only be the case for the "System" component, which represents the root of the system.
-                // we can't call createComponentSA here since its prerequisite is that "System" already exists
-                target = transverseMutationService.createComponent(parent);
-            } else {
-                target = saMutationService.createComponentSA(parent);
-            }
-        }
+        var target = source.isActor() ? saMutationService.createActorSA(parent)
+                : saMutationService.createComponentSA(parent);
 
         if (target == null) {
             context.diagnostics().error(source, "Unable to create a System Component");
