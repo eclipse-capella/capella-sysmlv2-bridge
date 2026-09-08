@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(4, CapellaMapperCatalog.createMappers().size());
+        assertEquals(8, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(java.util.List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 java.util.List.copyOf(backlog.keySet()));
@@ -23,6 +23,7 @@ class CapellaMapperCatalogTest {
                 "FunctionOutputPortMapper", "FunctionalChainMapper", "FunctionalExchangeMapper"),
                 backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
         assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
-                .noneMatch(org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper.class::isInstance));
+                .noneMatch(entry -> entry.mapperName().endsWith("FunctionMapper")
+                        || entry.mapperName().equals("OperationalActivityMapper")));
     }
 }
