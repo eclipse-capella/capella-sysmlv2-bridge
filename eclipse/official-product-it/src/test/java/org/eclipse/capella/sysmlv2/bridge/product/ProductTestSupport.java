@@ -89,23 +89,28 @@ final class ProductTestSupport {
         assertTrue(
                 execution.output().contains("Source SystemComponent count: 5"),
                 execution.output());
+        assertTrue(execution.output().contains("Source OperationalActivity count: 24"), execution.output());
+        assertTrue(execution.output().contains("Source SystemFunction count: 44"), execution.output());
+        assertTrue(execution.output().contains("Source LogicalFunction count: 64"), execution.output());
+        assertTrue(execution.output().contains("Source PhysicalFunction count: 103"), execution.output());
         assertTrue(
                 execution.output().contains("Source PhysicalComponent count: 64"),
                 execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 100"),
                 execution.output());
+        assertTrue(execution.output().contains("Generated ActionUsage count: 235"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Capella Transformation Coverage: 4/252 (1.59%)"),
+                        "Capella Transformation Coverage: 8/252 (3.17%)"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Arcadia SysML v2 Library Utilization: 3/42 (7.14%)"),
+                        "Arcadia SysML v2 Library Utilization: 4/42 (9.52%)"),
                 execution.output());
         assertTrue(execution.output().contains(
-                "Arcadia SysML v2 Library Coverage of Capella: 4/252 (1.59%)"),
+                "Arcadia SysML v2 Library Coverage of Capella: 8/252 (3.17%)"),
                 execution.output());
 
         var xmiModel = applicationOutput

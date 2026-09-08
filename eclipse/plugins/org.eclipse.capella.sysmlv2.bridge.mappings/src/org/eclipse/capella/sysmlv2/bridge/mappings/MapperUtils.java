@@ -39,9 +39,12 @@ import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
+import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.fa.FunctionPkg;
 
 /**
  * Describes an element discovered in the Arcadia library.
@@ -100,7 +103,10 @@ public class MapperUtils {
     public static <T extends EObject> T findTargetParent(TransformationContext context, EObject source,
             Class<T> expectedType, T defaultParent) {
         var parent = source.eContainer();
-        if (parent != null && context.traceability().contains(parent)) {
+        while (parent != null && !context.traceability().contains(parent)) {
+            parent = parent.eContainer();
+        }
+        if (parent != null) {
             return require(context, parent, expectedType);
         }
         return defaultParent;
@@ -140,6 +146,15 @@ public class MapperUtils {
         var packageContainer = source.eContainer();
         return !source.isActor() && packageContainer instanceof ComponentPkg componentPkg
                 && componentPkg.eContainer() instanceof ComponentArchitecture;
+    }
+
+    /**
+     * Returns whether the function is the root of an architecture.
+     */
+    public static boolean isArchitectureRootFunction(AbstractFunction source) {
+        var packageContainer = source.eContainer();
+        return packageContainer instanceof FunctionPkg functionPkg
+                && functionPkg.eContainer() instanceof BlockArchitecture;
     }
 
 }

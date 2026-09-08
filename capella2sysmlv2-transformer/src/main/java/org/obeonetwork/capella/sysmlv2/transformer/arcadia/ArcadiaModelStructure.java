@@ -17,7 +17,7 @@ import java.util.Objects;
 import org.eclipse.syson.sysml.OccurrenceDefinition;
 
 /**
- * Holds references to the default model structure of a SysML v2 Arcadia model.
+ * Holds the package structure for a given Sysmlv2 Capella project.
  *
  * @param root
  *            top-level model element
