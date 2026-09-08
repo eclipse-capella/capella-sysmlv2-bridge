@@ -13,13 +13,19 @@
 package org.obeonetwork.capella.sysmlv2.transformer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.CAPABILITIES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.DATA_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.EPBS_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.FUNCTIONS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.INTERFACES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.LOGICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.OPERATIONAL_ANALYSIS_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.PHYSICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.REQUIREMENTS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.STRUCTURE_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure.SYSTEM_ANALYSIS_PERSPECTIVE;
 
-import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.FeatureTyping;
-import org.eclipse.syson.sysml.PartUsage;
-import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
@@ -36,49 +42,41 @@ class DefaultArcadiaModelStructureBuilderTest {
         assertThat(structure.root().getDeclaredName()).isEqualTo("TestModel");
         assertThat(structure.root().getOwnedElement())
                 .extracting(Element::getDeclaredName)
-                .containsExactly("Operational Analysis", "System Analysis", "Logical Architecture",
-                        "Physical Architecture", "EPBS Architecture");
+                .containsExactly(OPERATIONAL_ANALYSIS_PERSPECTIVE, SYSTEM_ANALYSIS_PERSPECTIVE,
+                        LOGICAL_ARCHITECTURE_PERSPECTIVE, PHYSICAL_ARCHITECTURE_PERSPECTIVE,
+                        EPBS_ARCHITECTURE_PERSPECTIVE);
 
-        assertPerspective(structure.root(), "Operational Analysis", false, library);
-        assertPerspective(structure.root(), "System Analysis", true, library);
-        assertPerspective(structure.root(), "Logical Architecture", true, library);
-        assertPerspective(structure.root(), "Physical Architecture", true, library);
-        assertPerspective(structure.root(), "EPBS Architecture", true, library);
-        assertThat(structure.logicalArchitecturePackage().getDeclaredName()).isEqualTo("Structure");
-        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
-        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
-        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
-        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
-        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
-        assertThat(structure.getLogicalArchitectureFunctionsPackage().getDeclaredName()).isEqualTo("Functions");
-        assertThat(structure.getLogicalArchitectureInterfacesPackage().getDeclaredName()).isEqualTo("Interfaces");
-        assertThat(structure.getLogicalArchitectureDataPackage().getDeclaredName()).isEqualTo("Data");
-        assertThat(structure.getLogicalArchitectureRootFunction().getDeclaredName()).isEqualTo("Root Function");
-        assertThat(structure.getLogicalArchitectureSystemPart().getDeclaredName()).isEqualTo("system");
+        assertPerspective(structure.root(), OPERATIONAL_ANALYSIS_PERSPECTIVE);
+        assertPerspective(structure.root(), SYSTEM_ANALYSIS_PERSPECTIVE);
+        assertPerspective(structure.root(), LOGICAL_ARCHITECTURE_PERSPECTIVE);
+        assertPerspective(structure.root(), PHYSICAL_ARCHITECTURE_PERSPECTIVE);
+        assertPerspective(structure.root(), EPBS_ARCHITECTURE_PERSPECTIVE);
+
+        assertThat(structure.operationalAnalysisPackage().getDeclaredName()).isEqualTo(OPERATIONAL_ANALYSIS_PERSPECTIVE);
+        assertThat(structure.systemAnalysisPackage().getDeclaredName()).isEqualTo(SYSTEM_ANALYSIS_PERSPECTIVE);
+        assertThat(structure.logicalArchitecturePackage().getDeclaredName()).isEqualTo(LOGICAL_ARCHITECTURE_PERSPECTIVE);
+        assertThat(structure.physicalArchitecturePackage().getDeclaredName()).isEqualTo(PHYSICAL_ARCHITECTURE_PERSPECTIVE);
+        assertThat(structure.epbsArchitecturePackage().getDeclaredName()).isEqualTo(EPBS_ARCHITECTURE_PERSPECTIVE);
+
+        assertStandardPackages(structure.getOperationalAnalysisFunctionsPackage(),
+                structure.getOperationalAnalysisCapabilitiesPackage(), structure.getOperationalAnalysisInterfacesPackage(),
+                structure.getOperationalAnalysisDataPackage(), structure.getOperationalAnalysisStructurePackage(),
+                structure.getOperationalAnalysisRequirementsPackage());
+        assertStandardPackages(structure.getSystemAnalysisFunctionsPackage(),
+                structure.getSystemAnalysisCapabilitiesPackage(), structure.getSystemAnalysisInterfacesPackage(),
+                structure.getSystemAnalysisDataPackage(), structure.getSystemAnalysisStructurePackage(),
+                structure.getSystemAnalysisRequirementsPackage());
+        assertStandardPackages(structure.getLogicalArchitectureFunctionsPackage(),
+                structure.getLogicalArchitectureCapabilitiesPackage(), structure.getLogicalArchitectureInterfacesPackage(),
+                structure.getLogicalArchitectureDataPackage(), structure.getLogicalArchitectureStructurePackage(),
+                structure.getLogicalArchitectureRequirementsPackage());
+        assertStandardPackages(structure.getPhysicalArchitectureFunctionsPackage(),
+                structure.getPhysicalArchitectureCapabilitiesPackage(), structure.getPhysicalArchitectureInterfacesPackage(),
+                structure.getPhysicalArchitectureDataPackage(), structure.getPhysicalArchitectureStructurePackage(),
+                structure.getPhysicalArchitectureRequirementsPackage());
     }
 
-    @Test
-    void reportsMissingArcadiaDefinition() {
-        var arcadia = TestSysONModels.emptyArcadiaPackage();
-        addFunctionDefinition(arcadia);
-
-        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
-                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
-                .withMessageContaining("Arcadia::Component");
-    }
-
-    @Test
-    void reportsWrongArcadiaDefinitionType() {
-        var arcadia = TestSysONModels.arcadiaPackageWithWrongComponentType();
-        addFunctionDefinition(arcadia);
-
-        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
-                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
-                .withMessageContaining("PartDefinition");
-    }
-
-    private static void assertPerspective(Element root, String perspectiveName, boolean hasSystemPart,
-            TestSysONModels.ArcadiaTestLibrary library) {
+    private static void assertPerspective(Element root, String perspectiveName) {
         var perspectivePackage = root.getOwnedElement().stream()
                 .filter(element -> perspectiveName.equals(element.getDeclaredName()))
                 .findFirst()
@@ -86,34 +84,14 @@ class DefaultArcadiaModelStructureBuilderTest {
 
         assertThat(perspectivePackage.getOwnedElement())
                 .extracting(Element::getDeclaredName)
-                .containsExactly("Functions", "Capabilities", "Interfaces", "Data", "Structure", "Requirements");
+                .containsExactly(FUNCTIONS_PACKAGE, CAPABILITIES_PACKAGE, INTERFACES_PACKAGE, DATA_PACKAGE,
+                        STRUCTURE_PACKAGE, REQUIREMENTS_PACKAGE);
 
-        var functionsPackage = ownedElementNamed(perspectivePackage, "Functions");
-        assertThat(functionsPackage.getOwnedElement()).singleElement().isInstanceOfSatisfying(ActionUsage.class,
-                action -> {
-                    assertThat(action.getDeclaredName()).isEqualTo("Root Function");
-                    assertThat(action.getOwnedRelationship()).singleElement()
-                            .isInstanceOfSatisfying(FeatureTyping.class,
-                                    typing -> assertThat(typing.getType()).isSameAs(library.functionDefinition()));
-                });
+        var functionsPackage = ownedElementNamed(perspectivePackage, FUNCTIONS_PACKAGE);
+        assertThat(functionsPackage.getOwnedElement()).isEmpty();
 
-        var structurePackage = ownedElementNamed(perspectivePackage, "Structure");
-        if (hasSystemPart) {
-            assertThat(structurePackage.getOwnedElement()).singleElement().isInstanceOfSatisfying(PartUsage.class,
-                    part -> {
-                        assertThat(part.getDeclaredName()).isEqualTo("system");
-                        assertThat(part.getOwnedRelationship()).singleElement().isInstanceOfSatisfying(FeatureTyping.class,
-                                typing -> assertThat(typing.getType()).isSameAs(library.componentDefinition()));
-                    });
-        } else {
-            assertThat(structurePackage.getOwnedElement()).isEmpty();
-        }
-    }
-
-    private static void addFunctionDefinition(Element arcadia) {
-        var function = SysmlFactory.eINSTANCE.createActionDefinition();
-        function.setDeclaredName("Function");
-        TestSysONModels.addOwnedElement(arcadia, function);
+        var structurePackage = ownedElementNamed(perspectivePackage, STRUCTURE_PACKAGE);
+        assertThat(structurePackage.getOwnedElement()).isEmpty();
     }
 
     private static Element ownedElementNamed(Element owner, String name) {
@@ -121,5 +99,12 @@ class DefaultArcadiaModelStructureBuilderTest {
                 .filter(element -> name.equals(element.getDeclaredName()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private static void assertStandardPackages(Element... packages) {
+        assertThat(packages)
+                .extracting(Element::getDeclaredName)
+                .containsExactly(FUNCTIONS_PACKAGE, CAPABILITIES_PACKAGE, INTERFACES_PACKAGE, DATA_PACKAGE,
+                        STRUCTURE_PACKAGE, REQUIREMENTS_PACKAGE);
     }
 }
