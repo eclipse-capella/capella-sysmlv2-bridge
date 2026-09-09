@@ -58,6 +58,11 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+		<dependency>
+		  <groupId>org.slf4j</groupId>
+		  <artifactId>slf4j-api</artifactId>
+		  <version>${slf4j.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -83,7 +88,24 @@
 					<useUIThread>false</useUIThread>
 				</configuration>
 			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+                <executions>
+                    <execution>
+						<?m2e ignore?>
+                        <id>copy-embedded-runtime</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <includeArtifactIds>slf4j-api</includeArtifactIds>
+                            <excludeTransitive>false</excludeTransitive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
-
 	</build>
 </project>
