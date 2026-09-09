@@ -26,6 +26,11 @@
 
     <dependencies>
 		<dependency>
+		  <groupId>org.slf4j</groupId>
+		  <artifactId>slf4j-api</artifactId>
+		  <version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
 		  <groupId>org.eclipse.capella</groupId>
 		  <artifactId>capella-model-services</artifactId>
 		  <version>${capella.for.syson.version}</version>
@@ -47,7 +52,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>${maven-dependency-plugin.version}</version>
                 <executions>
                     <execution>
 						<?m2e ignore?>
@@ -56,7 +61,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-model-services, syson-model-services, capella-model-transverse-services</includeArtifactIds>
+                            <includeArtifactIds>capella-model-services, syson-model-services, capella-model-transverse-services, slf4j-api</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

@@ -16,4 +16,6 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.junit,
  junit-jupiter-api
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings.tests
-Bundle-ClassPath: .
+Bundle-ClassPath: target/dependency/slf4j-api-2.0.18.jar,
+ .
+ 
