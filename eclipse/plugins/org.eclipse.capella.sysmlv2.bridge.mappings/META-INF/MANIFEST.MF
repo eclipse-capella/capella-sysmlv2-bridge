@@ -19,4 +19,5 @@ Bundle-ClassPath: target/dependency/capella-model-services-2026.7.1.jar,
  target/dependency/capella-model-transverse-services-2026.7.1.jar,
  target/dependency/slf4j-api-2.0.18.jar,
  .,
- target/dependency/syson-model-services-2026.7.2.jar
+ target/dependency/syson-model-services-2026.7.2.jar,
+ target/dependency/syson-services-2026.7.2.jar

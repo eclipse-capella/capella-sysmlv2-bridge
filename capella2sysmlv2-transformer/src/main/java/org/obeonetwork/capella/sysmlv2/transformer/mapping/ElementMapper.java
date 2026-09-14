@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 /**
@@ -33,19 +34,19 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
 
     private final Class<S> sourceClass;
 
-    private final String target;
+    private final String targetQualifiedName;
 
     /**
      * Creates a mapper.
      *
      * @param sourceClass
      *            the supported Capella source class
-     * @param target
+     * @param targetQualifiedName
      *            the qualified name of the corresponding SysML or Arcadia concept
      */
-    protected ElementMapper(Class<S> sourceClass, String target) {
+    protected ElementMapper(Class<S> sourceClass, String targetQualifiedName) {
         this.sourceClass = Objects.requireNonNull(sourceClass, "sourceClass must not be null");
-        this.target = Objects.requireNonNull(target, "target must not be null");
+        this.targetQualifiedName = Objects.requireNonNull(targetQualifiedName, "target must not be null");
     }
 
     /**
@@ -62,8 +63,8 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
      *
      * @return the target concept name
      */
-    public final String getTarget() {
-        return this.target;
+    public final String getTargetQualifiedName() {
+        return this.targetQualifiedName;
     }
 
     /**
@@ -90,7 +91,7 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
         var target = this.createTarget(source, context);
         if (target != null) {
             context.traceability().register(source, target);
-            this.transformFeatures(source, target);
+            this.transformFeatures(source, target, context);
         }
     }
 
@@ -110,9 +111,9 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
      *
      * @return the feature mappings
      */
-    public abstract List<? extends FeatureMapping<? super S, ? super T>> getFeatureMappings();
+    public abstract List<FeatureMapping<S, T>> getFeatureMappings();
 
-    private void transformFeatures(S source, T target) {
-        this.getFeatureMappings().forEach(mapping -> mapping.transform(source, target));
+    private void transformFeatures(S source, T target, TransformationContext context) {
+        this.getFeatureMappings().forEach(mapping -> mapping.transform(source, target, context));
     }
 }

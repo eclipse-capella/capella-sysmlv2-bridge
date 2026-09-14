@@ -15,14 +15,16 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.SimpleFeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
@@ -102,7 +104,6 @@ class TransformationCoverageAnalyzerTest {
                 .findFirst().orElseThrow();
     }
 
-    @SafeVarargs
     private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
             String... mappedFeatures) {
         return mapper(sourceClass, Set.of(), mappedFeatures);
@@ -110,26 +111,41 @@ class TransformationCoverageAnalyzerTest {
 
     private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
             Set<String> ignoredFeatures, String... mappedFeatures) {
-        var mappings = java.util.Arrays.stream(mappedFeatures)
-                .map(feature -> new FeatureMapping<T, EObject>(feature, feature, (source, target) -> {
-                }))
-                .toList();
-        return new ElementMapper<>(sourceClass, "SysML::Element") {
-            @Override
-            public List<FeatureMapping<T, EObject>> getFeatureMappings() {
-                return mappings;
-            }
+        return new TestMapper<>(sourceClass, ignoredFeatures, mappedFeatures);
+    }
 
-            @Override
-            public Set<String> getIgnoredFeatures() {
-                return ignoredFeatures;
-            }
+    private static final class TestMapper<T extends EObject> extends ElementMapper<T, EObject> {
 
-            @Override
-            protected EObject createTarget(T source,
-                    TransformationContext context) {
-                return null;
-            }
-        };
+        private final List<FeatureMapping<T, EObject>> mappings;
+
+        private final Set<String> ignoredFeatures;
+
+        private TestMapper(Class<T> sourceClass, Set<String> ignoredFeatures, String... mappedFeatures) {
+            super(sourceClass, "SysML::Element");
+            this.ignoredFeatures = ignoredFeatures;
+            this.mappings = Arrays.stream(mappedFeatures)
+                    .map(this::mapping)
+                    .toList();
+        }
+
+        private FeatureMapping<T, EObject> mapping(String feature) {
+            return new SimpleFeatureMapping<>(feature, feature, (source, target) -> {
+            });
+        }
+
+        @Override
+        public List<FeatureMapping<T, EObject>> getFeatureMappings() {
+            return mappings;
+        }
+
+        @Override
+        public Set<String> getIgnoredFeatures() {
+            return ignoredFeatures;
+        }
+
+        @Override
+        protected EObject createTarget(T source, TransformationContext context) {
+            return null;
+        }
     }
 }

@@ -21,7 +21,7 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;

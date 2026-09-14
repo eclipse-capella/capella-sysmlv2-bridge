@@ -45,6 +45,11 @@
             <artifactId>syson-model-services</artifactId>
             <version>${syson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-services</artifactId>
+            <version>${syson.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -61,7 +66,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-model-services, syson-model-services, capella-model-transverse-services, slf4j-api</includeArtifactIds>
+                            <includeArtifactIds>capella-model-services, syson-model-services, capella-model-transverse-services, slf4j-api, syson-services</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

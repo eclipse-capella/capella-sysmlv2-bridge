@@ -32,5 +32,6 @@ Export-Package: org.eclipse.capella.sysmlv2.bridge.transformer,
  org.obeonetwork.capella.sysmlv2.transformer.arcadia,
  org.obeonetwork.capella.sysmlv2.transformer.diagnostic,
  org.obeonetwork.capella.sysmlv2.transformer.mapping,
+ org.obeonetwork.capella.sysmlv2.transformer.mapping.feature,
  org.obeonetwork.capella.sysmlv2.transformer.reporting,
  org.obeonetwork.capella.sysmlv2.transformer.transformation

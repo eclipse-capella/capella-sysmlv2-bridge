@@ -22,7 +22,8 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.SimpleFeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -39,7 +40,7 @@ class TransformationCoverageWriterTest {
                 TestMetamodels.LogicalComponent.class, "SysML::Element") {
             @Override
             public List<FeatureMapping<TestMetamodels.LogicalComponent, EObject>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("name", "name", (source, target) -> {
+                return List.of(new SimpleFeatureMapping<>("name", "name", (source, target) -> {
                 }));
             }
 

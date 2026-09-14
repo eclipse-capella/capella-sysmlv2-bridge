@@ -28,7 +28,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalFunctionMapper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
@@ -104,7 +104,7 @@ public final class CapellaMapperCatalog {
                     return new FeatureAlignment(feature.capellaFeature(), feature.sysmlFeature(), alignment);
                 })
                 .toList();
-        return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTarget(), AlignmentStatus.CONFIRMED, features);
+        return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTargetQualifiedName(), AlignmentStatus.CONFIRMED, features);
     }
 
     private static EClass findCorrespondingEClass(Class<?> sourceClass) {

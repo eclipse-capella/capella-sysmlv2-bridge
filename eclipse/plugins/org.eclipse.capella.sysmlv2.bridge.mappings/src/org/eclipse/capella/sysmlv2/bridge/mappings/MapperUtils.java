@@ -12,33 +12,17 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_IS_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_IS_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ABSTRACT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_DESCRIPTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_NAME;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REVIEW;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUMMARY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_DOC;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_LM;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DECLARED_NAME;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DESCRIPTION;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT;
 
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.ActionUsage;
+import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.sysml.Usage;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
@@ -47,41 +31,50 @@ import org.polarsys.capella.core.data.fa.AbstractFunction;
 import org.polarsys.capella.core.data.fa.FunctionPkg;
 
 /**
- * Describes an element discovered in the Arcadia library.
+ * Utility class centralizing methods used by mappers.
  *
  * @author Raphaël Pagé
  */
 public class MapperUtils {
-    /**
-     * The list of features commonly ignored when mapping Arcadia Elements
-     */
-    public static final Set<String> ARCADIA_ELEMENT_IGNORED_FEATURES = Set.of(CAPELLA_SUMMARY, CAPELLA_VISIBLE_IN_DOC, CAPELLA_VISIBLE_IN_LM, CAPELLA_REVIEW);
-
-    /**
-     * The list of features commonly mapped for Arcadia Elements
-     */
-    public static final List<FeatureMapping<? super NamedElement, ? super Element>> ARCADIA_ELEMENT_FEATURE_MAPPINGS = List.of(
-            new FeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME,
-                    (NamedElement source, Element target) -> target.setDeclaredName(source.getName())),
-            new FeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION,
-                    (NamedElement source, Element target) -> new TransverseMutationService().setElementDescription(target,
-                            source.getDescription())));
-
-    /**
-     * The list of features commonly mapped for Arcadia Components
-     */
-    public static final List<FeatureMapping<? super Component, ? super Usage>> COMPONENT_FEATURE_MAPPINGS = List.of(
-            new FeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
-                    (Component source, Usage target) -> new TransverseMutationService().setBooleanAttribute(target,
-                            ARCADIA_COMPONENT, ARCADIA_IS_ACTOR, source.isActor())),
-            new FeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
-                    (Component source, Usage target) -> new TransverseMutationService().setBooleanAttribute(target,
-                            ARCADIA_COMPONENT, ARCADIA_IS_HUMAN, source.isHuman())),
-            new FeatureMapping<>(CAPELLA_ABSTRACT, "SysML::Feature::isAbstract",
-                    (Component source, Usage target) -> target.setIsAbstract(source.isAbstract())));
+    private static final TransverseMutationService TRANSVERSE_MUTATION_SERVICE = new TransverseMutationService();
 
     private MapperUtils() {
         // utility class
+    }
+
+    public static void addFunctionAllocation(Component source, Usage target, TransformationContext context) {
+        source.getOwnedFunctionalAllocation()
+                .forEach(allocation -> TRANSVERSE_MUTATION_SERVICE.setPerformAction(target,
+                        require(context, allocation.getTargetElement(), ActionUsage.class)));
+    }
+
+    public static void mapRealizations(AbstractFunction source, TransformationContext context) {
+        source.getOwnedFunctionRealizations().forEach(it -> mapRealization(context, it));
+    }
+
+    public static void mapRealizations(Component source, TransformationContext context) {
+        source.getOwnedComponentRealizations().forEach(it -> mapRealization(context, it));
+    }
+
+    private static void mapRealization(TransformationContext context, AbstractTrace realization) {
+        var realizing = realization.getSourceElement();
+        var realized = realization.getTargetElement();
+
+        var optMappedRealizing = context.traceability().lookupTarget(realizing)
+                .filter(Usage.class::isInstance)
+                .map(Usage.class::cast);
+
+        var optMappedRealized = context.traceability().lookupTarget(realized)
+                .filter(Usage.class::isInstance)
+                .map(Usage.class::cast);
+
+        if (optMappedRealizing.isPresent() && optMappedRealized.isPresent()) {
+            var mappedRealizing = optMappedRealizing.get();
+            var mappedRealized = optMappedRealized.get();
+
+            TRANSVERSE_MUTATION_SERVICE.setFeatureReferenceValues(mappedRealizing, ARCADIA_ELEMENT, "realizes", List.of(mappedRealized), SysmlPackage.eINSTANCE.getOccurrenceUsage());
+            TRANSVERSE_MUTATION_SERVICE.setFeatureReferenceValues(mappedRealized, ARCADIA_ELEMENT, "isRealizedBy", List.of(mappedRealizing), SysmlPackage.eINSTANCE.getOccurrenceUsage());
+        }
     }
 
     /**

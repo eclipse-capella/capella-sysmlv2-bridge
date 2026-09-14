@@ -22,14 +22,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementDescriptor;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 
 /**
  * Computes transformation and library coverage from mapper declarations.
@@ -37,6 +38,9 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  * @author Raphaël Pagé
  */
 public final class TransformationCoverageAnalyzer {
+    private TransformationCoverageAnalyzer() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Analyzes Capella mappings, Arcadia library usage and alignments.
@@ -154,7 +158,7 @@ public final class TransformationCoverageAnalyzer {
 
     private static ArcadiaUtilizationCoverage analyzeArcadiaUtilization(List<ArcadiaElementDescriptor> inventory, Collection<? extends ElementMapper<?, ?>> mappers) {
         var usedConcepts = mappers.stream()
-                .map(ElementMapper::getTarget)
+                .map(ElementMapper::getTargetQualifiedName)
                 .filter(target -> target.startsWith("Arcadia::"))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -253,7 +257,9 @@ public final class TransformationCoverageAnalyzer {
 
     private static List<String> featureNames(EClass metaclass) {
         return metaclass.getEAllStructuralFeatures().stream()
-                .map(feature -> feature.getName()).distinct().sorted()
+                .map(ENamedElement::getName)
+                .distinct()
+                .sorted()
                 .toList();
     }
 }

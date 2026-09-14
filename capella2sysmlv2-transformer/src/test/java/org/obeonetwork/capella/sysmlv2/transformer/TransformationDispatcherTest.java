@@ -23,7 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.SimpleFeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
 
@@ -60,7 +61,7 @@ class TransformationDispatcherTest {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
         var target = TestEObjects.create("http://example.org/sysml", "PartUsage");
         var featureTransformed = new AtomicBoolean();
-        var mapping = new FeatureMapping<EObject, EObject>("name", "declaredName",
+        var mapping = new SimpleFeatureMapping<EObject, EObject>("name", "declaredName",
                 (mappedSource, mappedTarget) -> featureTransformed.set(
                         mappedSource == source && mappedTarget == target));
         var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::PartUsage") {

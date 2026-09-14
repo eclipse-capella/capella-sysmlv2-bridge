@@ -13,20 +13,18 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils.ARCADIA_ELEMENT_FEATURE_MAPPINGS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils.COMPONENT_FEATURE_MAPPINGS;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.oa.Entity;
 
@@ -43,10 +41,11 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     }
 
     @Override
-    public List<? extends FeatureMapping<? super Entity, ? super PartUsage>> getFeatureMappings() {
-        return Stream.of(ARCADIA_ELEMENT_FEATURE_MAPPINGS, COMPONENT_FEATURE_MAPPINGS)
-                .flatMap(Collection::stream)
-                .toList();
+    public List<FeatureMapping<Entity, PartUsage>> getFeatureMappings() {
+        List<FeatureMapping<Entity, PartUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<Entity, PartUsage>> componentMappings = FeatureMappingCatalog.getComponentMappings();
+
+        return Stream.concat(arcadiaElementMappings.stream(), componentMappings.stream()).toList();
     }
 
     @Override
@@ -64,17 +63,14 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
 
         // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing
         // context anymore
-        // TODO : realizes
-        // TODO : isRealizedBy
         // TODO : GeneralizedComponents
-        // TODO : Allocated Functions
         // TODO : Allocated Roles
         return target;
     }
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return MapperUtils.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
     }
 
 }

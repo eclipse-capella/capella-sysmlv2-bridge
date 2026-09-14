@@ -21,13 +21,11 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class DefaultMapperRegistryTest {
-
-    private static final EObject SOURCE = TestEObjects.create(
-            "http://example.org/capella", "LogicalComponent");
+    private static final EObject SOURCE = TestEObjects.create("http://example.org/capella", "LogicalComponent");
 
     @Test
     void findsMapperBySourceClass() {
