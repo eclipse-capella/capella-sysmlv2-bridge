@@ -107,7 +107,7 @@ final class ProductTestSupport {
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Arcadia SysML v2 Library Utilization: 4/42 (9.52%)"),
+                        "Arcadia SysML v2 Library Utilization: 7/46 (15.22%)"),
                 execution.output());
         assertTrue(execution.output().contains(
                 "Arcadia SysML v2 Library Coverage of Capella: 8/252 (3.17%)"),
@@ -137,7 +137,7 @@ final class ProductTestSupport {
                 markdown);
         assertTrue(markdown.contains("## Arcadia SysML v2 Library Utilization"),
                 markdown);
-        assertTrue(markdown.contains("14 concepts, 28 features"), markdown);
+        assertTrue(markdown.contains("14 concepts, 32 features"), markdown);
         assertTrue(
                 markdown.contains(
                         "## Arcadia SysML v2 Library Coverage of Capella"),
