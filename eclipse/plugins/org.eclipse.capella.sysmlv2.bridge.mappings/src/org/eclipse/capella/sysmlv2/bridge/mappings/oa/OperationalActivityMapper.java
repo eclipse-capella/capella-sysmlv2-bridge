@@ -10,18 +10,17 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils.ARCADIA_ELEMENT_FEATURE_MAPPINGS;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.oa.OperationalActivity;
 
@@ -33,21 +32,16 @@ import org.polarsys.capella.core.data.oa.OperationalActivity;
 public final class OperationalActivityMapper extends ElementMapper<OperationalActivity, ActionUsage> {
     private final TransverseMutationService transverseMutationService = new TransverseMutationService();
 
-    /**
-     * Creates an operational activity mapper.
-     */
     public OperationalActivityMapper() {
         super(OperationalActivity.class, ARCADIA_FUNCTION);
     }
 
-    /**
-     * Returns the common Arcadia element mappings.
-     *
-     * @return the feature mappings
-     */
     @Override
-    public List<? extends FeatureMapping<? super OperationalActivity, ? super ActionUsage>> getFeatureMappings() {
-        return Stream.of(ARCADIA_ELEMENT_FEATURE_MAPPINGS).flatMap(Collection::stream).toList();
+    public List<FeatureMapping<OperationalActivity, ActionUsage>> getFeatureMappings() {
+        List<FeatureMapping<OperationalActivity, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<OperationalActivity, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+
+        return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
 
     @Override
@@ -66,13 +60,8 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
         return target;
     }
 
-    /**
-     * Returns the common Arcadia features intentionally ignored by the mapper.
-     *
-     * @return the ignored feature names
-     */
     @Override
     public Set<String> getIgnoredFeatures() {
-        return MapperUtils.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
     }
 }

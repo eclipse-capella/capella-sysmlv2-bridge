@@ -33,6 +33,16 @@ public final class MapperConstants {
 
     public static final String CAPELLA_REVIEW = "review";
 
+    public static final String CAPELLA_ALLOCATED_FUNCTIONS = "allocatedFunctions";
+
+    public static final String CAPELLA_REALIZED_COMPONENTS = "realizedComponents";
+
+    public static final String CAPELLA_REALIZING_COMPONENTS = "realizingComponents";
+
+    public static final String CAPELLA_OUT_FUNCTION_REALIZATIONS = "outFunctionRealizations";
+
+    public static final String CAPELLA_IN_FUNCTION_REALIZATIONS = "inFunctionRealizations";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";
@@ -41,6 +51,14 @@ public final class MapperConstants {
 
     public static final String ARCADIA_COMPONENT_IS_HUMAN = ARCADIA_COMPONENT + "::isHuman";
 
+    public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + "::allocatedFunctions";
+
+    public static final String ARCADIA_ELEMENT = "Arcadia::ArcadiaElement";
+
+    public static final String ARCADIA_ELEMENT_REALIZES = ARCADIA_ELEMENT + "::realizes";
+
+    public static final String ARCADIA_ELEMENT_IS_REALIZED_BY = ARCADIA_ELEMENT + "::isRealizedBy";
+
     public static final String ARCADIA_IS_ACTOR = "isActor";
 
     public static final String ARCADIA_IS_HUMAN = "isHuman";
@@ -48,6 +66,8 @@ public final class MapperConstants {
     public static final String SYSML_DECLARED_NAME = "SysML::Element::declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
+
+    public static final String SYSML_IS_ABSTRACT = "SysML::Feature::isAbstract";
 
     private MapperConstants() {
         // Constant classes : do not instantiate

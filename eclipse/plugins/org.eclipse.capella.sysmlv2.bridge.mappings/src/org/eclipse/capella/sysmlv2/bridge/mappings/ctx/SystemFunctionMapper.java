@@ -10,18 +10,17 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.ctx;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils.ARCADIA_ELEMENT_FEATURE_MAPPINGS;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.ctx.SystemFunction;
 
@@ -33,21 +32,16 @@ import org.polarsys.capella.core.data.ctx.SystemFunction;
 public final class SystemFunctionMapper extends ElementMapper<SystemFunction, ActionUsage> {
     private final TransverseMutationService transverseMutationService = new TransverseMutationService();
 
-    /**
-     * Creates a system function mapper.
-     */
     public SystemFunctionMapper() {
         super(SystemFunction.class, ARCADIA_FUNCTION);
     }
 
-    /**
-     * Returns the common Arcadia element mappings.
-     *
-     * @return the feature mappings
-     */
     @Override
-    public List<? extends FeatureMapping<? super SystemFunction, ? super ActionUsage>> getFeatureMappings() {
-        return Stream.of(ARCADIA_ELEMENT_FEATURE_MAPPINGS).flatMap(Collection::stream).toList();
+    public List<FeatureMapping<SystemFunction, ActionUsage>> getFeatureMappings() {
+        List<FeatureMapping<SystemFunction, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<SystemFunction, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+
+        return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
 
     @Override
@@ -66,13 +60,8 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
         return target;
     }
 
-    /**
-     * Returns the common Arcadia features intentionally ignored by the mapper.
-     *
-     * @return the ignored feature names
-     */
     @Override
     public Set<String> getIgnoredFeatures() {
-        return MapperUtils.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
     }
 }

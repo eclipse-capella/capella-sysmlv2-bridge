@@ -10,19 +10,18 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.pa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils.ARCADIA_ELEMENT_FEATURE_MAPPINGS;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.pa.PhysicalFunction;
 
@@ -47,8 +46,11 @@ public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction
      * @return the feature mappings
      */
     @Override
-    public List<? extends FeatureMapping<? super PhysicalFunction, ? super ActionUsage>> getFeatureMappings() {
-        return Stream.of(ARCADIA_ELEMENT_FEATURE_MAPPINGS).flatMap(Collection::stream).toList();
+    public List<FeatureMapping<PhysicalFunction, ActionUsage>> getFeatureMappings() {
+        List<FeatureMapping<PhysicalFunction, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<PhysicalFunction, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+
+        return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
 
     @Override
@@ -74,6 +76,6 @@ public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction
      */
     @Override
     public Set<String> getIgnoredFeatures() {
-        return MapperUtils.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
     }
 }
