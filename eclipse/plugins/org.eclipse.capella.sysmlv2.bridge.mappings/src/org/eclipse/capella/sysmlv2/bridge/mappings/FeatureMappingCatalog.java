@@ -96,13 +96,11 @@ public class FeatureMappingCatalog {
     public static <S extends AbstractFunction, T extends Usage> List<FeatureMapping<S, T>> getFunctionMappings() {
         return List.of(
                 new DeferredFeatureMapping<>(CAPELLA_OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizations(source,
+                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedFunctionRealizations(),
                                 context)),
                 new DeferredFeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, T target, TransformationContext context) -> {
-                            // The relationship is mapped from its owning function above; this entry keeps the
-                            // derived inverse feature visible to coverage reporting.
-                        }));
+                        (S source, T target, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionRealizations(),
+                                context)));
     }
 
     /**
@@ -119,13 +117,11 @@ public class FeatureMappingCatalog {
                 new DeferredFeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
                         MapperUtils::addFunctionAllocation),
                 new DeferredFeatureMapping<>(CAPELLA_REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizations(source,
+                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedComponentRealizations(),
                                 context)),
                 new DeferredFeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, T target, TransformationContext context) -> {
-                            // The relationship is mapped from its owning component above; this entry keeps the
-                            // derived inverse feature visible to coverage reporting.
-                        }),
+                        (S source, T target, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentRealizations(),
+                                context)),
                 new SimpleFeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
                         (S source, T target) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(target,
                                 ARCADIA_COMPONENT, ARCADIA_IS_ACTOR, source.isActor())),
