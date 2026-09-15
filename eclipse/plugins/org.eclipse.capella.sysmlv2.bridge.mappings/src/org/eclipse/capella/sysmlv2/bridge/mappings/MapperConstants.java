@@ -45,6 +45,14 @@ public final class MapperConstants {
 
     public static final String CAPELLA_IN_FUNCTION_REALIZATIONS = "inFunctionRealizations";
 
+    public static final String CAPELLA_IN_PORT_REALIZATIONS = "incomingPortRealizations";
+
+    public static final String CAPELLA_OUT_PORT_REALIZATIONS = "outgoingPortRealizations";
+
+    public static final String CAPELLA_ORIENTATION = "orientation";
+
+    public static final String CAPELLA_ALLOCATED_FUNCTION_PORTS = "allocatedFunctionPorts";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";

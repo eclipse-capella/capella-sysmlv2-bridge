@@ -96,21 +96,24 @@ final class ProductTestSupport {
         assertTrue(
                 execution.output().contains("Source PhysicalComponent count: 64"),
                 execution.output());
+        assertTrue(execution.output().contains("Source FunctionInputPort count: 248"), execution.output());
+        assertTrue(execution.output().contains("Source FunctionOutputPort count: 234"), execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 100"),
                 execution.output());
         assertTrue(execution.output().contains("Generated ActionUsage count: 235"), execution.output());
+        assertTrue(execution.output().contains("Generated ItemUsage count: 482"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Capella Transformation Coverage: 8/252 (3.17%)"),
+                        "Capella Transformation Coverage: 10/252 (3.97%)"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
                         "Arcadia SysML v2 Library Utilization: 7/46 (15.22%)"),
                 execution.output());
         assertTrue(execution.output().contains(
-                "Arcadia SysML v2 Library Coverage of Capella: 8/252 (3.17%)"),
+                "Arcadia SysML v2 Library Coverage of Capella: 10/252 (3.97%)"),
                 execution.output());
 
         var xmiModel = applicationOutput
