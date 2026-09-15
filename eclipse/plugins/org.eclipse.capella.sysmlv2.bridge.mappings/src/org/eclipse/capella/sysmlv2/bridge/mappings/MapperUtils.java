@@ -13,16 +13,20 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_REALIZED_BY;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
+import org.polarsys.capella.common.data.modellingcore.TraceableElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
@@ -42,38 +46,45 @@ public class MapperUtils {
         // utility class
     }
 
+    /**
+     * Map the Capella function allocations to Sysml perform actions.
+     * 
+     * @param source
+     *            Capella element owning the allocations
+     * @param target
+     *            The transformed source
+     * @param context
+     *            T
+     */
     public static void addFunctionAllocation(Component source, Usage target, TransformationContext context) {
         source.getOwnedFunctionalAllocation()
                 .forEach(allocation -> TRANSVERSE_MUTATION_SERVICE.setPerformAction(target,
                         require(context, allocation.getTargetElement(), ActionUsage.class)));
     }
 
-    public static void mapRealizations(AbstractFunction source, TransformationContext context) {
-        source.getOwnedFunctionRealizations().forEach(it -> mapRealization(context, it));
+    public static void mapRealizes(Collection<? extends AbstractTrace> realizations, TransformationContext context) {
+        realizations.forEach(it -> mapToFeatureReference(context, it.getSourceElement(), it.getTargetElement(), ARCADIA_ELEMENT, ARCADIA_REALIZES, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
     }
 
-    public static void mapRealizations(Component source, TransformationContext context) {
-        source.getOwnedComponentRealizations().forEach(it -> mapRealization(context, it));
+    public static void mapIsRealizedBy(Collection<? extends AbstractTrace> realizations, TransformationContext context) {
+        realizations.forEach(it -> mapToFeatureReference(context, it.getTargetElement(), it.getSourceElement(), ARCADIA_ELEMENT, ARCADIA_IS_REALIZED_BY, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
     }
 
-    private static void mapRealization(TransformationContext context, AbstractTrace realization) {
-        var realizing = realization.getSourceElement();
-        var realized = realization.getTargetElement();
-
-        var optMappedRealizing = context.traceability().lookupTarget(realizing)
+    private static void mapToFeatureReference(TransformationContext context, TraceableElement sourceElement, TraceableElement targetElement, String libraryPrefix, String attributeName,
+            EClass referencedFeatureType) {
+        var optMappedSource = context.traceability().lookupTarget(sourceElement)
                 .filter(Usage.class::isInstance)
                 .map(Usage.class::cast);
 
-        var optMappedRealized = context.traceability().lookupTarget(realized)
+        var optMappedTarget = context.traceability().lookupTarget(targetElement)
                 .filter(Usage.class::isInstance)
                 .map(Usage.class::cast);
 
-        if (optMappedRealizing.isPresent() && optMappedRealized.isPresent()) {
-            var mappedRealizing = optMappedRealizing.get();
-            var mappedRealized = optMappedRealized.get();
+        if (optMappedSource.isPresent() && optMappedTarget.isPresent()) {
+            var mappedSource = optMappedSource.get();
+            var mappedTarget = optMappedTarget.get();
 
-            TRANSVERSE_MUTATION_SERVICE.setFeatureReferenceValues(mappedRealizing, ARCADIA_ELEMENT, "realizes", List.of(mappedRealized), SysmlPackage.eINSTANCE.getOccurrenceUsage());
-            TRANSVERSE_MUTATION_SERVICE.setFeatureReferenceValues(mappedRealized, ARCADIA_ELEMENT, "isRealizedBy", List.of(mappedRealizing), SysmlPackage.eINSTANCE.getOccurrenceUsage());
+            TRANSVERSE_MUTATION_SERVICE.addFeatureReferenceValue(mappedSource, libraryPrefix, attributeName, mappedTarget, referencedFeatureType);
         }
     }
 

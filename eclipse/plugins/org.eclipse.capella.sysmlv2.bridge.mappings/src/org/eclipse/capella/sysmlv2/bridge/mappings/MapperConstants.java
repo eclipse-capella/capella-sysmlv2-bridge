@@ -15,6 +15,8 @@ package org.eclipse.capella.sysmlv2.bridge.mappings;
  * @author Raphaël Pagé
  */
 public final class MapperConstants {
+    public static final String SEPARATOR = "::";
+
     public static final String CAPELLA_NAME = "name";
 
     public static final String CAPELLA_DESCRIPTION = "description";
@@ -55,19 +57,23 @@ public final class MapperConstants {
 
     public static final String ARCADIA_ELEMENT = "Arcadia::ArcadiaElement";
 
-    public static final String ARCADIA_ELEMENT_REALIZES = ARCADIA_ELEMENT + "::realizes";
+    public static final String ARCADIA_REALIZES = "realizes";
 
-    public static final String ARCADIA_ELEMENT_IS_REALIZED_BY = ARCADIA_ELEMENT + "::isRealizedBy";
+    public static final String ARCADIA_IS_REALIZED_BY = "isRealizedBy";
+
+    public static final String ARCADIA_ELEMENT_REALIZES = ARCADIA_ELEMENT + SEPARATOR + ARCADIA_REALIZES;
+
+    public static final String ARCADIA_ELEMENT_IS_REALIZED_BY = ARCADIA_ELEMENT + SEPARATOR + ARCADIA_IS_REALIZED_BY;
 
     public static final String ARCADIA_IS_ACTOR = "isActor";
 
     public static final String ARCADIA_IS_HUMAN = "isHuman";
 
-    public static final String SYSML_DECLARED_NAME = "SysML::Element::declaredName";
+    public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
 
-    public static final String SYSML_IS_ABSTRACT = "SysML::Feature::isAbstract";
+    public static final String SYSML_IS_ABSTRACT = "SysML" + SEPARATOR + "Feature" + SEPARATOR + "isAbstract";
 
     private MapperConstants() {
         // Constant classes : do not instantiate
