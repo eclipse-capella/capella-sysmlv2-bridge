@@ -26,8 +26,10 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELL
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_DESCRIPTION;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_HUMAN;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_IN_FUNCTION_REALIZATIONS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_IN_PORT_REALIZATIONS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_NAME;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUT_FUNCTION_REALIZATIONS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUT_PORT_REALIZATIONS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZED_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REVIEW;
@@ -49,6 +51,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.information.Port;
 
 /**
  * Factory methods for the {@link FeatureMapping} declarations shared by the different Capella element mappers.
@@ -95,6 +98,23 @@ public final class FeatureMappingCatalog {
                                 context.traceability())),
                 new FeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                         (S source, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionRealizations(),
+                                context.traceability())));
+    }
+
+    /**
+     * Creates the realization features mapped for Arcadia port.
+     *
+     * @param <S>
+     *            the mapped Capella function type
+     * @return the feature mappings
+     */
+    public static <S extends Port> List<FeatureMapping<S>> getPortRealizationMappings() {
+        return List.of(
+                new FeatureMapping<>(CAPELLA_OUT_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                        (S source, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedPortRealizations(),
+                                context.traceability())),
+                new FeatureMapping<>(CAPELLA_IN_PORT_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                        (S source, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedPortRealizations(),
                                 context.traceability())));
     }
 

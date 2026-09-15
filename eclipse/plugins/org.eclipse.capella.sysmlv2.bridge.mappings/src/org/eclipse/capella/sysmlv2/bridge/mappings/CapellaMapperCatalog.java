@@ -19,6 +19,8 @@ import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionInputPortMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalFunctionMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.oa.EntityMapper;
@@ -62,7 +64,8 @@ public final class CapellaMapperCatalog {
     public static List<ElementMapper<?, ?>> createMappers() {
         return List.of(new LogicalComponentMapper(), new EntityMapper(), new SystemComponentMapper(),
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
-                new LogicalFunctionMapper(), new PhysicalFunctionMapper());
+                new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
+                new FunctionOutputPortMapper());
     }
 
     /**
@@ -87,8 +90,6 @@ public final class CapellaMapperCatalog {
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
                 candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
                 candidate(FaPackage.Literals.COMPONENT_PORT, "Arcadia::ComponentPort"),
-                standard(FaPackage.Literals.FUNCTION_INPUT_PORT, "SysML::Feature"),
-                standard(FaPackage.Literals.FUNCTION_OUTPUT_PORT, "SysML::Feature"),
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
                 candidate(FaPackage.Literals.FUNCTIONAL_EXCHANGE, "Arcadia::FunctionalExchange"),
                 candidate(InformationPackage.Literals.EXCHANGE_ITEM, "Arcadia::ExchangeItem"),
@@ -131,8 +132,6 @@ public final class CapellaMapperCatalog {
         result.put("fa", List.of(
                 entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE),
                 entry("fa", "ComponentPortMapper", FaPackage.Literals.COMPONENT_PORT),
-                entry("fa", "FunctionInputPortMapper", FaPackage.Literals.FUNCTION_INPUT_PORT),
-                entry("fa", "FunctionOutputPortMapper", FaPackage.Literals.FUNCTION_OUTPUT_PORT),
                 entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN),
                 entry("fa", "FunctionalExchangeMapper", FaPackage.Literals.FUNCTIONAL_EXCHANGE)));
         result.put("information", List.of(
@@ -154,7 +153,4 @@ public final class CapellaMapperCatalog {
         return new MetaclassAlignment(sourceType, target, AlignmentStatus.CANDIDATE, List.of());
     }
 
-    private static MetaclassAlignment standard(EClass sourceType, String target) {
-        return new MetaclassAlignment(sourceType, target, AlignmentStatus.SYSML_STANDARD, List.of());
-    }
 }
