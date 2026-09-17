@@ -25,9 +25,7 @@ import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 
 class SystemComponentMapperTest {
     private final TransverseQueryService transverseQueryService = new TransverseQueryService();
@@ -48,11 +46,11 @@ class SystemComponentMapperTest {
         actor.setHuman(false);
         componentPackage.getOwnedSystemComponents().add(actor);
         var engine = new TransformationEngine(
-                new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
+                new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet());
 
         var result = engine.transform(architecture,
-                new TransformationOptions(false, false, false, "IFE", "In-Flight Entertainment System"));
+                "IFE");
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

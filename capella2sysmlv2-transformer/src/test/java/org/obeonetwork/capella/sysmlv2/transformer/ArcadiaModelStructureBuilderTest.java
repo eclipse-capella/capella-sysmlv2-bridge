@@ -14,17 +14,17 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.CAPABILITIES_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.DATA_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.EPBS_ARCHITECTURE_PERSPECTIVE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.FUNCTIONS_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.INTERFACES_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.LOGICAL_ARCHITECTURE_PERSPECTIVE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.OPERATIONAL_ANALYSIS_PERSPECTIVE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.PHYSICAL_ARCHITECTURE_PERSPECTIVE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.REQUIREMENTS_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.STRUCTURE_PACKAGE;
-import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder.SYSTEM_ANALYSIS_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.CAPABILITIES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.DATA_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.EPBS_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.FUNCTIONS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.INTERFACES_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.LOGICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.OPERATIONAL_ANALYSIS_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.PHYSICAL_ARCHITECTURE_PERSPECTIVE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.REQUIREMENTS_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.STRUCTURE_PACKAGE;
+import static org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder.SYSTEM_ANALYSIS_PERSPECTIVE;
 
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Element;
@@ -32,17 +32,15 @@ import org.eclipse.syson.sysml.FeatureTyping;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 
-class DefaultArcadiaModelStructureBuilderTest {
+class ArcadiaModelStructureBuilderTest {
 
     @Test
     void createsDefaultArcadiaModelStructure() {
         var library = TestSysONModels.arcadiaLibrary();
-        var options = new TransformationOptions(false, false, false, "TestModel", "Test Model");
 
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
+        var structure = new ArcadiaModelStructureBuilder().build("TestModel", library.resourceSet());
 
         assertThat(structure.root().getDeclaredName()).isEqualTo("TestModel");
         assertThat(structure.root().getOwnedElement())
@@ -71,8 +69,7 @@ class DefaultArcadiaModelStructureBuilderTest {
     @Test
     void findsRootElementsAfterTheirNamesAreUpdated() {
         var library = TestSysONModels.arcadiaLibrary();
-        var structure = new DefaultArcadiaModelStructureBuilder().build(
-                TransformationOptions.defaults(), library.resourceSet());
+        var structure = new ArcadiaModelStructureBuilder().build("TestModel", library.resourceSet());
 
         var operationalRootFunction = structure.operationalAnalysis().rootFunction();
         var systemRootFunction = structure.systemAnalysis().rootFunction();
@@ -110,8 +107,8 @@ class DefaultArcadiaModelStructureBuilderTest {
         var arcadia = TestSysONModels.emptyArcadiaPackage();
         addFunctionDefinition(arcadia);
 
-        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
-                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new ArcadiaModelStructureBuilder().build("TestModel", TestSysONModels.resourceSetWith(arcadia)))
                 .withMessageContaining("Arcadia::Component");
     }
 
@@ -120,8 +117,8 @@ class DefaultArcadiaModelStructureBuilderTest {
         var arcadia = TestSysONModels.arcadiaPackageWithWrongComponentType();
         addFunctionDefinition(arcadia);
 
-        assertThatIllegalStateException().isThrownBy(() -> new DefaultArcadiaModelStructureBuilder().build(
-                TransformationOptions.defaults(), TestSysONModels.resourceSetWith(arcadia)))
+        assertThatIllegalStateException()
+                .isThrownBy(() -> new ArcadiaModelStructureBuilder().build("TestModel", TestSysONModels.resourceSetWith(arcadia)))
                 .withMessageContaining("PartDefinition");
     }
 

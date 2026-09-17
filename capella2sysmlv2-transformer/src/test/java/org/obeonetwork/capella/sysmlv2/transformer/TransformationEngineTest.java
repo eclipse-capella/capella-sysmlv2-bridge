@@ -14,17 +14,17 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
 
 class TransformationEngineTest {
     @Test
@@ -32,20 +32,18 @@ class TransformationEngineTest {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
         var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+            public List<FeatureMapping<EObject>> getFeatureMappings() {
                 return List.of();
             }
 
             @Override
             protected EObject createTarget(EObject source, TransformationContext context) {
-                context.diagnostics().warning(source, "test diagnostic");
+                context.diagnostics().addWarning(source, "test diagnostic");
                 return null;
             }
         };
-        var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
-
-        var result = new TransformationEngine(dispatcher, TestSysONModels.arcadiaLibrary().resourceSet())
-                .transform(source, TransformationOptions.defaults());
+        var result = new TransformationEngine(new MapperRegistry(List.of(mapper)), TestSysONModels.arcadiaLibrary().resourceSet())
+                .transform(source, ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
 
         assertThat(result.root()).isNotNull();
         assertThat(result.diagnostics()).singleElement()
@@ -56,10 +54,10 @@ class TransformationEngineTest {
     void transformsMultipleSourcesInOneSharedContext() {
         var first = TestEObjects.create("http://example.org/capella", "LogicalComponent");
         var second = first.eClass().getEPackage().getEFactoryInstance().create(first.eClass());
-        var contexts = new java.util.ArrayList<TransformationContext>();
+        var contexts = new ArrayList<TransformationContext>();
         var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+            public List<FeatureMapping<EObject>> getFeatureMappings() {
                 return List.of();
             }
 
@@ -69,10 +67,9 @@ class TransformationEngineTest {
                 return null;
             }
         };
-        var dispatcher = new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper)));
         var context = TestContexts.create();
-        dispatcher.dispatch(first, context);
-        dispatcher.dispatch(second, context);
+        mapper.transform(first, context);
+        mapper.transform(second, context);
 
         assertThat(contexts).hasSize(2);
         assertThat(contexts.get(0)).isSameAs(contexts.get(1));
@@ -101,12 +98,12 @@ class TransformationEngineTest {
         var container = ePackage.getEFactoryInstance().create(containerClass);
         var child = ePackage.getEFactoryInstance().create(mappedClass);
         @SuppressWarnings("unchecked")
-        var values = (java.util.List<EObject>) container.eGet(children);
+        var values = (List<EObject>) container.eGet(children);
         values.add(child);
-        var transformed = new java.util.ArrayList<EObject>();
+        var transformed = new ArrayList<EObject>();
         var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
-            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+            public List<FeatureMapping<EObject>> getFeatureMappings() {
                 return List.of();
             }
 
@@ -117,8 +114,8 @@ class TransformationEngineTest {
             }
         };
 
-        new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(List.of(mapper))),
-                TestSysONModels.arcadiaLibrary().resourceSet()).transform(container, TransformationOptions.defaults());
+        new TransformationEngine(new MapperRegistry(List.of(mapper)),
+                TestSysONModels.arcadiaLibrary().resourceSet()).transform(container, ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
 
         assertThat(transformed).containsExactly(container, child);
     }

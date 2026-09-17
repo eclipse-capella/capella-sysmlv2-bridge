@@ -12,19 +12,17 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.DefaultTransformationContext;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 final class TestContexts {
 
     private TestContexts() {
     }
 
-    static DefaultTransformationContext create() {
-        var options = TransformationOptions.defaults();
+    static TransformationContext create() {
         var library = TestSysONModels.arcadiaLibrary();
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
-        return new DefaultTransformationContext(options, structure);
+        var structure = new ArcadiaModelStructureBuilder().build(ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME, library.resourceSet());
+        return new TransformationContext(structure);
     }
 }

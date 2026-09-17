@@ -29,8 +29,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementDescrip
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
 
 /**
  * Computes transformation and library coverage from mapper declarations.
@@ -44,6 +44,16 @@ public final class TransformationCoverageAnalyzer {
 
     /**
      * Analyzes Capella mappings, Arcadia library usage and alignments.
+     *
+     * @param packages
+     *            Capella metamodel packages to inspect
+     * @param mappers
+     *            mapper declarations used to determine mapping coverage
+     * @param arcadiaLibraryRoots
+     *            roots of the Arcadia library to inspect
+     * @param alignmentCatalog
+     *            declared source-to-target metaclass alignments
+     * @return the complete coverage report
      */
     public static TransformationCoverageReport analyze(Collection<? extends EPackage> packages, Collection<? extends ElementMapper<?, ?>> mappers, Collection<? extends EObject> arcadiaLibraryRoots,
             Collection<MetaclassAlignment> alignmentCatalog) {
@@ -52,7 +62,7 @@ public final class TransformationCoverageAnalyzer {
         Objects.requireNonNull(mappers, "mappers must not be null");
         Objects.requireNonNull(packages, "packages must not be null");
 
-        var capellaReport = analyzeCapella(packages, mappers);
+        var metaclassCoverages = analyzeCapella(packages, mappers);
 
         ArcadiaUtilizationCoverage utilization;
         if (arcadiaLibraryRoots.isEmpty()) {
@@ -61,8 +71,8 @@ public final class TransformationCoverageAnalyzer {
             utilization = analyzeArcadiaUtilization(new ArcadiaLibraryInventory().inspect(arcadiaLibraryRoots), mappers);
         }
 
-        var alignments = expandAlignments(capellaReport.metaclassCoverages(), alignmentCatalog);
-        return new TransformationCoverageReport(capellaReport.packageCount(), capellaReport.metaclassCoverages(), utilization,
+        var alignments = expandAlignments(metaclassCoverages, alignmentCatalog);
+        return new TransformationCoverageReport(packages.size(), metaclassCoverages, utilization,
                 alignments);
     }
 
@@ -70,7 +80,8 @@ public final class TransformationCoverageAnalyzer {
         return new ArcadiaUtilizationCoverage(List.of(), List.of(), 0, 0);
     }
 
-    private static TransformationCoverageReport analyzeCapella(Collection<? extends EPackage> packages, Collection<? extends ElementMapper<?, ?>> mappers) {
+    private static List<MetaclassCoverage> analyzeCapella(Collection<? extends EPackage> packages,
+            Collection<? extends ElementMapper<?, ?>> mappers) {
         var metaclasses = inspect(packages);
         var mappersByType = indexMappers(packages, mappers);
 
@@ -78,7 +89,7 @@ public final class TransformationCoverageAnalyzer {
                 .map(metaclass -> analyzeMetaclass(metaclass, mappersByType.get(metaclass)))
                 .toList();
 
-        return new TransformationCoverageReport(packages.size(), coverage, new ArcadiaUtilizationCoverage(List.of(), List.of(), 0, 0), List.of());
+        return coverage;
     }
 
     private static List<EClass> inspect(Collection<? extends EPackage> packages) {

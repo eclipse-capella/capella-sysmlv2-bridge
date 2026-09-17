@@ -24,7 +24,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
@@ -41,9 +41,9 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
     }
 
     @Override
-    public List<FeatureMapping<PhysicalComponent, PartUsage>> getFeatureMappings() {
-        List<FeatureMapping<PhysicalComponent, PartUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<PhysicalComponent, PartUsage>> componentMappings = FeatureMappingCatalog.getComponentMappings();
+    public List<FeatureMapping<PhysicalComponent>> getFeatureMappings() {
+        List<FeatureMapping<PhysicalComponent>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<PhysicalComponent>> componentMappings = FeatureMappingCatalog.getComponentMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), componentMappings.stream()).toList();
     }
@@ -65,7 +65,7 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
         }
 
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create a Physical Component");
+            context.diagnostics().addError(source, "Unable to create a Physical Component");
             return null;
         }
 

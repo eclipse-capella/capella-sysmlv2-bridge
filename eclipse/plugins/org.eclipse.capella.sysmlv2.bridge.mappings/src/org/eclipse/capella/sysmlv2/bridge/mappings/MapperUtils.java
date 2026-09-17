@@ -25,6 +25,7 @@ import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.common.data.modellingcore.TraceableElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
@@ -56,27 +57,27 @@ public class MapperUtils {
      * @param context
      *            T
      */
-    public static void addFunctionAllocation(Component source, Usage target, TransformationContext context) {
+    public static void addFunctionAllocation(Component source, Usage target, Traceability traceability) {
         source.getOwnedFunctionalAllocation()
                 .forEach(allocation -> TRANSVERSE_MUTATION_SERVICE.setPerformAction(target,
-                        require(context, allocation.getTargetElement(), ActionUsage.class)));
+                        require(traceability, allocation.getTargetElement(), ActionUsage.class)));
     }
 
-    public static void mapRealizes(Collection<? extends AbstractTrace> realizations, TransformationContext context) {
-        realizations.forEach(it -> mapToFeatureReference(context, it.getSourceElement(), it.getTargetElement(), ARCADIA_ELEMENT, ARCADIA_REALIZES, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
+    public static void mapRealizes(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
+        realizations.forEach(it -> mapToFeatureReference(traceability, it.getSourceElement(), it.getTargetElement(), ARCADIA_ELEMENT, ARCADIA_REALIZES, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
     }
 
-    public static void mapIsRealizedBy(Collection<? extends AbstractTrace> realizations, TransformationContext context) {
-        realizations.forEach(it -> mapToFeatureReference(context, it.getTargetElement(), it.getSourceElement(), ARCADIA_ELEMENT, ARCADIA_IS_REALIZED_BY, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
+    public static void mapIsRealizedBy(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
+        realizations.forEach(it -> mapToFeatureReference(traceability, it.getTargetElement(), it.getSourceElement(), ARCADIA_ELEMENT, ARCADIA_IS_REALIZED_BY, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
     }
 
-    private static void mapToFeatureReference(TransformationContext context, TraceableElement sourceElement, TraceableElement targetElement, String libraryPrefix, String attributeName,
+    private static void mapToFeatureReference(Traceability traceability, TraceableElement sourceElement, TraceableElement targetElement, String libraryPrefix, String attributeName,
             EClass referencedFeatureType) {
-        var optMappedSource = context.traceability().lookupTarget(sourceElement)
+        var optMappedSource = traceability.lookupTarget(sourceElement)
                 .filter(Usage.class::isInstance)
                 .map(Usage.class::cast);
 
-        var optMappedTarget = context.traceability().lookupTarget(targetElement)
+        var optMappedTarget = traceability.lookupTarget(targetElement)
                 .filter(Usage.class::isInstance)
                 .map(Usage.class::cast);
 
@@ -111,7 +112,7 @@ public class MapperUtils {
             parent = parent.eContainer();
         }
         if (parent != null) {
-            return require(context, parent, expectedType);
+            return require(context.traceability(), parent, expectedType);
         }
         return defaultParent;
     }
@@ -129,9 +130,9 @@ public class MapperUtils {
      *            The expected type of the already mapped element
      * @return The equivalent of an element
      */
-    public static <T extends EObject> T require(TransformationContext context,
+    public static <T extends EObject> T require(Traceability traceability,
             EObject source, Class<T> expectedType) {
-        var target = context.traceability().lookupTarget(source)
+        var target = traceability.lookupTarget(source)
                 .orElseThrow(() -> new IllegalStateException(
                         "No mapped target for " + source.eClass().getName()));
         if (!expectedType.isInstance(target)) {

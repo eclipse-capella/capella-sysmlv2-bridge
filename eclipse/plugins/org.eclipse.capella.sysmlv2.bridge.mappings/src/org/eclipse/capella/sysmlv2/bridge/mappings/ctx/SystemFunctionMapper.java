@@ -20,7 +20,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.ctx.SystemFunction;
 
@@ -37,9 +37,9 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
     }
 
     @Override
-    public List<FeatureMapping<SystemFunction, ActionUsage>> getFeatureMappings() {
-        List<FeatureMapping<SystemFunction, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<SystemFunction, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+    public List<FeatureMapping<SystemFunction>> getFeatureMappings() {
+        List<FeatureMapping<SystemFunction>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<SystemFunction>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
@@ -55,7 +55,7 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
 
         var target = transverseMutationService.createFunction(parent);
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create a System Function");
+            context.diagnostics().addError(source, "Unable to create a System Function");
         }
         return target;
     }

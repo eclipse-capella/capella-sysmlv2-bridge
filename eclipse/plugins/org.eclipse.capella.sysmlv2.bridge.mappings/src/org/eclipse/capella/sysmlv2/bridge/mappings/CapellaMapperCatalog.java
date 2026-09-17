@@ -28,7 +28,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalFunctionMapper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
@@ -51,6 +51,7 @@ public final class CapellaMapperCatalog {
     private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
 
     private CapellaMapperCatalog() {
+        /* This utility class should not be instantiated */
     }
 
     /**
@@ -64,6 +65,11 @@ public final class CapellaMapperCatalog {
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper());
     }
 
+    /**
+     * Returns the unsupported mapper backlog grouped by Capella package.
+     *
+     * @return immutable backlog entries grouped by package name
+     */
     public static Map<String, List<MapperBacklogEntry>> backlogByPackage() {
         return BACKLOG;
     }

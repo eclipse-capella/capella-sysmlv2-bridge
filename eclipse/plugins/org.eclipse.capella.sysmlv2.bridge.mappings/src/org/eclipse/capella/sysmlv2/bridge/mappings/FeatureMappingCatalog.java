@@ -44,9 +44,7 @@ import java.util.Set;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.Usage;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.DeferredFeatureMapping;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.SimpleFeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
@@ -57,11 +55,11 @@ import org.polarsys.capella.core.data.fa.AbstractFunction;
  * 
  * @author Raphaël Pagé
  */
-public class FeatureMappingCatalog {
+public final class FeatureMappingCatalog {
     private static final TransverseMutationService TRANSVERSE_MUTATION_SERVICE = new TransverseMutationService();
 
     /**
-     * The list of features commonly ignored when mapping Arcadia Elements
+     * Features commonly ignored when mapping Arcadia elements.
      */
     public static final Set<String> ARCADIA_ELEMENT_IGNORED_FEATURES = Set.of(CAPELLA_SUMMARY, CAPELLA_VISIBLE_IN_DOC, CAPELLA_VISIBLE_IN_LM, CAPELLA_REVIEW);
 
@@ -74,14 +72,13 @@ public class FeatureMappingCatalog {
      *
      * @param <S>
      *            the mapped Capella element type
-     * @param <T>
-     *            the mapped SysML element type
      * @return the feature mappings
      */
-    public static <S extends NamedElement, T extends Element> List<FeatureMapping<S, T>> getArcadiaElementMappings() {
+    public static <S extends NamedElement> List<FeatureMapping<S>> getArcadiaElementMappings() {
         return List.of(
-                new SimpleFeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME, FeatureMappingCatalog::mapName),
-                new SimpleFeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION, FeatureMappingCatalog::mapDescription));
+                new FeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
+                new FeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION,
+                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())));
     }
 
     /**
@@ -89,18 +86,16 @@ public class FeatureMappingCatalog {
      *
      * @param <S>
      *            the mapped Capella function type
-     * @param <T>
-     *            the mapped SysML usage type
      * @return the feature mappings
      */
-    public static <S extends AbstractFunction, T extends Usage> List<FeatureMapping<S, T>> getFunctionMappings() {
+    public static <S extends AbstractFunction> List<FeatureMapping<S>> getFunctionMappings() {
         return List.of(
-                new DeferredFeatureMapping<>(CAPELLA_OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedFunctionRealizations(),
-                                context)),
-                new DeferredFeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionRealizations(),
-                                context)));
+                new FeatureMapping<>(CAPELLA_OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                        (S source, TransformationContext context) -> context.defer(source, () -> MapperUtils.mapRealizes(source.getOwnedFunctionRealizations(),
+                                context.traceability()))),
+                new FeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                        (S source, TransformationContext context) -> context.defer(source, () -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionRealizations(),
+                                context.traceability()))));
     }
 
     /**
@@ -112,32 +107,22 @@ public class FeatureMappingCatalog {
      *            the mapped SysML usage type
      * @return the feature mappings
      */
-    public static <S extends Component, T extends Usage> List<FeatureMapping<S, T>> getComponentMappings() {
+    public static <S extends Component> List<FeatureMapping<S>> getComponentMappings() {
         return List.of(
-                new DeferredFeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
-                        MapperUtils::addFunctionAllocation),
-                new DeferredFeatureMapping<>(CAPELLA_REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedComponentRealizations(),
-                                context)),
-                new DeferredFeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, T target, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentRealizations(),
-                                context)),
-                new SimpleFeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
-                        (S source, T target) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(target,
-                                ARCADIA_COMPONENT, ARCADIA_IS_ACTOR, source.isActor())),
-                new SimpleFeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
-                        (S source, T target) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(target,
-                                ARCADIA_COMPONENT, ARCADIA_IS_HUMAN, source.isHuman())),
-                new SimpleFeatureMapping<>(CAPELLA_ABSTRACT, SYSML_IS_ABSTRACT,
-                        (S source, T target) -> target.setIsAbstract(source.isAbstract())));
-    }
-
-    private static <T extends Element, S extends NamedElement> Element mapDescription(S source, T target) {
-        return TRANSVERSE_MUTATION_SERVICE.setElementDescription(target, source.getDescription());
-    }
-
-    private static void mapName(NamedElement source, Element target) {
-        target.setDeclaredName(source.getName());
+                new FeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
+                        (source, context) -> context.defer(source, () -> MapperUtils.addFunctionAllocation(source, MapperUtils.require(context.traceability(), source, Usage.class), context.traceability()))),
+                new FeatureMapping<>(CAPELLA_REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
+                        (source, context) -> context.defer(source, () -> MapperUtils.mapRealizes(source.getOwnedComponentRealizations(), context.traceability()))),
+                new FeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                        (source, context) -> context.defer(source, () -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentRealizations(), context.traceability()))),
+                new FeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
+                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
+                                source.isActor())),
+                new FeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
+                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
+                                source.isHuman())),
+                new FeatureMapping<>(CAPELLA_ABSTRACT, SYSML_IS_ABSTRACT,
+                        (source, context) -> MapperUtils.require(context.traceability(), source, Usage.class).setIsAbstract(source.isAbstract())));
     }
 
 }

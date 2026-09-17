@@ -10,7 +10,10 @@
  * Contributors:
  *     Obeo - initial API and implementation
  *******************************************************************************/
-package org.obeonetwork.capella.sysmlv2.transformer.mapping.feature;
+package org.obeonetwork.capella.sysmlv2.transformer.mapping;
+
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -20,34 +23,27 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
  *
  * @param <S>
  *            the accepted Capella source type
- * @param <T>
- *            the accepted SysML target type
+ *
+ * @author Raphaël Pagé
  */
-public interface FeatureMapping<S extends EObject, T extends EObject> {
+public record FeatureMapping<S extends EObject>(String capellaFeature, String sysmlFeature, BiConsumer<S, TransformationContext> transformation) {
+
+    public FeatureMapping {
+        Objects.requireNonNull(capellaFeature, "capellaFeature must not be null");
+        Objects.requireNonNull(sysmlFeature, "sysmlFeature must not be null");
+        Objects.requireNonNull(transformation, "transformation must not be null");
+    }
 
     /**
-     * Returns the Capella feature name used by coverage reporting.
-     *
-     * @return the Capella feature name
-     */
-    String capellaFeature();
-
-    /**
-     * Returns the qualified SysML or Arcadia feature name used by reporting.
-     *
-     * @return the SysML feature name
-     */
-    String sysmlFeature();
-
-    /**
-     * Applies this feature transformation.
+     * Applies this feature mapping.
      *
      * @param source
-     *            the Capella source element
-     * @param target
-     *            the SysML target element
+     *            source element owning the feature
      * @param context
-     *            the transformation context
+     *            current transformation context
      */
-    void transform(S source, T target, TransformationContext context);
+    public void transform(S source, TransformationContext context) {
+        transformation.accept(source, context);
+    }
+
 }

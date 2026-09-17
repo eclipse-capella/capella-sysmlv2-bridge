@@ -20,7 +20,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.oa.OperationalActivity;
 
@@ -37,9 +37,9 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
     }
 
     @Override
-    public List<FeatureMapping<OperationalActivity, ActionUsage>> getFeatureMappings() {
-        List<FeatureMapping<OperationalActivity, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<OperationalActivity, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+    public List<FeatureMapping<OperationalActivity>> getFeatureMappings() {
+        List<FeatureMapping<OperationalActivity>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<OperationalActivity>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
@@ -55,7 +55,7 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
 
         var target = transverseMutationService.createFunction(parent);
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create an Operational Activity function");
+            context.diagnostics().addError(source, "Unable to create an Operational Activity function");
         }
         return target;
     }

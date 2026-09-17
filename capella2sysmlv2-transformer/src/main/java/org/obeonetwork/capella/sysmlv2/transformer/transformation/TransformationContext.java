@@ -13,23 +13,72 @@
 package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure;
-import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.Diagnostics;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DeferredReferenceResolver;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticsCollector;
 
 /**
- * Services and options shared by mappers during one transformation.
+ * Services shared by mappers during one transformation.
  *
  * @author Raphaël Pagé
  */
-public interface TransformationContext {
+public final class TransformationContext {
+    private final Traceability traceability = new Traceability();
 
-    TransformationOptions options();
+    private final DiagnosticsCollector diagnostics = new DiagnosticsCollector();
 
-    Traceability traceability();
+    private final ArcadiaModelStructure modelStructure;
 
-    Diagnostics diagnostics();
+    /**
+     * Creates a context for a model structure.
+     *
+     * @param modelStructure
+     *            generated Arcadia structure shared by the mappers
+     */
+    public TransformationContext(ArcadiaModelStructure modelStructure) {
+        this.modelStructure = java.util.Objects.requireNonNull(modelStructure, "modelStructure must not be null");
+    }
 
-    DeferredReferenceResolver deferredReferenceResolver();
+    /**
+     * Returns the source-to-target correspondences.
+     *
+     * @return traceability for this transformation
+     */
+    public Traceability traceability() {
+        return traceability;
+    }
 
-    ArcadiaModelStructure modelStructure();
+    /**
+     * Returns the diagnostics collected during this transformation.
+     *
+     * @return diagnostics service
+     */
+    public DiagnosticsCollector diagnostics() {
+        return diagnostics;
+    }
+
+    /**
+     * Returns the generated Arcadia model structure.
+     *
+     * @return model structure
+     */
+    public ArcadiaModelStructure modelStructure() {
+        return modelStructure;
+    }
+    private final java.util.List<Runnable> deferredReferences = new java.util.ArrayList<>();
+
+    public void defer(org.eclipse.emf.ecore.EObject source, Runnable resolution) {
+        java.util.Objects.requireNonNull(resolution, "resolution must not be null");
+        this.deferredReferences.add(() -> {
+            try {
+                resolution.run();
+            } catch (RuntimeException exception) {
+                this.diagnostics.addError(source, "Unable to resolve deferred reference: " + exception.getMessage());
+            }
+        });
+    }
+
+    public void resolveDeferredReferences() {
+        var actions = java.util.List.copyOf(this.deferredReferences);
+        this.deferredReferences.clear();
+        actions.forEach(Runnable::run);
+    }
 }

@@ -102,7 +102,7 @@ public final class ArcadiaLibraryInventory {
                         member.eClass().getName(), kind);
                 var previous = byQualifiedName.putIfAbsent(qualifiedName, descriptor);
                 if (previous != null && !previous.elementId().equals(descriptor.elementId())) {
-                    throw new IllegalStateException("Duplicate public Arcadia qualified name: " + qualifiedName); 
+                    throw new IllegalStateException("Duplicate public Arcadia qualified name: " + qualifiedName);
                 }
             });
         }

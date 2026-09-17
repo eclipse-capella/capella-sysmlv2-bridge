@@ -15,23 +15,23 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DefaultDiagnostics;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticsCollector;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 
-class DefaultDiagnosticsTest {
+class DiagnosticsTest {
 
     @Test
     void recordsInfoWarningAndErrorInOrder() {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
-        var diagnostics = new DefaultDiagnostics();
+        var diagnostics = new DiagnosticsCollector();
 
-        diagnostics.info(source, "info");
-        diagnostics.warning(source, "warning");
-        diagnostics.error(source, "error");
+        diagnostics.addInfo(source, "info");
+        diagnostics.addWarning(source, "warning");
+        diagnostics.addError(source, "error");
 
-        assertThat(diagnostics.all()).extracting(TransformationDiagnostic::severity)
+        assertThat(diagnostics.collect()).extracting(TransformationDiagnostic::severity)
                 .containsExactly(DiagnosticSeverity.INFO, DiagnosticSeverity.WARNING, DiagnosticSeverity.ERROR);
-        assertThat(diagnostics.all()).allSatisfy(diagnostic -> assertThat(diagnostic.source()).isSameAs(source));
+        assertThat(diagnostics.collect()).allSatisfy(diagnostic -> assertThat(diagnostic.source()).isSameAs(source));
     }
 }

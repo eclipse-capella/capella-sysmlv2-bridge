@@ -19,25 +19,26 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
-class DefaultMapperRegistryTest {
+class MapperRegistryTest {
     private static final EObject SOURCE = TestEObjects.create("http://example.org/capella", "LogicalComponent");
 
     @Test
     void findsMapperBySourceClass() {
         var mapper = mapper();
-        var registry = new DefaultMapperRegistry(List.of(mapper));
+        var registry = new MapperRegistry(List.of(mapper));
 
-        assertThat(registry.get(SOURCE)).contains(mapper);
+        assertThat(registry.get(SOURCE)).isPresent();
+        assertThat(registry.get(SOURCE).orElseThrow().getSource()).isSameAs(SOURCE);
     }
 
     @Test
     void returnsEmptyForUnknownSourceClass() {
-        var registry = new DefaultMapperRegistry(List.of());
+        var registry = new MapperRegistry(List.of());
 
         assertThat(registry.get(SOURCE)).isEmpty();
     }
@@ -45,7 +46,7 @@ class DefaultMapperRegistryTest {
     @Test
     void rejectsDuplicateMapperRegistration() {
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> new DefaultMapperRegistry(
+                .isThrownBy(() -> new MapperRegistry(
                         List.of(mapper(), mapper())))
                 .withMessageContaining("Duplicate mapper registration");
     }
@@ -53,7 +54,7 @@ class DefaultMapperRegistryTest {
     private static ElementMapper<EObject, EObject> mapper() {
         return new ElementMapper<>(EObject.class, "SysML::Element") {
             @Override
-            public List<FeatureMapping<EObject, EObject>> getFeatureMappings() {
+            public List<FeatureMapping<EObject>> getFeatureMappings() {
                 return List.of();
             }
 

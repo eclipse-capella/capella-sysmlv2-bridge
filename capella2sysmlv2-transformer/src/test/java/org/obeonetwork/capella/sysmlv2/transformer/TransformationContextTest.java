@@ -15,23 +15,19 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.DefaultTransformationContext;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
-class DefaultTransformationContextTest {
+class TransformationContextTest {
 
     @Test
     void wiresSharedRuntimeServices() {
         var library = TestSysONModels.arcadiaLibrary();
-        var options = new TransformationOptions(true, false, true);
-        var structure = new DefaultArcadiaModelStructureBuilder().build(options, library.resourceSet());
-        var context = new DefaultTransformationContext(options, structure);
+        var structure = new ArcadiaModelStructureBuilder().build(ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME, library.resourceSet());
+        var context = new TransformationContext(structure);
 
-        assertThat(context.options()).isSameAs(options);
         assertThat(context.modelStructure()).isSameAs(structure);
         assertThat(context.traceability()).isNotNull();
         assertThat(context.diagnostics()).isNotNull();
-        assertThat(context.deferredReferenceResolver()).isNotNull();
     }
 }
