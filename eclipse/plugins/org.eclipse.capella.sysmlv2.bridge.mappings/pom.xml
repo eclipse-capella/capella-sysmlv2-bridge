@@ -21,10 +21,15 @@
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
-    <artifactId>org.eclipse.capella.sysmlv2.bridge.mappings</artifactId>
+    <artifactId>org.eclipse.capella.sysmlv2.bridge.mappings</artifactId> 
     <packaging>eclipse-plugin</packaging>
 
     <dependencies>
+		<dependency>
+		  <groupId>org.obeonetwork.capella.sysmlv2</groupId>
+		  <artifactId>capella2sysmlv2-transformer</artifactId>
+		  <version>0.1.0-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 		  <groupId>org.slf4j</groupId>
 		  <artifactId>slf4j-api</artifactId>
@@ -50,6 +55,20 @@
             <artifactId>syson-services</artifactId>
             <version>${syson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-sysml-metamodel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.syson</groupId>
+            <artifactId>syson-sysml-metamodel-services</artifactId>
+            <version>${syson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.sirius</groupId>
+            <artifactId>sirius-components-core</artifactId>
+            <version>${sirius-web.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,7 +85,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella-model-services, syson-model-services, capella-model-transverse-services, slf4j-api, syson-services</includeArtifactIds>
+                            <includeArtifactIds>capella2sysmlv2-transformer,capella-model-services,syson-model-services,capella-model-transverse-services,slf4j-api,syson-services,syson-sysml-metamodel,syson-sysml-metamodel-services,sirius-components-core</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

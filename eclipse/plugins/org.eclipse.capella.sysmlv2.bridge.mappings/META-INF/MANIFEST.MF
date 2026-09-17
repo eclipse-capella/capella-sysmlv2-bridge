@@ -5,7 +5,6 @@ Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.mappings
 Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
- org.eclipse.capella.sysmlv2.bridge.transformer,
  org.polarsys.capella.core.data.gen
 Import-Package: org.apache.commons.logging
 Export-Package: org.eclipse.capella.model.transverse.services,
@@ -13,11 +12,35 @@ Export-Package: org.eclipse.capella.model.transverse.services,
  org.eclipse.capella.sysmlv2.bridge.mappings.ctx,
  org.eclipse.capella.sysmlv2.bridge.mappings.la,
  org.eclipse.capella.sysmlv2.bridge.mappings.oa,
- org.eclipse.capella.sysmlv2.bridge.mappings.pa
+ org.eclipse.capella.sysmlv2.bridge.mappings.pa,
+ org.obeonetwork.capella.sysmlv2.transformer;uses:="org.eclipse.emf.ecore,org.eclipse.syson.sysml",
+ org.obeonetwork.capella.sysmlv2.transformer.arcadia,
+ org.obeonetwork.capella.sysmlv2.transformer.diagnostic,
+ org.obeonetwork.capella.sysmlv2.transformer.mapping,
+ org.obeonetwork.capella.sysmlv2.transformer.mapping.feature,
+ org.obeonetwork.capella.sysmlv2.transformer.reporting,
+ org.obeonetwork.capella.sysmlv2.transformer.transformation,
+ org.eclipse.syson.services,
+ org.eclipse.syson.services.api,
+ org.eclipse.syson.model.services,
+ org.eclipse.syson.model.services.aql,
+ org.eclipse.syson.sysml,
+ org.eclipse.syson.sysml.impl,
+ org.eclipse.syson.sysml.util,
+ org.eclipse.syson.sysml.metamodel.helper,
+ org.eclipse.syson.sysml.metamodel.services,
+ org.eclipse.syson.sysml.metamodel.services.textual,
+ org.eclipse.syson.sysml.metamodel.services.textual.utils,
+ org.eclipse.syson.sysml.metamodel.util,
+ org.eclipse.syson.util
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings
 Bundle-ClassPath: target/dependency/capella-model-services-2026.7.1.jar,
  target/dependency/capella-model-transverse-services-2026.7.1.jar,
  target/dependency/slf4j-api-2.0.18.jar,
  .,
+ target/dependency/capella2sysmlv2-transformer-0.1.0-SNAPSHOT.jar,
  target/dependency/syson-model-services-2026.7.2.jar,
- target/dependency/syson-services-2026.7.2.jar
+ target/dependency/syson-services-2026.7.2.jar,
+ target/dependency/syson-sysml-metamodel-2026.7.2.jar,
+ target/dependency/syson-sysml-metamodel-services-2026.7.2.jar,
+ target/dependency/sirius-components-core-2026.7.3.jar

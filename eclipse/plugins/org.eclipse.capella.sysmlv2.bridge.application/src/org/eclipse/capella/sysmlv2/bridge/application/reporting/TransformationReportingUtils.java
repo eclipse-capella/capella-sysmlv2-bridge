@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;

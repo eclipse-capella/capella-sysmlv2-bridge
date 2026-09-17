@@ -20,7 +20,6 @@ import java.util.Objects;
 import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
 import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationReportingUtils;
 import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
-import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
