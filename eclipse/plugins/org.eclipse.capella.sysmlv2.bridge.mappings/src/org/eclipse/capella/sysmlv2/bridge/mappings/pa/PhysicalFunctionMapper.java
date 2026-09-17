@@ -19,7 +19,6 @@ import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
-import org.eclipse.syson.sysml.Element;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -33,9 +32,6 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
 public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction, ActionUsage> {
     private final TransverseMutationService transverseMutationService = new TransverseMutationService();
 
-    /**
-     * Creates a physical function mapper.
-     */
     public PhysicalFunctionMapper() {
         super(PhysicalFunction.class, ARCADIA_FUNCTION);
     }
@@ -59,14 +55,19 @@ public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction
             return context.modelStructure().physicalArchitecture().rootFunction();
         }
 
-        var parent = MapperUtils.findTargetParent(context, source, Element.class,
-                context.modelStructure().physicalArchitecture().rootFunction());
-
-        var target = transverseMutationService.createFunction(parent);
+        var target = transverseMutationService.createFunction(context.modelStructure().physicalArchitecture().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a Physical Function");
         }
         return target;
+    }
+
+    @Override
+    public void mapContainment(PhysicalFunction source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     /**

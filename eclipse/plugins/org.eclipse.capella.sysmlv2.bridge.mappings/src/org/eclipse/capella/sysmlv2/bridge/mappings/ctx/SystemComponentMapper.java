@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.services.system.analysis.SAMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -45,10 +44,7 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
         List<FeatureMapping<SystemComponent>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
         List<FeatureMapping<SystemComponent>> componentMappings = FeatureMappingCatalog.getComponentMappings();
 
-        return Stream.concat(
-                arcadiaElementMappings.stream(),
-                componentMappings.stream())
-                .toList();
+        return Stream.concat(arcadiaElementMappings.stream(), componentMappings.stream()).toList();
     }
 
     @Override
@@ -57,14 +53,11 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
             return context.modelStructure().systemAnalysis().systemPart().orElseThrow();
         }
 
-        Element parent;
         PartUsage target;
         if (source.isActor()) {
-            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().systemAnalysis().structurePackage());
-            target = saMutationService.createActorSA(parent);
+            target = saMutationService.createActorSA(context.modelStructure().systemAnalysis().structurePackage());
         } else {
-            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().systemAnalysis().systemPart().orElseThrow());
-            target = saMutationService.createComponentSA(parent);
+            target = saMutationService.createComponentSA(context.modelStructure().systemAnalysis().systemPart().orElseThrow());
         }
 
         if (target == null) {
@@ -76,6 +69,14 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
+    }
+
+    @Override
+    public void mapContainment(SystemComponent source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

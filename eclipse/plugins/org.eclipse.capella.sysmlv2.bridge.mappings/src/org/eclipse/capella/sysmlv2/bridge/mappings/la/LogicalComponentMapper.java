@@ -22,7 +22,6 @@ import org.eclipse.capella.model.services.logical.architecture.LAMutationService
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -57,14 +56,11 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
             return context.modelStructure().logicalArchitecture().systemPart().orElseThrow();
         }
 
-        Element parent;
         PartUsage target;
         if (source.isActor()) {
-            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().logicalArchitecture().structurePackage());
-            target = transverseMutationService.createActor(parent);
+            target = transverseMutationService.createActor(context.modelStructure().logicalArchitecture().structurePackage());
         } else {
-            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().logicalArchitecture().systemPart().orElseThrow());
-            target = laMutationService.createComponentLA(parent);
+            target = laMutationService.createComponentLA(context.modelStructure().logicalArchitecture().systemPart().orElseThrow());
         }
 
         if (target == null) {
@@ -77,6 +73,14 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
+    }
+
+    @Override
+    public void mapContainment(LogicalComponent source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

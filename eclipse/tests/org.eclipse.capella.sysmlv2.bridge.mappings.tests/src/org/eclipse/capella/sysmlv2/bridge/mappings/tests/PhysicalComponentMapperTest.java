@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.model.transverse.services.TransverseQueryService;
-import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
@@ -49,8 +49,7 @@ class PhysicalComponentMapperTest {
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet());
 
-        var result = engine.transform(architecture,
-                "IFE");
+        var result = engine.transform(architecture, "IFE");
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -54,14 +53,11 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
             return context.modelStructure().physicalArchitecture().systemPart().orElseThrow();
         }
 
-        Element parent;
         PartUsage target;
         if (source.isActor()) {
-            parent = MapperUtils.findTargetParent(context, source, Element.class, context.modelStructure().physicalArchitecture().structurePackage());
-            target = transverseMutationService.createActor(parent);
+            target = transverseMutationService.createActor(context.modelStructure().physicalArchitecture().structurePackage());
         } else {
-            parent = MapperUtils.findTargetParent(context, source, PartUsage.class, context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
-            target = transverseMutationService.createComponent(parent);
+            target = transverseMutationService.createComponent(context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
         }
 
         if (target == null) {
@@ -76,6 +72,14 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
         // TODO : physicalComponentNature
         // TODO : physicalComponentKind
         return target;
+    }
+
+    @Override
+    public void mapContainment(PhysicalComponent source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 /**
@@ -87,11 +86,45 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
      * @param context
      *            the transformation context
      */
-    public final void transform(S source, TransformationContext context) {
+    public final void createAndRegister(S source, TransformationContext context) {
         var target = this.createTarget(source, context);
         if (target != null) {
             context.traceability().register(source, target);
-            this.transformFeatures(source, target, context);
+        } else {
+            context.traceability().unregister(source);
+        }
+    }
+
+    /**
+     * Resolves the source containment after every target has been created.
+     *
+     * @param source
+     *            source element whose target must be placed
+     * @param context
+     *            current transformation context
+     */
+    public void mapContainment(S source, TransformationContext context) {
+        // No containment-specific work by default.
+    }
+
+    /**
+     * Maps all declared features after creation and containment phases.
+     *
+     * @param source
+     *            source element owning the features
+     * @param context
+     *            current transformation context
+     */
+    public final void mapFeatures(S source, TransformationContext context) {
+        if (context.traceability().contains(source)) {
+            this.getFeatureMappings().forEach(mapping -> {
+                try {
+                    mapping.transform(source, context);
+                } catch (RuntimeException exception) {
+                    context.diagnostics().addError(source, "Unable to map feature " + mapping.capellaFeature() + ": "
+                            + exception.getMessage());
+                }
+            });
         }
     }
 
@@ -112,8 +145,4 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
      * @return the feature mappings
      */
     public abstract List<FeatureMapping<S>> getFeatureMappings();
-
-    private void transformFeatures(S source, T target, TransformationContext context) {
-        this.getFeatureMappings().forEach(mapping -> mapping.transform(source, context));
-    }
 }

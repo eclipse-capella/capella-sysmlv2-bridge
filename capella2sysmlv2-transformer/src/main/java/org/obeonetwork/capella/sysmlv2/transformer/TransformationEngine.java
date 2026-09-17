@@ -13,7 +13,9 @@
 package org.obeonetwork.capella.sysmlv2.transformer;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.eclipse.emf.common.util.URI;
@@ -27,7 +29,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 /**
- * Executes a Capella to SysML transformation and resolves deferred references.
+ * Executes a Capella to SysML transformation in creation, containment and feature phases.
  *
  * @author Raphaël Pagé
  */
@@ -68,9 +70,10 @@ public final class TransformationEngine {
     }
 
     /**
-     * Transforms the supplied sources and resolves deferred references.
+     * Transforms the supplied sources in creation, containment and feature phases.
      * <p>
-     * Sources are processed in encounter order, with containment resolved during target creation.
+     * Sources are processed from the shallowest containment depth to the deepest. Elements at the same depth retain
+     * their encounter order in {@code sources}. This ordering is reused for every phase.
      *
      * @param sources
      *            source elements to transform
@@ -89,13 +92,33 @@ public final class TransformationEngine {
         targetResource.getContents().add(modelStructure.root());
         var context = new TransformationContext(modelStructure);
 
-        for (EObject source : sources) {
-            this.mapperRegistry.get(Objects.requireNonNull(source, "source must not be null"))
-                    .ifPresent(mapper -> mapper.transform(context));
-        }
-        context.resolveDeferredReferences();
+        var boundMappers = sources.stream()
+                .sorted(Comparator.comparingInt(TransformationEngine::containmentDepth))
+                .map(this.mapperRegistry::get)
+                .flatMap(Optional::stream)
+                .toList();
+        LOGGER.info("Done!");
+
+        LOGGER.info("Started creating the mapper elements ...");
+        boundMappers.forEach(mapper -> mapper.createAndRegister(context));
+        LOGGER.info("Done!");
+
+        LOGGER.info("Started moving the elements to their container ...");
+        boundMappers.forEach(mapper -> mapper.mapContainment(context));
+        LOGGER.info("Done!");
+
+        LOGGER.info("Started mapping the features of the elements ...");
+        boundMappers.forEach(mapper -> mapper.mapFeatures(context));
+        LOGGER.info("Done!");
 
         return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability());
     }
 
+    private static int containmentDepth(EObject source) {
+        var depth = 0;
+        for (var parent = source.eContainer(); parent != null; parent = parent.eContainer()) {
+            depth++;
+        }
+        return depth;
+    }
 }

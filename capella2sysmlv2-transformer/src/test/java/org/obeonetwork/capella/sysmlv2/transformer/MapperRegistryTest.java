@@ -15,9 +15,12 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -34,6 +37,53 @@ class MapperRegistryTest {
 
         assertThat(registry.get(SOURCE)).isPresent();
         assertThat(registry.get(SOURCE).orElseThrow().getSource()).isSameAs(SOURCE);
+    }
+
+    @Test
+    void bindsEachSourceToAllMapperPhases() {
+        var calls = new ArrayList<String>();
+        var context = TestContexts.create();
+        var mapper = new ElementMapper<EPackage, EObject>(EPackage.class, "SysML::Element") {
+            @Override
+            protected EObject createTarget(EPackage source, TransformationContext actualContext) {
+                assertThat(actualContext).isSameAs(context);
+                calls.add("create " + source.getName());
+                return EcoreFactory.eINSTANCE.createEPackage();
+            }
+
+            @Override
+            public void mapContainment(EPackage source, TransformationContext actualContext) {
+                assertThat(actualContext).isSameAs(context);
+                calls.add("containment " + source.getName());
+            }
+
+            @Override
+            public List<FeatureMapping<EPackage>> getFeatureMappings() {
+                return List.of(new FeatureMapping<>("name", "name", (source, actualContext) -> {
+                    assertThat(actualContext).isSameAs(context);
+                    calls.add("features " + source.getName());
+                }));
+            }
+        };
+        var first = EcoreFactory.eINSTANCE.createEPackage();
+        first.setName("first");
+        var second = EcoreFactory.eINSTANCE.createEPackage();
+        second.setName("second");
+        var registry = new MapperRegistry(List.of(mapper));
+        EObject source = first;
+        var firstBinding = registry.get(source).orElseThrow();
+        var secondBinding = registry.get(second).orElseThrow();
+
+        firstBinding.createAndRegister(context);
+        secondBinding.createAndRegister(context);
+        firstBinding.mapContainment(context);
+        secondBinding.mapContainment(context);
+        firstBinding.mapFeatures(context);
+        secondBinding.mapFeatures(context);
+
+        assertThat(calls).containsExactly("create first", "create second", "containment first",
+                "containment second", "features first", "features second");
+        assertThat(registry.get(SOURCE)).isEmpty();
     }
 
     @Test

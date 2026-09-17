@@ -42,8 +42,33 @@ public final class BoundMapper<S extends EObject> {
         return this.source;
     }
 
-    /** Transforms the bound source using the current context. */
-    public void transform(TransformationContext context) {
-        this.mapper.transform(this.source, context);
+    /**
+     * Creates and registers the target for the bound source.
+     *
+     * @param context
+     *            current transformation context
+     */
+    public void createAndRegister(TransformationContext context) {
+        this.mapper.createAndRegister(this.source, context);
+    }
+
+    /**
+     * Maps containment for the bound source.
+     *
+     * @param context
+     *            current transformation context
+     */
+    public void mapContainment(TransformationContext context) {
+        this.mapper.mapContainment(this.source, context);
+    }
+
+    /**
+     * Maps features for the bound source.
+     *
+     * @param context
+     *            current transformation context
+     */
+    public void mapFeatures(TransformationContext context) {
+        this.mapper.mapFeatures(this.source, context);
     }
 }

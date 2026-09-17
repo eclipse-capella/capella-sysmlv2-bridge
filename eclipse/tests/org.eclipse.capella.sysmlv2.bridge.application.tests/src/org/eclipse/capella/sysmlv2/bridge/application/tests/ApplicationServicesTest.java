@@ -31,6 +31,8 @@ import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.polarsys.capella.core.data.la.LaFactory;
+import org.polarsys.capella.core.data.la.LogicalArchitecture;
+import org.polarsys.capella.core.data.la.LogicalComponent;
 
 class ApplicationServicesTest {
 
@@ -64,9 +66,10 @@ class ApplicationServicesTest {
     @Test
     void transformationServiceMapsLogicalComponent() {
         var source = LaFactory.eINSTANCE.createLogicalComponent();
+        var architecture = logicalArchitectureContaining(source);
         source.setName("Cabin Server");
 
-        var transformation = ModelTransformationUtils.transform(source,
+        var transformation = ModelTransformationUtils.transform(architecture,
                 "IFE");
 
         assertFalse(transformation.sources().isEmpty());
@@ -79,8 +82,9 @@ class ApplicationServicesTest {
     void reportingServicePersistsTransformation() throws IOException {
         var outputDirectory = Files.createTempDirectory("capella-sysmlv2-application-test");
         var source = LaFactory.eINSTANCE.createLogicalComponent();
+        var architecture = logicalArchitectureContaining(source);
         source.setName("Cabin Server");
-        var transformation = ModelTransformationUtils.transform(source,
+        var transformation = ModelTransformationUtils.transform(architecture,
                 "IFE");
 
         var summary = TransformationReportingUtils.generate(
@@ -113,5 +117,13 @@ class ApplicationServicesTest {
 
         assertNotNull(providers.getAdapterFactoryProvider());
         assertNotNull(providers.getCrossReferencerProvider());
+    }
+
+    private static LogicalArchitecture logicalArchitectureContaining(LogicalComponent component) {
+        LogicalArchitecture architecture = LaFactory.eINSTANCE.createLogicalArchitecture();
+        var componentPackage = LaFactory.eINSTANCE.createLogicalComponentPkg();
+        architecture.setOwnedLogicalComponentPkg(componentPackage);
+        componentPackage.getOwnedLogicalComponents().add(component);
+        return architecture;
     }
 }

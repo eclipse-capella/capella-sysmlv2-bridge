@@ -63,22 +63,4 @@ public final class TransformationContext {
     public ArcadiaModelStructure modelStructure() {
         return modelStructure;
     }
-    private final java.util.List<Runnable> deferredReferences = new java.util.ArrayList<>();
-
-    public void defer(org.eclipse.emf.ecore.EObject source, Runnable resolution) {
-        java.util.Objects.requireNonNull(resolution, "resolution must not be null");
-        this.deferredReferences.add(() -> {
-            try {
-                resolution.run();
-            } catch (RuntimeException exception) {
-                this.diagnostics.addError(source, "Unable to resolve deferred reference: " + exception.getMessage());
-            }
-        });
-    }
-
-    public void resolveDeferredReferences() {
-        var actions = java.util.List.copyOf(this.deferredReferences);
-        this.deferredReferences.clear();
-        actions.forEach(Runnable::run);
-    }
 }

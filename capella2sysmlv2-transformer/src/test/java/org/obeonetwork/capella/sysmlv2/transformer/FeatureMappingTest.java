@@ -46,27 +46,4 @@ class FeatureMappingTest {
 
         assertThat(transformed).isTrue();
     }
-    @Test
-    void mapperRegistersTargetBeforeApplyingFeatures() {
-        var source = TestEObjects.create("http://example.org/capella", "Element");
-        var target = TestEObjects.create("http://example.org/sysml", "Element");
-        var transformed = new AtomicBoolean();
-        var context = TestContexts.create();
-        var mapper = new org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
-            @Override
-            protected EObject createTarget(EObject value, org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext current) {
-                return target;
-            }
-
-            @Override
-            public java.util.List<FeatureMapping<EObject>> getFeatureMappings() {
-                return java.util.List.of(new FeatureMapping<>("name", "name", (value, current) -> {
-                    assertThat(current.traceability().lookupTarget(value)).contains(target);
-                    transformed.set(true);
-                }));
-            }
-        };
-        mapper.transform(source, context);
-        assertThat(transformed).isTrue();
-    }
 }

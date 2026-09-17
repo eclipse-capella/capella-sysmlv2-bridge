@@ -50,14 +50,19 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
             return context.modelStructure().operationalAnalysis().rootFunction();
         }
 
-        var parent = MapperUtils.findTargetParent(context, source, ActionUsage.class,
-                context.modelStructure().operationalAnalysis().rootFunction());
-
-        var target = transverseMutationService.createFunction(parent);
+        var target = transverseMutationService.createFunction(context.modelStructure().operationalAnalysis().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create an Operational Activity function");
         }
         return target;
+    }
+
+    @Override
+    public void mapContainment(OperationalActivity source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

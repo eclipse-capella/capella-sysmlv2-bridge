@@ -15,34 +15,84 @@ package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 import java.util.IdentityHashMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 
+/**
+ * Associates source elements with their transformed targets.
+ *
+ * @author Raphaël Pagé
+ */
 public final class Traceability {
-
-    private static final String TARGET_MUST_NOT_BE_NULL = "target must not be null";
-
-    private static final String SOURCE_MUST_NOT_BE_NULL = "source must not be null";
-
     private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
 
-    public void register(EObject source, EObject target) {
-        Objects.requireNonNull(source, SOURCE_MUST_NOT_BE_NULL);
-        Objects.requireNonNull(target, TARGET_MUST_NOT_BE_NULL);
+    private final Set<EObject> excluded = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
 
-        var existing = this.mappings.putIfAbsent(source, target);
-        if (existing != null && existing != target) {
+    /**
+     * Registers a source-to-target correspondence.
+     *
+     * @param source
+     *            source element
+     * @param target
+     *            transformed target
+     * @throws IllegalStateException
+     *             if a different target is already registered for the source
+     */
+    public void register(EObject source, EObject target) {
+        Objects.requireNonNull(source);
+        Objects.requireNonNull(target);
+        var previous = mappings.putIfAbsent(source, target);
+        if (previous != null && previous != target) {
             throw new IllegalStateException("A target is already registered for source " + source);
         }
     }
 
-    public Optional<EObject> lookupTarget(EObject source) {
-        Objects.requireNonNull(source, "source must not be null");
-        return Optional.ofNullable(this.mappings.get(source));
+    /**
+     * Removes a correspondence and marks the source as excluded.
+     *
+     * @param source
+     *            source element to exclude
+     */
+    public void unregister(EObject source) {
+        Objects.requireNonNull(source);
+        mappings.remove(source);
+        excluded.add(source);
     }
 
+    /**
+     * Looks up the target associated with a source element.
+     *
+     * @param source
+     *            source element
+     * @return the mapped target, when one exists
+     */
+    public Optional<EObject> lookupTarget(EObject source) {
+        Objects.requireNonNull(source);
+        return Optional.ofNullable(mappings.get(source));
+    }
+
+    /**
+     * Tests whether a source currently has a target correspondence.
+     *
+     * @param source
+     *            source element
+     * @return {@code true} when a target is registered
+     */
     public boolean contains(EObject source) {
-        Objects.requireNonNull(source, "source must not be null");
-        return this.mappings.containsKey(source);
+        Objects.requireNonNull(source);
+        return mappings.containsKey(source);
+    }
+
+    /**
+     * Tests whether a source was excluded from the transformation.
+     *
+     * @param source
+     *            source element
+     * @return {@code true} when the source was excluded
+     */
+    public boolean isExcluded(EObject source) {
+        Objects.requireNonNull(source);
+        return excluded.contains(source);
     }
 }

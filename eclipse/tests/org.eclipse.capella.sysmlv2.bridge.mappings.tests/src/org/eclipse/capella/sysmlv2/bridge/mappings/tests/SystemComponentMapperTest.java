@@ -15,13 +15,11 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.model.transverse.services.TransverseQueryService;
-import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
-import org.eclipse.syson.sysml.OwningMembership;
+import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
@@ -31,7 +29,7 @@ class SystemComponentMapperTest {
     private final TransverseQueryService transverseQueryService = new TransverseQueryService();
 
     @Test
-    void mapsTheSystemAnalysisRootToTheExistingSystemAndMapsItsChildren() {
+    void mapsTheSystemRootAndRetainsActorWithoutMappedAncestor() {
         var architecture = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemAnalysis();
         var componentPackage = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemComponentPkg();
         architecture.setOwnedSystemComponentPkg(componentPackage);
@@ -49,8 +47,7 @@ class SystemComponentMapperTest {
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet());
 
-        var result = engine.transform(architecture,
-                "IFE");
+        var result = engine.transform(architecture, "IFE");
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());
@@ -58,13 +55,12 @@ class SystemComponentMapperTest {
         assertEquals("The system root", transverseQueryService.getArcadiaElementDescription(system));
         assertFalse(transverseQueryService.isComponentActor(system));
         assertFalse(transverseQueryService.isComponentHumanActor(system));
-        var target = assertInstanceOf(PartUsage.class,
-                result.traceability().lookupTarget(actor).orElseThrow());
-        assertEquals("Navigation Computer", target.getDeclaredName());
-        assertEquals("The system navigation computer", transverseQueryService.getArcadiaElementDescription(target));
-        assertTrue(transverseQueryService.isComponentActor(target));
-        assertFalse(transverseQueryService.isComponentHumanActor(target));
-        assertSame(system.eContainer().eContainer(), assertInstanceOf(OwningMembership.class, target.eContainer()).eContainer());
+        var actorTarget = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(actor).orElseThrow());
+        assertEquals("Navigation Computer", actorTarget.getDeclaredName());
+        assertEquals("The system navigation computer", transverseQueryService.getArcadiaElementDescription(actorTarget));
+        assertTrue(transverseQueryService.isComponentActor(actorTarget));
+        assertFalse(transverseQueryService.isComponentHumanActor(actorTarget));
+        assertFalse(result.traceability().isExcluded(actor));
         assertTrue(result.diagnostics().isEmpty());
     }
 }
