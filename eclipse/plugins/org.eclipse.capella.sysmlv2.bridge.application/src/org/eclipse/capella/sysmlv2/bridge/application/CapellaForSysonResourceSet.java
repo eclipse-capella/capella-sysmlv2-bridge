@@ -10,7 +10,7 @@
  * Contributors:
  *     Obeo - initial API and implementation
  *******************************************************************************/
-package org.eclipse.capella.sysmlv2.bridge.transformer;
+package org.eclipse.capella.sysmlv2.bridge.application;
 
 import java.io.IOException;
 import java.util.List;

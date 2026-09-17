@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.model.transverse.services.TransverseQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.Package;

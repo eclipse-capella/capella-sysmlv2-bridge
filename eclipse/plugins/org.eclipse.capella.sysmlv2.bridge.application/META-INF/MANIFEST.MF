@@ -3,15 +3,22 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Capella SysML v2 Bridge Application
 Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.application;singleton:=true
 Bundle-Version: 0.1.0.qualifier
-Export-Package: org.eclipse.capella.sysmlv2.bridge.application,
- org.eclipse.capella.sysmlv2.bridge.application.loading,
- org.eclipse.capella.sysmlv2.bridge.application.reporting,
- org.eclipse.capella.sysmlv2.bridge.application.transformation
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,
- target/dependency/cli-0.1.0-SNAPSHOT.jar
+ target/dependency/cli-0.1.0-SNAPSHOT.jar,
+ target/dependency/arcadia-library-0.0.3.jar,
+ target/dependency/org.eclipse.sirius.emfjson-2.5.3-SNAPSHOT.jar,
+ target/dependency/gson-2.13.1.jar,
+ target/dependency/java-uuid-generator-5.1.0.jar,
+ target/dependency/commons-text-1.10.0.jar,
+ target/dependency/sirius-components-emf-2026.7.3.jar,
+ target/dependency/sirius-components-core-2026.7.3.jar,
+ target/dependency/spring-core-7.0.8.jar,
+ target/dependency/commons-lang3-3.20.0.jar,
+ target/dependency/commons-io-2.15.1.jar,
+ target/dependency/syson-application-configuration-2026.7.2.jar
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.equinox.app,
  org.eclipse.emf.ecore,
@@ -19,12 +26,18 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.edit,
  org.eclipse.emf.transaction,
  org.eclipse.sirius.common,
- org.eclipse.capella.sysmlv2.bridge.transformer,
  org.eclipse.capella.sysmlv2.bridge.mappings,
+ org.slf4j.api,
  org.polarsys.capella.common.platform.sirius.ted,
  org.polarsys.capella.common.libraries.gen,
  org.polarsys.capella.core.data.gen,
  org.eclipse.emf.workspace,
  org.polarsys.capella.common.re.gen,
  org.polarsys.capella.core.data.helpers
+Import-Package: org.apache.commons.logging
+Export-Package: org.eclipse.capella.sysmlv2.bridge.application,
+ org.eclipse.capella.sysmlv2.bridge.application.loading,
+ org.eclipse.capella.sysmlv2.bridge.application.reporting,
+ org.eclipse.capella.sysmlv2.bridge.application.transformation,
+ org.eclipse.sirius.components.core.api
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.application

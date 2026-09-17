@@ -11,12 +11,6 @@
          version="0.0.0"
          unpack="false"/>
    <plugin
-         id="org.eclipse.capella.sysmlv2.bridge.transformer"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-   <plugin
          id="org.eclipse.capella.sysmlv2.bridge.mappings"
          download-size="0"
          install-size="0"

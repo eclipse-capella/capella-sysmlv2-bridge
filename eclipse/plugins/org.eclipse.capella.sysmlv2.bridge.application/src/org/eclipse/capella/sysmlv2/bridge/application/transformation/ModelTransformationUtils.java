@@ -16,7 +16,7 @@ import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.ARCADIA_LIBRARY_LOAD
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.transformer.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;

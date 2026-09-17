@@ -6,7 +6,7 @@ Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.core.runtime,
- org.eclipse.capella.sysmlv2.bridge.transformer,
+ org.eclipse.capella.sysmlv2.bridge.application,
  org.eclipse.capella.sysmlv2.bridge.mappings,
  org.polarsys.capella.core.data.gen,
  org.polarsys.capella.common.libraries.gen,
