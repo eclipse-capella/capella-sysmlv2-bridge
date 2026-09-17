@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.TransverseMutationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -50,9 +49,7 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
 
     @Override
     protected PartUsage createTarget(Entity source, TransformationContext context) {
-        var parent = MapperUtils.findTargetParent(context, source,
-                Element.class, context.modelStructure().operationalAnalysis().perspectivePackage());
-
+        var parent = context.modelStructure().operationalAnalysis().perspectivePackage();
         var target = source.isActor() ? transverseMutationService.createActor(parent)
                 : transverseMutationService.createComponent(parent);
 
@@ -66,6 +63,11 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
+    }
+
+    @Override
+    public void mapContainment(Entity source, TransformationContext context) {
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

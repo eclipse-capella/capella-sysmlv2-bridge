@@ -50,14 +50,19 @@ public final class LogicalFunctionMapper extends ElementMapper<LogicalFunction, 
             return context.modelStructure().logicalArchitecture().rootFunction();
         }
 
-        var parent = MapperUtils.findTargetParent(context, source, ActionUsage.class,
-                context.modelStructure().logicalArchitecture().rootFunction());
-
-        var target = transverseMutationService.createFunction(parent);
+        var target = transverseMutationService.createFunction(context.modelStructure().logicalArchitecture().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a Logical Function");
         }
         return target;
+    }
+
+    @Override
+    public void mapContainment(LogicalFunction source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

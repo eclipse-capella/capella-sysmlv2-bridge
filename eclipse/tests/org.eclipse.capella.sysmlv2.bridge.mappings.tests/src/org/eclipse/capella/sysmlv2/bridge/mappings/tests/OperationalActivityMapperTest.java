@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.capella.model.transverse.services.TransverseQueryService;
-import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.Package;
@@ -38,7 +38,14 @@ class OperationalActivityMapperTest {
         child.setName("Read sensor");
         source.getOwnedFunctions().add(child);
 
-        var result = transform(source);
+        var architecture = OaFactory.eINSTANCE.createOperationalAnalysis();
+        var functionPackage = OaFactory.eINSTANCE.createOperationalActivityPkg();
+        architecture.setOwnedFunctionPkg(functionPackage);
+        var root = OaFactory.eINSTANCE.createOperationalActivity();
+        root.setName("Root Function");
+        functionPackage.getOwnedOperationalActivities().add(root);
+        root.getOwnedFunctions().add(source);
+        var result = transform(architecture);
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Capture movement", target.getDeclaredName());
@@ -54,7 +61,7 @@ class OperationalActivityMapperTest {
     }
 
     private static org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult transform(
-            org.polarsys.capella.core.data.oa.OperationalActivity source) {
+            org.polarsys.capella.core.data.oa.OperationalAnalysis source) {
         var resourceSet = new CapellaForSysonResourceSet().getResourceSet();
         return new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()), resourceSet)

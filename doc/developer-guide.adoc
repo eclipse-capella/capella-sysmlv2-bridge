@@ -76,7 +76,7 @@ mvn --settings .github/maven-settings.xml \
 Contains the model loading contracts and secure Capella project archive extraction.
 
 `capella2sysmlv2-transformer`::
-Contains mapper dispatch, transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
+Contains the three-phase transformation engine, the concrete transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
 
 `cli`::
 Contains the Java command-line entry point and the runtime-independent transformation service contract.
@@ -92,14 +92,11 @@ Provides reusable test resources and golden-file assertions.
 `eclipse/target-platform`::
 Defines the Capella 7.0.1 metamodel, EMF, Equinox, and Kitalpha target platform.
 
-`eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.transformer`::
-Adapts the regular transformer to Equinox and loads the bundled Arcadia library.
-
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.mappings`::
 Contains typed Capella mapper implementations, the curated alignment backlog, and deterministic candidate-source generation.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
-Implements the Equinox application, typed Capella resource loading, transformation orchestration, and intermediate XMI persistence.
+Implements the Equinox application, typed Capella resource loading, transformation orchestration, bundled Arcadia library loading, and intermediate XMI persistence.
 
 `eclipse/tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests`::
 Tests typed mappings against small EMF models and materializes mapper candidate sources from the installed Capella metamodel.
@@ -131,10 +128,13 @@ Capella metamodel package registration
 Direct .capella semantic model loading
         |
         v
-MetaclassId-based mapper dispatch
+Typed mapper registry resolution
         |
         v
-Shared TransformationContext
+Three-phase TransformationEngine
+        | creation and registration
+        | containment resolution
+        | feature mapping
         |
         v
 SysON SysML v2 model using Arcadia concepts
@@ -145,9 +145,26 @@ Intermediate XMI persistence and reload validation
 
 The transformation layer does not initialize Equinox, load projects, or serialize textual SysML.
 The engine resolves the definitions required by the generated model structure from the shared `ResourceSet`.
-It attaches the generated root to that same `ResourceSet` before dispatching mappers, allowing SysON services to discover Arcadia concepts through `SysONEContentAdapter`.
+It attaches the generated root to that same `ResourceSet` before creating targets, allowing SysON services to discover Arcadia concepts through `SysONEContentAdapter`.
 
-Mapper lookup uses `MetaclassId(nsURI, className)` rather than runtime `EClass` identity or class names alone.
+`MapperRegistry` resolves the first compatible mapper in registration order and rejects duplicate source classes.
+The registry uses the mapper's typed Java source class.
+
+=== Three-phase transformation
+
+`TransformationEngine.transform(root, rootName)` traverses the root and its descendants; `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>` of explicit sources. Both methods invoke mappers only for sources supported by the registry. The `rootName` string names the generated model root.
+
+Sources are sorted from shallowest containment depth to deepest, counting unmapped ancestors. Sources at the same depth retain their encounter order when the collection is ordered. The engine materializes the bound mappers once and reuses that order for all three phases without modifying the source collection.
+
+The engine then executes three ordered steps:
+
+. **Creation and registration:** each mapper creates its target below the architecture's default container and immediately registers the source-to-target correspondence in `Traceability`. No feature mapping runs in this step.
+. **Containment:** mappers resolve the closest mapped owner from the source hierarchy after all targets exist. Intermediate unmapped containers are traversed, while architecture roots remain in their pre-created containers. If no mapped ancestor exists, the target keeps its initial placement. SysON's semantic move service preserves the target identity and may convert its owning membership to suit the destination. An excluded ancestor, an incompatible mapped owner, or a failed move excludes the target, removes it from the model and traceability, and records a diagnostic; descendants detect that exclusion during their own containment pass.
+. **Features:** only retained targets receive their `FeatureMapping` actions. Each action resolves related targets through the shared context, and failures produce a diagnostic for the source and feature while allowing subsequent mappings to continue.
+
+The public services are concrete single implementations: `TransformationContext`, `Traceability`, `DiagnosticsCollector`, and `MapperRegistry`. `ElementMapper` exposes the lifecycle methods `createAndRegister`, `mapContainment`, and `mapFeatures`; `FeatureMapping` stores coverage metadata and a context-aware action.
+
+The transformation context contains the model structure, identity-based traceability, diagnostics, and exclusion state. It does not contain transformation options or a deferred reference resolver.
 The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a Capella semantic editing domain with a Sirius cross-reference adapter. It requires a typed Capella `Project` root and does not create an Eclipse workspace, load an `.aird` resource, or open a Sirius session.
 Standalone loading removes TED's session-aware `DataNotifier` immediately after editing-domain creation. The notifier is only useful with a Sirius session and otherwise activates the full Sirius bundle during model notifications; the `SiriusCrossReferenceAdapter` remains installed for direct and inverse derived references.
 
@@ -242,7 +259,7 @@ The expected transformation result is 23 source `LogicalComponent` elements, 23 
 === Mapper Candidate Sources
 
 The Tycho mapping test build inventories all Capella semantic packages contributed through `org.eclipse.emf.ecore.generated_package` and writes one typed Java candidate for every non-abstract metaclass without an implemented mapper.
-For the Capella 7.0.1 baseline, it records 252 non-abstract metaclasses and generates 251 candidates under:
+For the Capella 7.0.1 baseline, it records 252 non-abstract metaclasses and generates 244 candidates after excluding the eight registered production mappers:
 
 [source,text]
 ----
@@ -391,7 +408,7 @@ Contributions must not:
 * implement a private textual SysML serializer;
 * hardcode local paths;
 * let mappers load the Arcadia library directly;
-* place transformation semantics in the dispatcher, loader, or CLI;
+* place transformation semantics in the engine orchestration, loader, or CLI;
 * keep mutable execution state in mapper instances.
 
 Contributions must:

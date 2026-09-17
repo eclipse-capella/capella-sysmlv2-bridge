@@ -50,14 +50,19 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
             return context.modelStructure().systemAnalysis().rootFunction();
         }
 
-        var parent = MapperUtils.findTargetParent(context, source, ActionUsage.class,
-                context.modelStructure().systemAnalysis().rootFunction());
-
-        var target = transverseMutationService.createFunction(parent);
+        var target = transverseMutationService.createFunction(context.modelStructure().systemAnalysis().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a System Function");
         }
         return target;
+    }
+
+    @Override
+    public void mapContainment(SystemFunction source, TransformationContext context) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return;
+        }
+        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

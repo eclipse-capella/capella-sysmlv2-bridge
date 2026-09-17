@@ -66,10 +66,13 @@ Capella metamodel package registration
 Direct .capella semantic model loading
              |
              v
-MetaclassId-based mapper dispatch
-             |
-             v
-Shared TransformationContext
+Typed mapper registry resolution
+        |
+        v
+Three-phase TransformationEngine
+        | creation and registration
+        | containment resolution
+        | feature mapping
              |
              v
 SysON SysML v2 model using Arcadia concepts
@@ -115,28 +118,29 @@ The production loader:
 * creates and disposes a Capella semantic editing domain without opening an `.aird` file or Sirius session;
 * closes model resources deterministically.
 
-Production mapping uses typed Capella APIs for `LogicalComponent` identity and names rather than reflective business-feature access.
+Production mappings use typed Capella APIs for source identity, names, and relationships rather than reflective business-feature access.
 
 === Transformation Engine
 
-Mapper identity is based on `MetaclassId(nsURI, className)`, not runtime `EClass` identity or class name alone.
+`MapperRegistry` resolves the first mapper whose typed source class is compatible with the source element, in registration order, and rejects duplicate source classes.
+There is no separate dispatcher or deferred reference resolver.
 
-`TransformationContext` owns all mutable execution state:
+`TransformationEngine` runs every transformation in three ordered steps:
 
-* source-to-target traceability;
-* generated elements;
-* deferred reference resolution;
-* diagnostics;
-* transformation options.
+. **Creation and registration:** every source target is created below its architecture-specific default container and registered immediately in identity-based `Traceability`.
+. **Containment:** once creation is complete, mappers resolve the closest mapped owners from the source hierarchy. Targets without a mapped ancestor retain their initial placement. SysON's semantic move service preserves target identity and may convert owning memberships to suit the destination. An excluded ancestor, an incompatible mapped owner, or a failed move excludes the target, removes it from the model and traceability, and adds a diagnostic; descendants detect the exclusion during their containment pass.
+. **Features:** retained targets execute their `FeatureMapping` actions. Relations resolve targets from the complete traceability and report failures per feature.
 
-All source elements are transformed in one shared context and deferred references are resolved once.
+`transform(root, rootName)` traverses the root and its descendants. `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>`. Both methods invoke registered mappers only for supported sources, sorted from shallowest containment depth to deepest, counting unmapped ancestors. Sources at the same depth retain their encounter order when the collection is ordered. The bound mappers are materialized once and reused in the same order for every phase; the source collection is unchanged.
+
+The concrete `TransformationContext` owns the model structure, identity-based `Traceability` (including exclusion state), and `DiagnosticsCollector`. The engine accepts a `rootName` string to name the generated model root; there is no transformation options object or deferred reference resolver.
 
 === Arcadia Library
 
-The Equinox transformer loads `arcadia/library/arcadia.json` from the official open-source Arcadia library artifact using Sirius EMF JSON.
+`CapellaForSysonResourceSet` in the Equinox application bundle loads `arcadia/library/arcadia.json` from the official open-source Arcadia library artifact using Sirius EMF JSON.
 
 The transformation engine locates required definitions such as `Arcadia::Component` directly in the shared `ResourceSet`.
-The generated root is attached to that resource set before mapper dispatch, so SysON services can discover the Arcadia library through `SysONEContentAdapter`.
+The generated root is attached to that resource set before target creation, so SysON services can discover the Arcadia library through `SysONEContentAdapter`.
 
 Generated models reference the external Arcadia resource and do not redefine the component concept.
 
@@ -181,35 +185,42 @@ The package-access secrets are configured. The workflow temporarily resolves `or
 
 == Current Mapping Coverage
 
-The only production semantic mapping is:
+The production semantic mappings currently include:
 
 [source,text]
 ----
-Capella LogicalComponent
+LogicalComponent, SystemComponent, PhysicalComponent, Entity
         -> SysML v2 PartUsage
         -> typed by Arcadia::Component
+
+LogicalFunction, SystemFunction, PhysicalFunction, OperationalActivity
+        -> SysML v2 ActionUsage
+        -> typed by Arcadia::Function
 ----
 
-Mapped usages are placed under:
+Mapped usages are first created below the relevant architecture root and then placed under their final source parent during the containment phase:
 
 [source,text]
 ----
-Logical Architecture / Structure
+Operational Analysis / root functions and packages
+System Analysis / Structure and Functions
+Logical Architecture / Structure and Functions
+Physical Architecture / Structure and Functions
 ----
 
 The target structure also creates the Arcadia perspective packages, root functions, and system parts required by the current model shape.
 
-No other Capella metaclass is supported in production yet.
+Other Capella metaclasses remain unsupported and are reported as candidates by the mapping inventory.
 Functional scenario placeholders do not imply implemented coverage.
 
 The Tycho mapping test build now generates typed, unregistered Java candidates from the installed Capella metamodel.
-The Capella 7.0.1 inventory contains 252 non-abstract metaclasses; after excluding the implemented `LogicalComponentMapper`, the build writes 251 candidates and a deterministic index under the mapping test module's `target/generated-mapper-sources` directory.
+The Capella 7.0.1 inventory contains 252 non-abstract metaclasses; after excluding the eight registered production mappers, the build writes 244 candidates and a deterministic index under the mapping test module's `target/generated-mapper-sources` directory.
 Generated candidates do not increase mapping or alignment coverage until their implementations, metadata, registration, and tests are completed.
 The 17 WIP-derived entries remain the curated semantic backlog and are independent from this complete structural inventory.
 
 Every successful transformation also generates deterministic JSON and Markdown semantic coverage reports under `OUTPUT_DIRECTORY/.capella2sysmlv2`.
 The reports inventory the 22 Capella semantic packages and 396 EClasses, distinguish implemented mapper coverage from the independent alignment backlog, and inventory Arcadia 0.0.3's 14 public concepts and 28 public features.
-Only `LogicalComponent -> Arcadia::Component` currently has `CONFIRMED` alignment status; candidate entries remain planning data and do not increase transformation coverage.
+The eight production mapper alignments currently have `CONFIRMED` status; candidate entries remain planning data and do not increase transformation coverage.
 `FunctionInputPort` and `FunctionOutputPort` are classified as `SYSML_STANDARD` rather than Arcadia alignments.
 These metrics are evidence and prioritization data, not build thresholds.
 
@@ -273,7 +284,7 @@ All 27 parts retain an external reference to `Arcadia::Component` after XMI relo
 
 |Extended mapping coverage
 |Not implemented
-|Only `LogicalComponent` is mapped in production.
+Eight typed Capella mappers are implemented in production; the remaining metaclasses are still candidates.
 |===
 
 == Headless Runtime Constraint
@@ -357,5 +368,5 @@ The project must not:
 * implement or maintain a private textual SysML serializer;
 * hardcode local absolute paths;
 * let mappers load or navigate the Arcadia library directly;
-* place transformation semantics in the dispatcher, loader, or CLI;
+* place transformation semantics in the engine orchestration, loader, or CLI;
 * maintain mutable execution state inside mapper instances.
