@@ -12,59 +12,90 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
+import java.util.Collection;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.DefaultArcadiaModelStructureBuilder;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.DefaultTransformationContext;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
-public final class TransformationEngine implements CapellaToSysMLTransformer {
+/**
+ * Executes a Capella to SysML transformation and resolves deferred references.
+ *
+ * @author Raphaël Pagé
+ */
+public final class TransformationEngine {
+    private static final Logger LOGGER = Logger
+            .getLogger(TransformationEngine.class.getName());
 
-    private final TransformationDispatcher dispatcher;
+    private final MapperRegistry mapperRegistry;
 
     private final ResourceSet resourceSet;
 
-    public TransformationEngine(TransformationDispatcher dispatcher, ResourceSet resourceSet) {
-        this.dispatcher = Objects.requireNonNull(dispatcher, "dispatcher must not be null");
+    /**
+     * Creates a transformation engine.
+     *
+     * @param mapperRegistry
+     *            registry used to resolve source mappers
+     * @param resourceSet
+     *            resource set receiving the generated model
+     */
+    public TransformationEngine(MapperRegistry mapperRegistry, ResourceSet resourceSet) {
+        this.mapperRegistry = Objects.requireNonNull(mapperRegistry, "mapperRegistry must not be null");
         this.resourceSet = Objects.requireNonNull(resourceSet, "resourceSet must not be null");
     }
 
-    @Override
-    public TransformationResult transform(EObject capellaRoot, TransformationOptions options) {
+    /**
+     * Transforms the supplied root and all supported descendants.
+     *
+     * @param capellaRoot
+     *            root of the Capella model to transform
+     * @param rootName
+     *            name of the root element
+     * @return the generated model and transformation metadata
+     */
+    public TransformationResult transform(EObject capellaRoot, String rootName) {
         Objects.requireNonNull(capellaRoot, "capellaRoot must not be null");
-        var sources = new java.util.ArrayList<EObject>();
-        if (this.dispatcher.supports(capellaRoot)) {
-            sources.add(capellaRoot);
-        }
-        capellaRoot.eAllContents().forEachRemaining(source -> {
-            if (this.dispatcher.supports(source)) {
-                sources.add(source);
-            }
-        });
-        return this.transformAll(sources, options);
+
+        return this.transformAll(EObjectUtils.allContents(capellaRoot), rootName);
     }
 
-    public TransformationResult transformAll(Iterable<? extends EObject> sources, TransformationOptions options) {
+    /**
+     * Transforms the supplied sources and resolves deferred references.
+     * <p>
+     * Sources are processed in encounter order, with containment resolved during target creation.
+     *
+     * @param sources
+     *            source elements to transform
+     * @param rootName
+     *            name of the root element
+     * @return the generated model and transformation metadata
+     */
+    public TransformationResult transformAll(Collection<? extends EObject> sources, String rootName) {
         Objects.requireNonNull(sources, "sources must not be null");
-        Objects.requireNonNull(options, "options must not be null");
+        Objects.requireNonNull(rootName, "rootName must not be null");
 
-        var modelStructure = new DefaultArcadiaModelStructureBuilder().build(options, this.resourceSet);
-        var targetResource = new ResourceImpl(URI.createURI(
-                "transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
+        LOGGER.info("Starting building the mappers ...");
+        var modelStructure = new ArcadiaModelStructureBuilder().build(rootName, this.resourceSet);
+        var targetResource = new ResourceImpl(URI.createURI("transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
         this.resourceSet.getResources().add(targetResource);
         targetResource.getContents().add(modelStructure.root());
-        var context = new DefaultTransformationContext(options, modelStructure);
+        var context = new TransformationContext(modelStructure);
+
         for (EObject source : sources) {
-            this.dispatcher.dispatch(Objects.requireNonNull(source, "source must not be null"), context);
+            this.mapperRegistry.get(Objects.requireNonNull(source, "source must not be null"))
+                    .ifPresent(mapper -> mapper.transform(context));
         }
-        context.deferredReferenceResolver().resolveAll();
-        return new TransformationResult(modelStructure.root(), context.diagnostics().all(),
-                context.traceability());
+        context.resolveDeferredReferences();
+
+        return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability());
     }
+
 }

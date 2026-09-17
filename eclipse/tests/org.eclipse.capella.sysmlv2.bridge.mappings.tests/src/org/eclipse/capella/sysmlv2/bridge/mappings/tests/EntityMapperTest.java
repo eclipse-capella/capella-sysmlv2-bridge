@@ -15,9 +15,7 @@ import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet
 import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 
 class EntityMapperTest {
     private final TransverseQueryService transverseQueryService = new TransverseQueryService();
@@ -30,11 +28,11 @@ class EntityMapperTest {
         source.setActor(true);
         source.setHuman(true);
         var engine = new TransformationEngine(
-                new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
+                new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet());
 
         var result = engine.transform(source,
-                new TransformationOptions(false, false, false, "IFE", "In-Flight Entertainment System"));
+                "IFE");
 
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());

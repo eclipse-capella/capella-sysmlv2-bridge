@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 /**
@@ -111,9 +111,9 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
      *
      * @return the feature mappings
      */
-    public abstract List<FeatureMapping<S, T>> getFeatureMappings();
+    public abstract List<FeatureMapping<S>> getFeatureMappings();
 
     private void transformFeatures(S source, T target, TransformationContext context) {
-        this.getFeatureMappings().forEach(mapping -> mapping.transform(source, target, context));
+        this.getFeatureMappings().forEach(mapping -> mapping.transform(source, context));
     }
 }

@@ -17,41 +17,40 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DefaultDiagnostics;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultDeferredReferenceResolver;
 
-class DefaultDeferredReferenceResolverTest {
+class DeferredReferencesTest {
 
     @Test
     void resolvesDeferredActionsInOrder() {
-        var diagnostics = new DefaultDiagnostics();
-        var resolver = new DefaultDeferredReferenceResolver(diagnostics);
+        var resolver = TestContexts.create();
+        var diagnostics = resolver.diagnostics();
         var executed = new ArrayList<String>();
 
         resolver.defer(null, () -> executed.add("first"));
         resolver.defer(null, () -> executed.add("second"));
 
-        resolver.resolveAll();
+        resolver.resolveDeferredReferences();
 
         assertThat(executed).containsExactly("first", "second");
-        assertThat(resolver.pendingSources()).isEmpty();
-        assertThat(diagnostics.all()).isEmpty();
+        resolver.resolveDeferredReferences();
+        assertThat(executed).containsExactly("first", "second");
+        assertThat(diagnostics.collect()).isEmpty();
     }
 
     @Test
     void reportsDiagnosticWhenDeferredActionFails() {
         var source = TestEObjects.create("http://example.org/capella", "LogicalComponent");
-        var diagnostics = new DefaultDiagnostics();
-        var resolver = new DefaultDeferredReferenceResolver(diagnostics);
+        var resolver = TestContexts.create();
+        var diagnostics = resolver.diagnostics();
 
         resolver.defer(source, () -> {
             throw new IllegalStateException("missing target");
         });
 
-        resolver.resolveAll();
+        resolver.resolveDeferredReferences();
 
-        assertThat(diagnostics.all()).singleElement().satisfies(diagnostic -> {
+        assertThat(diagnostics.collect()).singleElement().satisfies(diagnostic -> {
             assertThat(diagnostic.severity()).isEqualTo(DiagnosticSeverity.ERROR);
             assertThat(diagnostic.source()).isSameAs(source);
             assertThat(diagnostic.message()).contains("missing target");

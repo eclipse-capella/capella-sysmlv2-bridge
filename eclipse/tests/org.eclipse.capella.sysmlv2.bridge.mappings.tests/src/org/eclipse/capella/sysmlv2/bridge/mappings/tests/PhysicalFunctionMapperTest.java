@@ -18,9 +18,7 @@ import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.Package;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.DefaultMapperRegistry;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationDispatcher;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.polarsys.capella.core.data.pa.PaFactory;
 
 /**
@@ -39,9 +37,9 @@ class PhysicalFunctionMapperTest {
         var child = PaFactory.eINSTANCE.createPhysicalFunction();
         child.setName("Set torque");
         source.getOwnedFunctions().add(child);
-        var result = new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
+        var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet()).transform(source,
-                        new TransformationOptions(false, false, false, "IFE", "IFE"));
+                        "IFE");
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Drive actuator", target.getDeclaredName());
@@ -66,9 +64,9 @@ class PhysicalFunctionMapperTest {
         source.getOwnedPhysicalFunctionPkgs().add(packageSource);
         packageSource.getOwnedPhysicalFunctions().add(child);
 
-        var result = new TransformationEngine(new TransformationDispatcher(new DefaultMapperRegistry(CapellaMapperCatalog.createMappers())),
+        var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet()).transform(source,
-                        new TransformationOptions(false, false, false, "IFE", "IFE"));
+                        "IFE");
 
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());

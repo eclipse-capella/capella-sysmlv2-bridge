@@ -22,9 +22,8 @@ import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.SimpleFeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
@@ -116,7 +115,7 @@ class TransformationCoverageAnalyzerTest {
 
     private static final class TestMapper<T extends EObject> extends ElementMapper<T, EObject> {
 
-        private final List<FeatureMapping<T, EObject>> mappings;
+        private final List<FeatureMapping<T>> mappings;
 
         private final Set<String> ignoredFeatures;
 
@@ -128,13 +127,13 @@ class TransformationCoverageAnalyzerTest {
                     .toList();
         }
 
-        private FeatureMapping<T, EObject> mapping(String feature) {
-            return new SimpleFeatureMapping<>(feature, feature, (source, target) -> {
+        private FeatureMapping<T> mapping(String feature) {
+            return new FeatureMapping<>(feature, feature, (source, context) -> {
             });
         }
 
         @Override
-        public List<FeatureMapping<T, EObject>> getFeatureMappings() {
+        public List<FeatureMapping<T>> getFeatureMappings() {
             return mappings;
         }
 

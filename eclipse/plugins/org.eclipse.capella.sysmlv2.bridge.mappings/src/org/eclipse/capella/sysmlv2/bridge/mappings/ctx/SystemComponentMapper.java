@@ -24,7 +24,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.ctx.SystemComponent;
 
@@ -41,9 +41,9 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
     }
 
     @Override
-    public List<FeatureMapping<SystemComponent, PartUsage>> getFeatureMappings() {
-        List<FeatureMapping<SystemComponent, PartUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<SystemComponent, PartUsage>> componentMappings = FeatureMappingCatalog.getComponentMappings();
+    public List<FeatureMapping<SystemComponent>> getFeatureMappings() {
+        List<FeatureMapping<SystemComponent>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<SystemComponent>> componentMappings = FeatureMappingCatalog.getComponentMappings();
 
         return Stream.concat(
                 arcadiaElementMappings.stream(),
@@ -68,7 +68,7 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
         }
 
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create a System Component");
+            context.diagnostics().addError(source, "Unable to create a System Component");
             return null;
         }
         // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing

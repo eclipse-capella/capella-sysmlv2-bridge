@@ -20,7 +20,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.la.LogicalFunction;
 
@@ -37,9 +37,9 @@ public final class LogicalFunctionMapper extends ElementMapper<LogicalFunction, 
     }
 
     @Override
-    public List<FeatureMapping<LogicalFunction, ActionUsage>> getFeatureMappings() {
-        List<FeatureMapping<LogicalFunction, ActionUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<LogicalFunction, ActionUsage>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
+    public List<FeatureMapping<LogicalFunction>> getFeatureMappings() {
+        List<FeatureMapping<LogicalFunction>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<LogicalFunction>> functionMappings = FeatureMappingCatalog.getFunctionMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), functionMappings.stream()).toList();
     }
@@ -55,7 +55,7 @@ public final class LogicalFunctionMapper extends ElementMapper<LogicalFunction, 
 
         var target = transverseMutationService.createFunction(parent);
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create a Logical Function");
+            context.diagnostics().addError(source, "Unable to create a Logical Function");
         }
         return target;
     }

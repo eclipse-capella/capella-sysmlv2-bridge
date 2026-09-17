@@ -25,7 +25,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
@@ -44,9 +44,9 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
     }
 
     @Override
-    public List<FeatureMapping<LogicalComponent, PartUsage>> getFeatureMappings() {
-        List<FeatureMapping<LogicalComponent, PartUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<LogicalComponent, PartUsage>> componentMappings = FeatureMappingCatalog.getComponentMappings();
+    public List<FeatureMapping<LogicalComponent>> getFeatureMappings() {
+        List<FeatureMapping<LogicalComponent>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<LogicalComponent>> componentMappings = FeatureMappingCatalog.getComponentMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), componentMappings.stream()).toList();
     }
@@ -68,7 +68,7 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
         }
 
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create an Logical Component");
+            context.diagnostics().addError(source, "Unable to create an Logical Component");
             return null;
         }
 

@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -32,10 +33,27 @@ public final class EObjectUtils {
 
     /**
      * Returns the root and all its descendants.
+     *
+     * @param root
+     *            root object to traverse
+     * @return the root followed by all descendants in traversal order
      */
     public static List<EObject> allContents(EObject root) {
-        return Stream.concat(Stream.of(root),
-                StreamSupport.stream(Spliterators.spliteratorUnknownSize(root.eAllContents(), 0), false))
-                .toList();
+        return Stream.concat(Stream.of(root), allDescendants(root)).toList();
+    }
+
+    /**
+     * Returns all the descendants of root.
+     *
+     * @param root
+     *            root object to traverse
+     * @return a stream of descendants in traversal order
+     */
+    public static Stream<EObject> allDescendants(EObject root) {
+        return toStream(root.eAllContents());
+    }
+
+    public static <S> Stream<S> toStream(Iterator<S> iterator) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
     }
 }

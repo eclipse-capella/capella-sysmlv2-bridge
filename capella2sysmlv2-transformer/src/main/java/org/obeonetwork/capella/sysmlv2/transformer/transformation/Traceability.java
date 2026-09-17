@@ -12,20 +12,37 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 
+import java.util.IdentityHashMap;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.emf.ecore.EObject;
 
-/**
- * Associates source elements with their transformed targets.
- *
- * @author Raphaël Pagé
- */
-public interface Traceability {
+public final class Traceability {
 
-    void register(EObject source, EObject target);
+    private static final String TARGET_MUST_NOT_BE_NULL = "target must not be null";
 
-    Optional<EObject> lookupTarget(EObject source);
+    private static final String SOURCE_MUST_NOT_BE_NULL = "source must not be null";
 
-    boolean contains(EObject source);
+    private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
+
+    public void register(EObject source, EObject target) {
+        Objects.requireNonNull(source, SOURCE_MUST_NOT_BE_NULL);
+        Objects.requireNonNull(target, TARGET_MUST_NOT_BE_NULL);
+
+        var existing = this.mappings.putIfAbsent(source, target);
+        if (existing != null && existing != target) {
+            throw new IllegalStateException("A target is already registered for source " + source);
+        }
+    }
+
+    public Optional<EObject> lookupTarget(EObject source) {
+        Objects.requireNonNull(source, "source must not be null");
+        return Optional.ofNullable(this.mappings.get(source));
+    }
+
+    public boolean contains(EObject source) {
+        Objects.requireNonNull(source, "source must not be null");
+        return this.mappings.containsKey(source);
+    }
 }

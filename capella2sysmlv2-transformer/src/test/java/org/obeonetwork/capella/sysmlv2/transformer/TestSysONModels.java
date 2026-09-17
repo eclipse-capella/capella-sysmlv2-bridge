@@ -18,6 +18,7 @@ import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.syson.sysml.ActionDefinition;
 import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.Package;
 import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.SysmlFactory;
 
@@ -34,7 +35,7 @@ final class TestSysONModels {
         return arcadiaPackage;
     }
 
-    static org.eclipse.syson.sysml.Package arcadiaPackageWithWrongComponentType() {
+    static Package arcadiaPackageWithWrongComponentType() {
         var arcadiaPackage = SysmlFactory.eINSTANCE.createPackage();
         arcadiaPackage.setDeclaredName("Arcadia");
         var wrongComponent = SysmlFactory.eINSTANCE.createAttributeDefinition();

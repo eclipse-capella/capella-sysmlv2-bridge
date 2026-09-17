@@ -12,12 +12,9 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.arcadia;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.syson.sysml.ActionDefinition;
 import org.eclipse.syson.sysml.ActionUsage;
@@ -28,14 +25,14 @@ import org.eclipse.syson.sysml.PartDefinition;
 import org.eclipse.syson.sysml.PartUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.eclipse.syson.sysml.Type;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationOptions;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 
 /**
  * Builds the standard Arcadia model structure used by a transformation.
  * 
  * @author Raphaël Pagé
  */
-public final class DefaultArcadiaModelStructureBuilder {
+public final class ArcadiaModelStructureBuilder {
     public static final String REQUIREMENTS_PACKAGE = "Requirements";
 
     public static final String STRUCTURE_PACKAGE = "Structure";
@@ -62,8 +59,7 @@ public final class DefaultArcadiaModelStructureBuilder {
 
     public static final String ROOT_FUNCTION = "Root Function";
 
-    private static final List<String> STANDARD_PACKAGES = List.of(FUNCTIONS_PACKAGE, CAPABILITIES_PACKAGE, INTERFACES_PACKAGE, DATA_PACKAGE,
-            STRUCTURE_PACKAGE, REQUIREMENTS_PACKAGE);
+    public static final String MODEL_DEFAULT_NAME = "Model";
 
     /**
      * Builds the standard Arcadia model structure used by a transformation.
@@ -74,8 +70,8 @@ public final class DefaultArcadiaModelStructureBuilder {
      *            the resource set containing the Arcadia library
      * @return the generated model structure
      */
-    public ArcadiaModelStructure build(TransformationOptions options, ResourceSet resourceSet) {
-        Objects.requireNonNull(options, "options must not be null");
+    public ArcadiaModelStructure build(String rootName, ResourceSet resourceSet) {
+        Objects.requireNonNull(rootName, "options must not be null");
         Objects.requireNonNull(resourceSet, "resourceSet must not be null");
 
         var componentDefinition = resolveDefinition(resourceSet,
@@ -83,7 +79,7 @@ public final class DefaultArcadiaModelStructureBuilder {
         var functionDefinition = resolveDefinition(resourceSet,
                 "Arcadia::Function", ActionDefinition.class);
         var root = SysmlFactory.eINSTANCE.createOccurrenceDefinition();
-        root.setDeclaredName(options.modelShortName());
+        root.setDeclaredName(rootName);
 
         var operationalAnalysis = createPerspective(root, OPERATIONAL_ANALYSIS_PERSPECTIVE, componentDefinition, functionDefinition, false);
         var systemAnalysis = createPerspective(root, SYSTEM_ANALYSIS_PERSPECTIVE, componentDefinition, functionDefinition, true);
@@ -99,23 +95,20 @@ public final class DefaultArcadiaModelStructureBuilder {
             Class<T> expectedType) {
         var definition = resourceSet.getResources().stream()
                 .flatMap(resource -> resource.getContents().stream())
-                .flatMap(DefaultArcadiaModelStructureBuilder::descendants)
+                .flatMap(root -> EObjectUtils.allContents(root).stream())
                 .filter(Element.class::isInstance)
                 .map(Element.class::cast)
                 .filter(element -> qualifiedName.equals(element.getQualifiedName()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
                         "Unable to resolve required Arcadia definition: " + qualifiedName));
+
         if (!expectedType.isInstance(definition)) {
             throw new IllegalStateException(qualifiedName + " must be a SysON "
                     + expectedType.getSimpleName() + " but was " + definition.eClass().getName());
         }
-        return expectedType.cast(definition);
-    }
 
-    private static Stream<EObject> descendants(EObject object) {
-        return Stream.concat(Stream.of(object), object.eContents().stream()
-                .flatMap(DefaultArcadiaModelStructureBuilder::descendants));
+        return expectedType.cast(definition);
     }
 
     private static ArcadiaPerspectiveStructure createPerspective(Element owner, String name, PartDefinition componentDefinition,
@@ -123,42 +116,32 @@ public final class DefaultArcadiaModelStructureBuilder {
         var perspectivePackage = createPackage(name);
         addOwnedElement(owner, perspectivePackage);
 
-        Package functionsPackage = null;
-        Package capabilitiesPackage = null;
-        Package interfacesPackage = null;
-        Package dataPackage = null;
-        Package structurePackage = null;
-        Package requirementsPackage = null;
-        ActionUsage rootFunction = null;
-        PartUsage systemPart = null;
-        for (var childName : STANDARD_PACKAGES) {
-            var childPackage = createPackage(childName);
-            addOwnedElement(perspectivePackage, childPackage);
-            switch (childName) {
-                case FUNCTIONS_PACKAGE -> {
-                    functionsPackage = childPackage;
-                    rootFunction = addRootFunction(childPackage, functionDefinition);
-                }
-                case CAPABILITIES_PACKAGE -> capabilitiesPackage = childPackage;
-                case INTERFACES_PACKAGE -> interfacesPackage = childPackage;
-                case DATA_PACKAGE -> dataPackage = childPackage;
-                case STRUCTURE_PACKAGE -> {
-                    structurePackage = childPackage;
-                    if (createSystemPart) {
-                        systemPart = addSystemPart(childPackage, componentDefinition);
-                    }
-                }
-                case REQUIREMENTS_PACKAGE -> requirementsPackage = childPackage;
-                default -> throw new IllegalStateException("Unexpected standard package: " + childName);
-            }
-        }
+        var functionsPackage = createPackage(FUNCTIONS_PACKAGE);
+        addOwnedElement(perspectivePackage, functionsPackage);
+        var rootFunction = addRootFunction(functionsPackage, functionDefinition);
+
+        var capabilitiesPackage = createPackage(CAPABILITIES_PACKAGE);
+        addOwnedElement(perspectivePackage, capabilitiesPackage);
+
+        var interfacesPackage = createPackage(INTERFACES_PACKAGE);
+        addOwnedElement(perspectivePackage, interfacesPackage);
+
+        var dataPackage = createPackage(DATA_PACKAGE);
+        addOwnedElement(perspectivePackage, dataPackage);
+
+        var structurePackage = createPackage(STRUCTURE_PACKAGE);
+        addOwnedElement(perspectivePackage, structurePackage);
+        var systemPart = createSystemPart ? addSystemPart(structurePackage, componentDefinition) : null;
+
+        var requirementsPackage = createPackage(REQUIREMENTS_PACKAGE);
+        addOwnedElement(perspectivePackage, requirementsPackage);
 
         return new ArcadiaPerspectiveStructure(perspectivePackage, functionsPackage,
                 capabilitiesPackage, interfacesPackage, dataPackage, structurePackage,
                 requirementsPackage, rootFunction, Optional.ofNullable(systemPart));
     }
 
-    private static org.eclipse.syson.sysml.Package createPackage(String name) {
+    private static Package createPackage(String name) {
         var sysmlPackage = SysmlFactory.eINSTANCE.createPackage();
         sysmlPackage.setDeclaredName(name);
         return sysmlPackage;
@@ -167,10 +150,13 @@ public final class DefaultArcadiaModelStructureBuilder {
     private static ActionUsage addRootFunction(Element owner, ActionDefinition functionDefinition) {
         var rootFunction = SysmlFactory.eINSTANCE.createActionUsage();
         rootFunction.setDeclaredName(ROOT_FUNCTION);
+
         var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
         typing.setTypedFeature(rootFunction);
         typing.setType(functionDefinition);
+
         rootFunction.getOwnedRelationship().add(typing);
+
         addOwnedElement(owner, rootFunction);
         return rootFunction;
     }

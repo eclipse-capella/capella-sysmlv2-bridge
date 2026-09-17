@@ -24,7 +24,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.feature.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.oa.Entity;
 
@@ -41,9 +41,9 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     }
 
     @Override
-    public List<FeatureMapping<Entity, PartUsage>> getFeatureMappings() {
-        List<FeatureMapping<Entity, PartUsage>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
-        List<FeatureMapping<Entity, PartUsage>> componentMappings = FeatureMappingCatalog.getComponentMappings();
+    public List<FeatureMapping<Entity>> getFeatureMappings() {
+        List<FeatureMapping<Entity>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
+        List<FeatureMapping<Entity>> componentMappings = FeatureMappingCatalog.getComponentMappings();
 
         return Stream.concat(arcadiaElementMappings.stream(), componentMappings.stream()).toList();
     }
@@ -57,7 +57,7 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
                 : transverseMutationService.createComponent(parent);
 
         if (target == null) {
-            context.diagnostics().error(source, "Unable to create an Operational Entity");
+            context.diagnostics().addError(source, "Unable to create an Operational Entity");
             return null;
         }
 

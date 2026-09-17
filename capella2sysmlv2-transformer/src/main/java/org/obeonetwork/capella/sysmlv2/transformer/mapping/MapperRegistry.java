@@ -12,6 +12,9 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.mapping;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.emf.ecore.EObject;
@@ -21,10 +24,35 @@ import org.eclipse.emf.ecore.EObject;
  *
  * @author Raphaël Pagé
  */
-public interface MapperRegistry {
+public final class MapperRegistry {
+    private final Collection<ElementMapper<?, ?>> mappers;
+
+    public MapperRegistry(Collection<? extends ElementMapper<?, ?>> mappers) {
+        Objects.requireNonNull(mappers);
+
+        var registered = new LinkedHashMap<Class<?>, ElementMapper<?, ?>>();
+
+        for (var mapper : mappers) {
+            if (registered.putIfAbsent(mapper.getSourceClass(), Objects.requireNonNull(mapper)) != null) {
+                throw new IllegalArgumentException("Duplicate mapper registration for " + mapper.getSourceClass());
+            }
+        }
+
+        this.mappers = registered.values();
+    }
 
     /**
-     * Returns the mapper supporting the supplied source element, if any.
+     * Returns the first compatible mapper bound to the supplied source element, if any.
+     *
+     * @param source
+     *            source element to resolve
+     * @return the bound mapper, when one exists
      */
-    Optional<ElementMapper<?, ?>> get(EObject sourceType);
+    public Optional<BoundMapper<?>> get(EObject source) {
+        Objects.requireNonNull(source);
+        return mappers.stream()
+                .filter(mapper -> mapper.getSourceClass().isInstance(source))
+                .findFirst()
+                .map(mapper -> new BoundMapper<>(mapper, source));
+    }
 }
