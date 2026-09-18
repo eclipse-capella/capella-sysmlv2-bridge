@@ -175,7 +175,7 @@ public final class TransformationCoverageAnalyzer {
 
         var usedFeatures = mappers.stream()
                 .flatMap(mapper -> mapper.getFeatureMappings().stream())
-                .map(FeatureMapping::sysmlFeature)
+                .map(FeatureMapping::getSysmlFeature)
                 .filter(feature -> feature.startsWith("Arcadia::"))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -208,8 +208,8 @@ public final class TransformationCoverageAnalyzer {
     private static Map<String, String> featureTargets(ElementMapper<?, ?> mapper) {
         var result = new LinkedHashMap<String, String>();
         for (var mapping : mapper.getFeatureMappings()) {
-            if (result.putIfAbsent(mapping.capellaFeature(), mapping.sysmlFeature()) != null) {
-                throw new IllegalArgumentException("Duplicate mapping for " + mapping.capellaFeature());
+            if (result.putIfAbsent(mapping.getCapellaFeature(), mapping.getSysmlFeature()) != null) {
+                throw new IllegalArgumentException("Duplicate mapping for " + mapping.getCapellaFeature());
             }
         }
         return result;

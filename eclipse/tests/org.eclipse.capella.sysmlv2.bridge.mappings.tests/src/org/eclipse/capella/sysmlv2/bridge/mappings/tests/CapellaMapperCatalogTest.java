@@ -15,6 +15,8 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
 import org.junit.jupiter.api.Test;
@@ -22,12 +24,11 @@ import org.junit.jupiter.api.Test;
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(10, CapellaMapperCatalog.createMappers().size());
+        assertEquals(11, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
-        assertEquals(java.util.List.of("ctx", "fa", "information", "la", "oa", "pa"),
-                java.util.List.copyOf(backlog.keySet()));
-        assertEquals(java.util.List.of("ComponentExchangeMapper", "ComponentPortMapper", "FunctionalChainMapper",
-                "FunctionalExchangeMapper"),
+        assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
+                List.copyOf(backlog.keySet()));
+        assertEquals(List.of("ComponentExchangeMapper", "FunctionalChainMapper", "FunctionalExchangeMapper"),
                 backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
         assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
                 .noneMatch(entry -> entry.mapperName().endsWith("FunctionMapper")
