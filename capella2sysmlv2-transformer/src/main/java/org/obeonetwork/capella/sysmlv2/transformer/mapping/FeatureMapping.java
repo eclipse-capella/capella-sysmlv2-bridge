@@ -26,12 +26,25 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
  *
  * @author Raphaël Pagé
  */
-public record FeatureMapping<S extends EObject>(String capellaFeature, String sysmlFeature, BiConsumer<S, TransformationContext> transformation) {
+public class FeatureMapping<S extends EObject> {
+    private final String capellaFeature;
 
-    public FeatureMapping {
-        Objects.requireNonNull(capellaFeature, "capellaFeature must not be null");
-        Objects.requireNonNull(sysmlFeature, "sysmlFeature must not be null");
-        Objects.requireNonNull(transformation, "transformation must not be null");
+    private final String sysmlFeature;
+
+    private final BiConsumer<S, TransformationContext> transformation;
+
+    public FeatureMapping(String capellaFeature, String sysmlFeature, BiConsumer<S, TransformationContext> transformation) {
+        this.capellaFeature = Objects.requireNonNull(capellaFeature, "capellaFeature must not be null");
+        this.sysmlFeature = Objects.requireNonNull(sysmlFeature, "sysmlFeature must not be null");
+        this.transformation = Objects.requireNonNull(transformation, "transformation must not be null");
+    }
+
+    public String getCapellaFeature() {
+        return capellaFeature;
+    }
+
+    public String getSysmlFeature() {
+        return sysmlFeature;
     }
 
     /**
@@ -45,5 +58,4 @@ public record FeatureMapping<S extends EObject>(String capellaFeature, String sy
     public void transform(S source, TransformationContext context) {
         transformation.accept(source, context);
     }
-
 }

@@ -121,7 +121,7 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
                 try {
                     mapping.transform(source, context);
                 } catch (RuntimeException exception) {
-                    context.diagnostics().addError(source, "Unable to map feature " + mapping.capellaFeature() + ": "
+                    context.diagnostics().addError(source, "Unable to map feature " + mapping.getCapellaFeature() + ": "
                             + exception.getMessage());
                 }
             });

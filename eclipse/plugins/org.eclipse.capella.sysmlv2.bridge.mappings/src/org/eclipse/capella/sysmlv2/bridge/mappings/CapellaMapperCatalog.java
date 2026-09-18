@@ -19,6 +19,7 @@ import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionInputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
@@ -65,7 +66,7 @@ public final class CapellaMapperCatalog {
         return List.of(new LogicalComponentMapper(), new EntityMapper(), new SystemComponentMapper(),
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
-                new FunctionOutputPortMapper());
+                new FunctionOutputPortMapper(), new ComponentPortMapper());
     }
 
     /**
@@ -89,7 +90,6 @@ public final class CapellaMapperCatalog {
                 candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
                 candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
-                candidate(FaPackage.Literals.COMPONENT_PORT, "Arcadia::ComponentPort"),
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
                 candidate(FaPackage.Literals.FUNCTIONAL_EXCHANGE, "Arcadia::FunctionalExchange"),
                 candidate(InformationPackage.Literals.EXCHANGE_ITEM, "Arcadia::ExchangeItem"),
@@ -100,15 +100,15 @@ public final class CapellaMapperCatalog {
 
     private static MetaclassAlignment alignment(ElementMapper<?, ?> mapper) {
         var features = mapper.getFeatureMappings().stream()
-                .sorted(java.util.Comparator.comparing(FeatureMapping::capellaFeature))
+                .sorted(java.util.Comparator.comparing(FeatureMapping::getCapellaFeature))
                 .map(feature -> {
                     AlignmentStatus alignment;
-                    if (feature.sysmlFeature().startsWith("Arcadia::")) {
+                    if (feature.getSysmlFeature().startsWith("Arcadia::")) {
                         alignment = AlignmentStatus.CONFIRMED;
                     } else {
                         alignment = AlignmentStatus.SYSML_STANDARD;
                     }
-                    return new FeatureAlignment(feature.capellaFeature(), feature.sysmlFeature(), alignment);
+                    return new FeatureAlignment(feature.getCapellaFeature(), feature.getSysmlFeature(), alignment);
                 })
                 .toList();
         return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTargetQualifiedName(), AlignmentStatus.CONFIRMED, features);
@@ -131,7 +131,6 @@ public final class CapellaMapperCatalog {
                 entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION)));
         result.put("fa", List.of(
                 entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE),
-                entry("fa", "ComponentPortMapper", FaPackage.Literals.COMPONENT_PORT),
                 entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN),
                 entry("fa", "FunctionalExchangeMapper", FaPackage.Literals.FUNCTIONAL_EXCHANGE)));
         result.put("information", List.of(

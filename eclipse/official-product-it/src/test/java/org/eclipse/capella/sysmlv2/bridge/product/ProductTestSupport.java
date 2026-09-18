@@ -106,14 +106,14 @@ final class ProductTestSupport {
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Capella Transformation Coverage: 10/252 (3.97%)"),
+                        "Capella Transformation Coverage: 11/252 (4.37%)"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Arcadia SysML v2 Library Utilization: 7/46 (15.22%)"),
+                        "Arcadia SysML v2 Library Utilization: 10/46 (21.74%)"),
                 execution.output());
         assertTrue(execution.output().contains(
-                "Arcadia SysML v2 Library Coverage of Capella: 10/252 (3.97%)"),
+                "Arcadia SysML v2 Library Coverage of Capella: 11/252 (4.37%)"),
                 execution.output());
 
         var xmiModel = applicationOutput
