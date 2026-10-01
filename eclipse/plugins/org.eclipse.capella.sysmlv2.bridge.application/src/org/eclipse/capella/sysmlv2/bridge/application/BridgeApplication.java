@@ -14,6 +14,9 @@ package org.eclipse.capella.sysmlv2.bridge.application;
 
 import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.RUNTIME_ENVIRONMENT_FAILURE;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.eclipse.equinox.app.IApplication;
@@ -22,6 +25,8 @@ import org.obeonetwork.capella.sysmlv2.cli.Capella2SysMLV2Command;
 
 public final class BridgeApplication implements IApplication {
 
+    private static final String RESOURCES_LOGGING_PROPERTIES = "/resources/logging.properties";
+    
     private static final Logger LOGGER = Logger
             .getLogger(BridgeApplication.class.getName());
 
@@ -34,6 +39,15 @@ public final class BridgeApplication implements IApplication {
         if (this.stopping) {
             return RUNTIME_ENVIRONMENT_FAILURE;
         }
+        
+        try {
+        	InputStream configFile = BridgeApplication.class.getResourceAsStream(RESOURCES_LOGGING_PROPERTIES);
+            LogManager.getLogManager().readConfiguration(configFile);
+            configFile.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
         var command = new Capella2SysMLV2Command(
                 new EquinoxTransformationService());
         return command.execute(arguments, LOGGER::info, LOGGER::severe);
