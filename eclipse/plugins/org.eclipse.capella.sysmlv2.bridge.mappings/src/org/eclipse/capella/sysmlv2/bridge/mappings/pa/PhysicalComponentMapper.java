@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.PartUsage;
@@ -33,7 +33,8 @@ import org.polarsys.capella.core.data.pa.PhysicalComponent;
  * @author Raphaël Pagé
  */
 public final class PhysicalComponentMapper extends ElementMapper<PhysicalComponent, PartUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+    
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public PhysicalComponentMapper() {
         super(PhysicalComponent.class, ARCADIA_COMPONENT);
@@ -55,9 +56,9 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
 
         PartUsage target;
         if (source.isActor()) {
-            target = transverseMutationService.createActor(context.modelStructure().physicalArchitecture().structurePackage());
+            target = COMMON_CREATION_SERVICE.createActor(context.modelStructure().physicalArchitecture().structurePackage());
         } else {
-            target = transverseMutationService.createComponent(context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
+            target = COMMON_CREATION_SERVICE.createComponent(context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
         }
 
         if (target == null) {

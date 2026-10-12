@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.ActionUsage;
@@ -27,7 +27,8 @@ import org.polarsys.capella.core.data.ctx.CtxFactory;
  * @author Raphaël Pagé
  */
 class SystemFunctionMapperTest {
-    private final TransverseQueryService queryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsSystemFunctionAndItsSubFunction() {
@@ -49,9 +50,9 @@ class SystemFunctionMapperTest {
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Control system", target.getDeclaredName());
-        assertEquals("Controls the system", queryService.getArcadiaElementDescription(target));
-        assertTrue(queryService.isFunction(target));
-        assertSame(target, queryService.getParentFunction(childTarget).orElseThrow());
+        assertEquals("Controls the system", COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
+        assertTrue(COMMON_QUERY_SERVICE.isFunction(target));
+        assertSame(target, COMMON_QUERY_SERVICE.getParentFunction(childTarget).orElseThrow());
         var rootFunction = assertInstanceOf(ActionUsage.class,
                 assertInstanceOf(OwningMembership.class, target.eContainer()).eContainer());
         assertEquals("Root Function", rootFunction.getDeclaredName());

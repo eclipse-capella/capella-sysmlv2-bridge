@@ -69,6 +69,16 @@
             <artifactId>sirius-components-core</artifactId>
             <version>${sirius-web.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons-text.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -85,7 +95,7 @@
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                            <includeArtifactIds>capella2sysmlv2-transformer,capella-model-services,syson-model-services,capella-model-transverse-services,slf4j-api,syson-services,syson-sysml-metamodel,syson-sysml-metamodel-services,sirius-components-core</includeArtifactIds>
+                            <includeArtifactIds>capella2sysmlv2-transformer,capella-model-services,syson-model-services,capella-model-transverse-services,slf4j-api,syson-services,syson-sysml-metamodel,syson-sysml-metamodel-services,sirius-components-core,commons-text,commons-lang3</includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                         </configuration>
                     </execution>

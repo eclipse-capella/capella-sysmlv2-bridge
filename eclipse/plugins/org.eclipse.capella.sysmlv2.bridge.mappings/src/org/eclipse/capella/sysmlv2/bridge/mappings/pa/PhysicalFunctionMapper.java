@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
@@ -30,7 +30,8 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
  * @author Raphaël Pagé
  */
 public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction, ActionUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public PhysicalFunctionMapper() {
         super(PhysicalFunction.class, ARCADIA_FUNCTION);
@@ -55,7 +56,7 @@ public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction
             return context.modelStructure().physicalArchitecture().rootFunction();
         }
 
-        var target = transverseMutationService.createFunction(context.modelStructure().physicalArchitecture().rootFunction());
+        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().physicalArchitecture().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a Physical Function");
         }

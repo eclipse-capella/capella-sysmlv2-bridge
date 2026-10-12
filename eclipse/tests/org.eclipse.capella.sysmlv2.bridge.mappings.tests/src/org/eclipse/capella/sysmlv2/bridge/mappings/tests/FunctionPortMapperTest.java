@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.emf.common.util.URI;
@@ -37,7 +37,8 @@ import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.pa.PaFactory;
 
 class FunctionPortMapperTest {
-    private final TransverseQueryService queryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsSystemFunctionPorts() {
@@ -101,9 +102,9 @@ class FunctionPortMapperTest {
             FeatureDirectionKind direction) {
         ItemUsage target = assertInstanceOf(ItemUsage.class, value);
         assertEquals(name, target.getDeclaredName());
-        assertEquals(description, queryService.getArcadiaElementDescription(target));
+        assertEquals(description, COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
         assertEquals(direction, target.getDirection());
         assertSame(functionTarget, target.getOwningUsage());
-        assertTrue(queryService.isExchangeItem(target));
+        assertTrue(COMMON_QUERY_SERVICE.isExchangeItem(target));
     }
 }

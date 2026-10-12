@@ -23,7 +23,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.Feature;
@@ -45,7 +46,10 @@ import org.polarsys.capella.core.data.fa.ComponentPort;
  * @author Raphaël Pagé
  */
 public final class ComponentPortMapper extends ElementMapper<ComponentPort, PortUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
+
+    private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
 
     public ComponentPortMapper() {
         super(ComponentPort.class, ARCADIA_COMPONENT_PORT);
@@ -97,7 +101,7 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
                 .map(FeatureDirectionKind.class::cast)
                 .orElseThrow();
 
-        return transverseMutationService.createComponentPort(owner.get(), direction);
+        return COMMON_CREATION_SERVICE.createComponentPort(owner.get(), direction);
     }
 
     @Override
@@ -118,7 +122,7 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
                 .map(Feature.class::cast)
                 .toList();
 
-        transverseMutationService.setFeatureReferenceValues(
+        COMMON_UPDATE_SERVICE.setFeatureReferenceValues(
                 MapperUtils.require(context.traceability(), source, PortUsage.class), ARCADIA_COMPONENT_PORT,
                 "allocatedFunctionPorts", allocatedFunctionPorts, SysmlPackage.eINSTANCE.getItemUsage());
     }

@@ -43,7 +43,7 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -59,7 +59,8 @@ import org.polarsys.capella.core.data.information.Port;
  * @author Raphaël Pagé
  */
 public final class FeatureMappingCatalog {
-    private static final TransverseMutationService TRANSVERSE_MUTATION_SERVICE = new TransverseMutationService();
+
+    private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
 
     /**
      * Features commonly ignored when mapping Arcadia elements.
@@ -81,7 +82,7 @@ public final class FeatureMappingCatalog {
         return List.of(
                 new FeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
                 new FeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION,
-                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())));
+                        (source, context) -> COMMON_UPDATE_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())));
     }
 
     /**
@@ -136,10 +137,10 @@ public final class FeatureMappingCatalog {
                 new FeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                         (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentRealizations(), context.traceability())),
                 new FeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
-                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
+                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
                                 source.isActor())),
                 new FeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
-                        (source, context) -> TRANSVERSE_MUTATION_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
+                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
                                 source.isHuman())),
                 new FeatureMapping<>(CAPELLA_ABSTRACT, SYSML_IS_ABSTRACT,
                         (source, context) -> MapperUtils.require(context.traceability(), source, Usage.class).setIsAbstract(source.isAbstract())));

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -31,7 +31,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.polarsys.capella.core.data.la.LaFactory;
 
 class LogicalComponentMapperTest {
-    private final TransverseQueryService transverseQueryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsTheLogicalArchitectureRootToTheExistingSystemAndMapsItsChildren() {
@@ -62,13 +63,13 @@ class LogicalComponentMapperTest {
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());
         assertEquals("In-Flight Entertainment System", system.getDeclaredName());
-        assertEquals("The logical system root", transverseQueryService.getArcadiaElementDescription(system));
+        assertEquals("The logical system root", COMMON_QUERY_SERVICE.getArcadiaElementDescription(system));
         assertTrue(system.isIsAbstract());
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
         assertEquals(sourceName, target.getDeclaredName());
         assertTrue(target.isIsAbstract());
-        assertEquals(sourceDescription, transverseQueryService.getArcadiaElementDescription(target));
+        assertEquals(sourceDescription, COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
         var typing = assertInstanceOf(FeatureTyping.class, target.getOwnedRelationship().get(0));
         assertSame(target, typing.getTypedFeature());
         assertEquals("Arcadia::Component", typing.getType().getQualifiedName());

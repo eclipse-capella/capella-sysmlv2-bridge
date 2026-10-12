@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.services.DefaultSysMLMoveElementService;
@@ -52,7 +52,7 @@ public class MapperUtils {
 
     public static final String NO_MAPPED_PARENT_ERROR = "Unable to find a mapped source parent for :";
 
-    private static final TransverseMutationService TRANSVERSE_MUTATION_SERVICE = new TransverseMutationService();
+    private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
 
     private static final SysMLMoveElementService MOVE_ELEMENT_SERVICE = new SysMLMoveElementService(List.of(),
             new DefaultSysMLMoveElementService(new SysMLMoveElementCheckerService(object -> false)));
@@ -77,7 +77,7 @@ public class MapperUtils {
         source.getOwnedFunctionalAllocation()
                 .forEach(allocation -> {
                     var truc = require(traceability, allocation.getTargetElement(), ActionUsage.class);
-                    TRANSVERSE_MUTATION_SERVICE.setPerformAction(target, truc);
+                    COMMON_UPDATE_SERVICE.setPerformAction(target, truc);
                 });
 
     }
@@ -121,7 +121,7 @@ public class MapperUtils {
             var mappedSource = optMappedSource.get();
             var mappedTarget = optMappedTarget.get();
 
-            TRANSVERSE_MUTATION_SERVICE.addFeatureReferenceValue(mappedSource, libraryPrefix, attributeName, mappedTarget, referencedFeatureType);
+            COMMON_UPDATE_SERVICE.addFeatureReferenceValue(mappedSource, libraryPrefix, attributeName, mappedTarget, referencedFeatureType);
         }
     }
 
