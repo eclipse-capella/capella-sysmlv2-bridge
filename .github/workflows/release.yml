@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: Build products
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: read
@@ -45,6 +45,17 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+
+      - name: Set up Maven 3.9.16
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -fsSLO https://archive.apache.org/dist/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz
+          curl -fsSLO https://archive.apache.org/dist/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz.sha512
+          echo "$(cat apache-maven-3.9.16-bin.tar.gz.sha512)  apache-maven-3.9.16-bin.tar.gz" | sha512sum --check -
+          tar -xzf apache-maven-3.9.16-bin.tar.gz
+          echo "$RUNNER_TEMP/apache-maven-3.9.16/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/apache-maven-3.9.16/bin/mvn" --version
                 
       - name: Qualify build and Linux and Windows products for Capella 7.1.0
         run: >-
