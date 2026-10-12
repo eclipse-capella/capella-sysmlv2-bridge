@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.PartUsage;
@@ -36,7 +36,7 @@ import org.polarsys.capella.core.data.la.LogicalComponent;
 public final class LogicalComponentMapper extends ElementMapper<LogicalComponent, PartUsage> {
     private final LAMutationService laMutationService = new LAMutationService();
 
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public LogicalComponentMapper() {
         super(LogicalComponent.class, ARCADIA_COMPONENT);
@@ -58,7 +58,7 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
 
         PartUsage target;
         if (source.isActor()) {
-            target = transverseMutationService.createActor(context.modelStructure().logicalArchitecture().structurePackage());
+            target = COMMON_CREATION_SERVICE.createActor(context.modelStructure().logicalArchitecture().structurePackage());
         } else {
             target = laMutationService.createComponentLA(context.modelStructure().logicalArchitecture().systemPart().orElseThrow());
         }

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
@@ -30,7 +30,8 @@ import org.polarsys.capella.core.data.ctx.SystemFunction;
  * @author Raphaël Pagé
  */
 public final class SystemFunctionMapper extends ElementMapper<SystemFunction, ActionUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+    
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public SystemFunctionMapper() {
         super(SystemFunction.class, ARCADIA_FUNCTION);
@@ -50,7 +51,7 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
             return context.modelStructure().systemAnalysis().rootFunction();
         }
 
-        var target = transverseMutationService.createFunction(context.modelStructure().systemAnalysis().rootFunction());
+        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().systemAnalysis().rootFunction());
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a System Function");
         }

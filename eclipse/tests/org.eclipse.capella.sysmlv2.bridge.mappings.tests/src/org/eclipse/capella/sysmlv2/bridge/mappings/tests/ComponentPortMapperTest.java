@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
@@ -31,7 +31,8 @@ import org.polarsys.capella.core.data.fa.OrientationPortKind;
 import org.polarsys.capella.core.data.la.LaFactory;
 
 class ComponentPortMapperTest {
-    private final TransverseQueryService queryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsDirectionContainmentAndAllocatedFunctionPorts() {
@@ -61,10 +62,10 @@ class ComponentPortMapperTest {
         var target = assertInstanceOf(PortUsage.class,
                 result.traceability().lookupTarget(componentPort).orElseThrow());
         assertEquals("Cable Connector", target.getDeclaredName());
-        assertEquals("Carries sensor data", queryService.getArcadiaElementDescription(target));
+        assertEquals("Carries sensor data", COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
         assertEquals(FeatureDirectionKind.OUT, target.getDirection());
         assertSame(componentTarget, target.getOwningUsage());
-        assertTrue(queryService.isComponentPort(target));
+        assertTrue(COMMON_QUERY_SERVICE.isComponentPort(target));
         assertTrue(target.getNestedReference().stream()
                 .filter(reference -> reference.getName().endsWith("allocatedFunctionPorts"))
                 .findFirst().isPresent());

@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.ActionUsage;
@@ -39,7 +39,8 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
  * @author Raphaël Pagé
  */
 abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends ElementMapper<S, ItemUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+    
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     private final FeatureDirectionKind direction;
 
@@ -69,7 +70,7 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
                 .map(ActionUsage.class::cast)
                 .orElseGet(() -> rootFunction(owner, context));
 
-        return transverseMutationService.createFunctionPort(defaultParent, direction);
+        return COMMON_CREATION_SERVICE.createFunctionPort(defaultParent, direction);
     }
 
     private static ActionUsage rootFunction(AbstractFunction owner, TransformationContext context) {

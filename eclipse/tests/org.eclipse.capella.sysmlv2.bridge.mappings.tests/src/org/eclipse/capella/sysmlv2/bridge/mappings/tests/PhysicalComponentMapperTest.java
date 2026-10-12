@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.OwningMembership;
@@ -28,7 +28,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 
 class PhysicalComponentMapperTest {
-    private final TransverseQueryService transverseQueryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsThePhysicalArchitectureRootToTheExistingSystemAndMapsItsChildren() {
@@ -54,15 +55,15 @@ class PhysicalComponentMapperTest {
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());
         assertEquals("In-Flight Entertainment System", system.getDeclaredName());
-        assertEquals("The physical system root", transverseQueryService.getArcadiaElementDescription(system));
-        assertFalse(transverseQueryService.isComponentActor(system));
-        assertFalse(transverseQueryService.isComponentHumanActor(system));
+        assertEquals("The physical system root", COMMON_QUERY_SERVICE.getArcadiaElementDescription(system));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentActor(system));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentHumanActor(system));
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
         assertEquals("Navigation Computer", target.getDeclaredName());
-        assertEquals("The physical navigation computer", transverseQueryService.getArcadiaElementDescription(target));
-        assertFalse(transverseQueryService.isComponentActor(target));
-        assertFalse(transverseQueryService.isComponentHumanActor(target));
+        assertEquals("The physical navigation computer", COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentActor(target));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentHumanActor(target));
         assertSame(system, assertInstanceOf(OwningMembership.class, target.eContainer()).eContainer());
         assertTrue(result.diagnostics().isEmpty());
     }

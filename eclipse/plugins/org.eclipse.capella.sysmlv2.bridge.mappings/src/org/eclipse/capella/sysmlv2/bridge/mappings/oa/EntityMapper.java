@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.eclipse.capella.model.transverse.services.TransverseMutationService;
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.syson.sysml.PartUsage;
@@ -33,7 +33,8 @@ import org.polarsys.capella.core.data.oa.Entity;
  * @author Raphaël Pagé
  */
 public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
-    private final TransverseMutationService transverseMutationService = new TransverseMutationService();
+    
+    private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public EntityMapper() {
         super(Entity.class, ARCADIA_COMPONENT);
@@ -50,8 +51,8 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     @Override
     protected PartUsage createTarget(Entity source, TransformationContext context) {
         var parent = context.modelStructure().operationalAnalysis().perspectivePackage();
-        var target = source.isActor() ? transverseMutationService.createActor(parent)
-                : transverseMutationService.createComponent(parent);
+        var target = source.isActor() ? COMMON_CREATION_SERVICE.createActor(parent)
+                : COMMON_CREATION_SERVICE.createComponent(parent);
 
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create an Operational Entity");

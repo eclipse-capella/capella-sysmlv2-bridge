@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.eclipse.capella.model.transverse.services.TransverseQueryService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.syson.sysml.PartUsage;
@@ -26,7 +26,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 
 class SystemComponentMapperTest {
-    private final TransverseQueryService transverseQueryService = new TransverseQueryService();
+
+    private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
     void mapsTheSystemRootAndRetainsActorWithoutMappedAncestor() {
@@ -52,14 +53,14 @@ class SystemComponentMapperTest {
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());
         assertEquals("In-Flight Entertainment System", system.getDeclaredName());
-        assertEquals("The system root", transverseQueryService.getArcadiaElementDescription(system));
-        assertFalse(transverseQueryService.isComponentActor(system));
-        assertFalse(transverseQueryService.isComponentHumanActor(system));
+        assertEquals("The system root", COMMON_QUERY_SERVICE.getArcadiaElementDescription(system));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentActor(system));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentHumanActor(system));
         var actorTarget = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(actor).orElseThrow());
         assertEquals("Navigation Computer", actorTarget.getDeclaredName());
-        assertEquals("The system navigation computer", transverseQueryService.getArcadiaElementDescription(actorTarget));
-        assertTrue(transverseQueryService.isComponentActor(actorTarget));
-        assertFalse(transverseQueryService.isComponentHumanActor(actorTarget));
+        assertEquals("The system navigation computer", COMMON_QUERY_SERVICE.getArcadiaElementDescription(actorTarget));
+        assertTrue(COMMON_QUERY_SERVICE.isComponentActor(actorTarget));
+        assertFalse(COMMON_QUERY_SERVICE.isComponentHumanActor(actorTarget));
         assertFalse(result.traceability().isExcluded(actor));
         assertTrue(result.diagnostics().isEmpty());
     }
