@@ -94,6 +94,7 @@ public final class TransformationReportingUtils {
         var reloadedRoot = TemporarySysMLXmiExporterUtils.exportAndReload(
                 result.root(), targetModel.getResourceSet(), outputModel);
         validateReloadedModel(expectedModel, reloadedRoot);
+        TemporarySysMLXmiExporterUtils.rewriteArcadiaLibraryReferences(outputModel);
     }
 
     private static void writeCoverageReport(

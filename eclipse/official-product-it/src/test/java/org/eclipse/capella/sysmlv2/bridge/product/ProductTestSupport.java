@@ -123,7 +123,7 @@ final class ProductTestSupport {
         var xmi = Files.readString(xmiModel, StandardCharsets.UTF_8);
         assertTrue(xmi.contains("OccurrenceDefinition"), xmi);
         assertTrue(xmi.contains("PartUsage"), xmi);
-        assertTrue(xmi.contains("arcadialibrary:/arcadia.json"), xmi);
+        assertTrue(xmi.contains("sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#"), xmi);
 
         var reportDirectory = applicationOutput.resolve(".capella2sysmlv2");
         var jsonReport = reportDirectory.resolve("mapping-coverage.json");
