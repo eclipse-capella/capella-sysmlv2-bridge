@@ -202,7 +202,7 @@ jobs:
           test -f "output/In-Flight Entertainment System.sysml.xmi"
           test -f "output/.capella2sysmlv2/mapping-coverage.json"
           test -f "output/.capella2sysmlv2/mapping-coverage.md"
-          grep -F "arcadialibrary:/arcadia.json" \
+          grep -F "sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#" \
             "output/In-Flight Entertainment System.sysml.xmi"
 
       - name: Publish Linux mapping coverage summary
@@ -282,7 +282,7 @@ jobs:
           if (-not (Test-Path -Path $xmi -PathType Leaf)) {
             throw "Missing generated model: $xmi"
           }
-          if (-not (Select-String -Path $xmi -SimpleMatch "arcadialibrary:/arcadia.json" -Quiet)) {
+          if (-not (Select-String -Path $xmi -SimpleMatch "sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#" -Quiet)) {
             throw "Generated model does not reference the Arcadia library"
           }
           @(

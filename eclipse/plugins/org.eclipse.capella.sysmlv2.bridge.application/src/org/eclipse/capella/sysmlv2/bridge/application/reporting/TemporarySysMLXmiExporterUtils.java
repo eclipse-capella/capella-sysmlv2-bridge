@@ -14,6 +14,7 @@ package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -27,6 +28,10 @@ import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 
 public final class TemporarySysMLXmiExporterUtils {
+
+    private static final String ARCADIA_LIBRARY_REFERENCE = "arcadialibrary:/arcadia.json#";
+
+    private static final String SYSON_ARCADIA_LIBRARY_REFERENCE = "sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#";
 
     private TemporarySysMLXmiExporterUtils() {
         /* This utility class should not be instantiated */
@@ -80,6 +85,40 @@ public final class TemporarySysMLXmiExporterUtils {
                 Files.deleteIfExists(temporaryOutput);
             } catch (IOException exception) {
                 // Preserve the export or reload failure, if any.
+            }
+        }
+    }
+
+    /**
+     * Rewrites Arcadia library references in an exported XMI file to the SysON library URI.
+     *
+     * @param outputFile
+     *            exported XMI file to update
+     * @throws NullPointerException
+     *             if {@code outputFile} is {@code null}
+     * @throws IllegalStateException
+     *             if the file cannot be read or updated
+     */
+    public static void rewriteArcadiaLibraryReferences(Path outputFile) {
+        Objects.requireNonNull(outputFile, "outputFile must not be null");
+
+        var normalizedOutput = outputFile.toAbsolutePath().normalize();
+        var temporaryOutput = normalizedOutput.resolveSibling(normalizedOutput.getFileName() + ".tmp");
+        try {
+            var xmi = Files.readString(normalizedOutput, StandardCharsets.UTF_8);
+            var rewrittenXmi = xmi.replace(ARCADIA_LIBRARY_REFERENCE, SYSON_ARCADIA_LIBRARY_REFERENCE);
+            if (!rewrittenXmi.equals(xmi)) {
+                Files.writeString(temporaryOutput, rewrittenXmi, StandardCharsets.UTF_8);
+                replace(temporaryOutput, normalizedOutput);
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Cannot rewrite Arcadia library references in " + normalizedOutput,
+                    exception);
+        } finally {
+            try {
+                Files.deleteIfExists(temporaryOutput);
+            } catch (IOException exception) {
+                // Preserve the rewrite failure, if any.
             }
         }
     }
