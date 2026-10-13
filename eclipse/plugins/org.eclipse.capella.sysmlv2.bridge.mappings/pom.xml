@@ -38,12 +38,12 @@
 		<dependency>
 		  <groupId>org.eclipse.capella</groupId>
 		  <artifactId>capella-model-services</artifactId>
-		  <version>${capella.for.syson.version}</version>
+		  <version>${capella-for-syson.version}</version>
 		</dependency>
 		<dependency>
 		  <groupId>org.eclipse.capella</groupId>
 		  <artifactId>capella-model-transverse-services</artifactId>
-		  <version>${capella.for.syson.version}</version>
+		  <version>${capella-for-syson.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.eclipse.syson</groupId>
