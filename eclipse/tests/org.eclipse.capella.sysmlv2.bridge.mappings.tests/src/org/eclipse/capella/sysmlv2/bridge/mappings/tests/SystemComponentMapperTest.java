@@ -30,6 +30,28 @@ class SystemComponentMapperTest {
     private static final CommonQueryService COMMON_QUERY_SERVICE = new CommonQueryService();
 
     @Test
+    void retainsServiceSelectedActorContainmentWhenSourceParentIsTheSystem() {
+        var factory = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE;
+        var architecture = factory.createSystemAnalysis();
+        var pkg = factory.createSystemComponentPkg();
+        architecture.setOwnedSystemComponentPkg(pkg);
+        var root = factory.createSystemComponent();
+        pkg.getOwnedSystemComponents().add(root);
+        var actor = factory.createSystemComponent();
+        actor.setActor(true);
+        root.getOwnedSystemComponents().add(actor);
+
+        var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
+                new CapellaForSysonResourceSet().getResourceSet())
+                        .transformAll(java.util.List.of(actor, root), "Service containment");
+        var system = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(root).orElseThrow());
+        var target = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(actor).orElseThrow());
+        org.junit.jupiter.api.Assertions.assertSame(system.getOwner(), target.getOwner());
+        org.junit.jupiter.api.Assertions.assertSame(root, actor.eContainer());
+        assertTrue(result.diagnostics().isEmpty());
+    }
+
+    @Test
     void mapsTheSystemRootAndRetainsActorWithoutMappedAncestor() {
         var architecture = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemAnalysis();
         var componentPackage = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemComponentPkg();

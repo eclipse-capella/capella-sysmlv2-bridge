@@ -76,7 +76,7 @@ mvn --settings .github/maven-settings.xml \
 Contains the model loading contracts and secure Capella project archive extraction.
 
 `capella2sysmlv2-transformer`::
-Contains the three-phase transformation engine, the concrete transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
+Contains the dependency-driven transformation engine, the concrete transformation context, diagnostics, traceability, target structure creation, and semantic mappings.
 
 `cli`::
 Contains the Java command-line entry point and the runtime-independent transformation service contract.
@@ -131,9 +131,8 @@ Direct .capella semantic model loading
 Typed mapper registry resolution
         |
         v
-Three-phase TransformationEngine
-        | creation and registration
-        | containment resolution
+Dependency-driven TransformationEngine
+        | prerequisite construction and registration
         | feature mapping
         |
         v
@@ -150,20 +149,19 @@ It attaches the generated root to that same `ResourceSet` before creating target
 `MapperRegistry` resolves the first compatible mapper in registration order and rejects duplicate source classes.
 The registry uses the mapper's typed Java source class.
 
-=== Three-phase transformation
+=== Dependency-driven construction
 
 `TransformationEngine.transform(root, rootName)` traverses the root and its descendants; `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>` of explicit sources. Both methods invoke mappers only for sources supported by the registry. The `rootName` string names the generated model root.
 
-Sources are sorted from shallowest containment depth to deepest, counting unmapped ancestors. Sources at the same depth retain their encounter order when the collection is ordered. The engine materializes the bound mappers once and reuses that order for all three phases without modifying the source collection.
+Sources are indexed by object identity and duplicates are ignored. Independent sources retain encounter order. Each mapper declares its creation prerequisites through `getCreationDependencies(source)`, using read-only source inspection without traceability. Only prerequisites in the supplied scope can be constructed.
 
-The engine then executes three ordered steps:
+The engine recursively resolves dependencies with `CONSTRUCTING`, `READY`, and `FAILED` states. It creates and registers each successful target once. Missing, unsupported, excluded, failed, or out-of-scope prerequisites prevent dependent creation and produce a diagnostic identifying the prerequisite. Cycles report their active source path and fail the affected chain while unrelated sources continue. Discovery and creation exceptions, and null results, exclude the source without retries or placeholders.
 
-. **Creation and registration:** each mapper creates its target below the architecture's default container and immediately registers the source-to-target correspondence in `Traceability`. No feature mapping runs in this step.
-. **Containment:** mappers resolve the closest mapped owner from the source hierarchy after all targets exist. Intermediate unmapped containers are traversed, while architecture roots remain in their pre-created containers. If no mapped ancestor exists, the target keeps its initial placement. SysON's semantic move service preserves the target identity and may convert its owning membership to suit the destination. An excluded ancestor, an incompatible mapped owner, or a failed move excludes the target, removes it from the model and traceability, and records a diagnostic; descendants detect that exclusion during their own containment pass.
-. **Features:** only retained targets receive their `FeatureMapping` actions. Each action resolves related targets through the shared context, and failures produce a diagnostic for the source and feature while allowing subsequent mappings to continue.
+Functions and components select the nearest compatible source ancestor within their perspective, traversing unmapped packages. Architecture roots reuse the targets provided by `ArcadiaModelStructureBuilder` without a parent dependency. Other elements pass the selected mapped ancestor to their existing creation service; only absence of a compatible source ancestor permits the existing perspective fallback. Ports require their mapped owners and set direction during creation. Creation services own containment: their results are never relocated to reproduce the Capella hierarchy.
 
-The public services are concrete single implementations: `TransformationContext`, `Traceability`, `DiagnosticsCollector`, and `MapperRegistry`. `ElementMapper` exposes the lifecycle methods `createAndRegister`, `mapContainment`, and `mapFeatures`; `FeatureMapping` stores coverage metadata and a context-aware action.
+After every construction attempt finishes, successful targets receive their feature mappings once, in construction-completion order. Names, descriptions, allocations, and realizations remain feature mappings. Cross-reference feature mappings do not contribute construction dependencies. Feature failures produce diagnostics while subsequent mappings continue.
 
+The public services are concrete single implementations: `TransformationContext`, `Traceability`, `DiagnosticsCollector`, and `MapperRegistry`. `ElementMapper` exposes `getCreationDependencies`, `createAndRegister`, and `mapFeatures`; `FeatureMapping` stores coverage metadata and a context-aware action. Catalog registration requires no priorities. Coverage-report containment fields still describe the Capella metamodel.
 The transformation context contains the model structure, identity-based traceability, diagnostics, and exclusion state. It does not contain transformation options or a deferred reference resolver.
 The Equinox application registers the installed Capella packages, maps `platform:/resource` URIs to the extracted project, and loads the `.capella` resource directly into a Capella semantic editing domain with a Sirius cross-reference adapter. It requires a typed Capella `Project` root and does not create an Eclipse workspace, load an `.aird` resource, or open a Sirius session.
 Standalone loading removes TED's session-aware `DataNotifier` immediately after editing-domain creation. The notifier is only useful with a Sirius session and otherwise activates the full Sirius bundle during model notifications; the `SiriusCrossReferenceAdapter` remains installed for direct and inverse derived references.

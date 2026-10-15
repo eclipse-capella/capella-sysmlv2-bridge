@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -33,7 +35,7 @@ import org.polarsys.capella.core.data.pa.PhysicalComponent;
  * @author Raphaël Pagé
  */
 public final class PhysicalComponentMapper extends ElementMapper<PhysicalComponent, PartUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public PhysicalComponentMapper() {
@@ -49,16 +51,34 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
     }
 
     @Override
+    public List<EObject> getCreationDependencies(PhysicalComponent source) {
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, PhysicalComponent.class).stream().toList();
+    }
+
+    @Override
     protected PartUsage createTarget(PhysicalComponent source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootComponent(source)) {
             return context.modelStructure().physicalArchitecture().systemPart().orElseThrow();
         }
 
+        var sourceParent = MapperUtils.creationParent(source, PhysicalComponent.class);
+        Element parent;
+        if (sourceParent.isPresent()) {
+            parent = MapperUtils.require(context.traceability(), sourceParent.get(), PartUsage.class);
+        } else if (source.isActor()) {
+            parent = context.modelStructure().physicalArchitecture().structurePackage();
+        } else {
+            parent = context.modelStructure().physicalArchitecture().systemPart().orElseThrow();
+        }
+
         PartUsage target;
         if (source.isActor()) {
-            target = COMMON_CREATION_SERVICE.createActor(context.modelStructure().physicalArchitecture().structurePackage());
+            target = COMMON_CREATION_SERVICE.createActor(parent);
         } else {
-            target = COMMON_CREATION_SERVICE.createComponent(context.modelStructure().physicalArchitecture().systemPart().orElseThrow());
+            target = COMMON_CREATION_SERVICE.createComponent(parent);
         }
 
         if (target == null) {
@@ -73,14 +93,6 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
         // TODO : physicalComponentNature
         // TODO : physicalComponentKind
         return target;
-    }
-
-    @Override
-    public void mapContainment(PhysicalComponent source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootComponent(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

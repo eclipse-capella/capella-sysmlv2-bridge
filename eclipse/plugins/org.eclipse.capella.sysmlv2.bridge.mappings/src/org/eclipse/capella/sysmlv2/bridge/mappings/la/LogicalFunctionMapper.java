@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -30,7 +31,7 @@ import org.polarsys.capella.core.data.la.LogicalFunction;
  * @author Raphaël Pagé
  */
 public final class LogicalFunctionMapper extends ElementMapper<LogicalFunction, ActionUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public LogicalFunctionMapper() {
@@ -46,24 +47,28 @@ public final class LogicalFunctionMapper extends ElementMapper<LogicalFunction, 
     }
 
     @Override
+    public List<EObject> getCreationDependencies(LogicalFunction source) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, LogicalFunction.class).stream().toList();
+    }
+
+    @Override
     protected ActionUsage createTarget(LogicalFunction source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootFunction(source)) {
             return context.modelStructure().logicalArchitecture().rootFunction();
         }
 
-        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().logicalArchitecture().rootFunction());
+        var targetParent = MapperUtils.creationParent(source, LogicalFunction.class)
+                .map(parent -> MapperUtils.require(context.traceability(), parent, ActionUsage.class))
+                .orElseGet(() -> context.modelStructure().logicalArchitecture().rootFunction());
+
+        var target = COMMON_CREATION_SERVICE.createFunction(targetParent);
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a Logical Function");
         }
         return target;
-    }
-
-    @Override
-    public void mapContainment(LogicalFunction source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootFunction(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

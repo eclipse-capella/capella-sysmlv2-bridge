@@ -27,6 +27,7 @@ import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Feature;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
 import org.eclipse.syson.sysml.ItemUsage;
@@ -74,17 +75,7 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
 
     @Override
     protected PortUsage createTarget(ComponentPort source, TransformationContext context) {
-        var owner = Optional.ofNullable(source.eContainer())
-                .filter(Component.class::isInstance)
-                .flatMap(context.traceability()::lookupTarget)
-                .filter(PartUsage.class::isInstance)
-                .map(PartUsage.class::cast);
-
-        if (owner.isEmpty()) {
-            context.diagnostics().addError(source, "Unable to find the mapped owning component");
-            return null;
-        }
-
+        var owner = MapperUtils.require(context.traceability(), getCreationDependencies(source).getFirst(), PartUsage.class);
         var portDirection = switch (source.getOrientation()) {
             case IN -> Optional.of(FeatureDirectionKind.IN);
             case OUT -> Optional.of(FeatureDirectionKind.OUT);
@@ -101,12 +92,14 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
                 .map(FeatureDirectionKind.class::cast)
                 .orElseThrow();
 
-        return COMMON_CREATION_SERVICE.createComponentPort(owner.get(), direction);
+        return COMMON_CREATION_SERVICE.createComponentPort(owner, direction);
     }
 
     @Override
-    public void mapContainment(ComponentPort source, TransformationContext context) {
-        MapperUtils.moveToSourceParent(context, source);
+    public List<EObject> getCreationDependencies(ComponentPort source) {
+        return List.of(Optional.ofNullable(source.eContainer())
+                .filter(Component.class::isInstance)
+                .orElseThrow(() -> new IllegalArgumentException("Missing owning component for " + source)));
     }
 
     @Override

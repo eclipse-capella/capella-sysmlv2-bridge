@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -51,24 +52,28 @@ public final class PhysicalFunctionMapper extends ElementMapper<PhysicalFunction
     }
 
     @Override
+    public List<EObject> getCreationDependencies(PhysicalFunction source) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, PhysicalFunction.class).stream().toList();
+    }
+
+    @Override
     protected ActionUsage createTarget(PhysicalFunction source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootFunction(source)) {
             return context.modelStructure().physicalArchitecture().rootFunction();
         }
 
-        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().physicalArchitecture().rootFunction());
+        var targetParent = MapperUtils.creationParent(source, PhysicalFunction.class)
+                .map(parent -> MapperUtils.require(context.traceability(), parent, ActionUsage.class))
+                .orElseGet(() -> context.modelStructure().physicalArchitecture().rootFunction());
+
+        var target = COMMON_CREATION_SERVICE.createFunction(targetParent);
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a Physical Function");
         }
         return target;
-    }
-
-    @Override
-    public void mapContainment(PhysicalFunction source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootFunction(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     /**

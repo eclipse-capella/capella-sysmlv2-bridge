@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -30,7 +31,7 @@ import org.polarsys.capella.core.data.ctx.SystemFunction;
  * @author Raphaël Pagé
  */
 public final class SystemFunctionMapper extends ElementMapper<SystemFunction, ActionUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public SystemFunctionMapper() {
@@ -46,24 +47,28 @@ public final class SystemFunctionMapper extends ElementMapper<SystemFunction, Ac
     }
 
     @Override
+    public List<EObject> getCreationDependencies(SystemFunction source) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, SystemFunction.class).stream().toList();
+    }
+
+    @Override
     protected ActionUsage createTarget(SystemFunction source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootFunction(source)) {
             return context.modelStructure().systemAnalysis().rootFunction();
         }
 
-        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().systemAnalysis().rootFunction());
+        var targetParent = MapperUtils.creationParent(source, SystemFunction.class)
+                .map(parent -> MapperUtils.require(context.traceability(), parent, ActionUsage.class))
+                .orElseGet(() -> context.modelStructure().systemAnalysis().rootFunction());
+
+        var target = COMMON_CREATION_SERVICE.createFunction(targetParent);
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create a System Function");
         }
         return target;
-    }
-
-    @Override
-    public void mapContainment(SystemFunction source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootFunction(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

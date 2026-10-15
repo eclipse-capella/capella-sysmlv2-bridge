@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -30,7 +31,7 @@ import org.polarsys.capella.core.data.oa.OperationalActivity;
  * @author Raphaël Pagé
  */
 public final class OperationalActivityMapper extends ElementMapper<OperationalActivity, ActionUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public OperationalActivityMapper() {
@@ -46,24 +47,28 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
     }
 
     @Override
+    public List<EObject> getCreationDependencies(OperationalActivity source) {
+        if (MapperUtils.isArchitectureRootFunction(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, OperationalActivity.class).stream().toList();
+    }
+
+    @Override
     protected ActionUsage createTarget(OperationalActivity source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootFunction(source)) {
             return context.modelStructure().operationalAnalysis().rootFunction();
         }
 
-        var target = COMMON_CREATION_SERVICE.createFunction(context.modelStructure().operationalAnalysis().rootFunction());
+        var targetParent = MapperUtils.creationParent(source, OperationalActivity.class)
+                .map(parent -> MapperUtils.require(context.traceability(), parent, ActionUsage.class))
+                .orElseGet(() -> context.modelStructure().operationalAnalysis().rootFunction());
+
+        var target = COMMON_CREATION_SERVICE.createFunction(targetParent);
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create an Operational Activity function");
         }
         return target;
-    }
-
-    @Override
-    public void mapContainment(OperationalActivity source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootFunction(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

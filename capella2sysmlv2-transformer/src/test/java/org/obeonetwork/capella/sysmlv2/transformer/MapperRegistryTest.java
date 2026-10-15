@@ -52,9 +52,9 @@ class MapperRegistryTest {
             }
 
             @Override
-            public void mapContainment(EPackage source, TransformationContext actualContext) {
-                assertThat(actualContext).isSameAs(context);
-                calls.add("containment " + source.getName());
+            public List<EObject> getCreationDependencies(EPackage source) {
+                calls.add("dependencies " + source.getName());
+                return List.of(SOURCE);
             }
 
             @Override
@@ -76,13 +76,13 @@ class MapperRegistryTest {
 
         firstBinding.createAndRegister(context);
         secondBinding.createAndRegister(context);
-        firstBinding.mapContainment(context);
-        secondBinding.mapContainment(context);
+        assertThat(firstBinding.getCreationDependencies()).containsExactly(SOURCE);
+        assertThat(secondBinding.getCreationDependencies()).containsExactly(SOURCE);
         firstBinding.mapFeatures(context);
         secondBinding.mapFeatures(context);
 
-        assertThat(calls).containsExactly("create first", "create second", "containment first",
-                "containment second", "features first", "features second");
+        assertThat(calls).containsExactly("create first", "create second", "dependencies first",
+                "dependencies second", "features first", "features second");
         assertThat(registry.get(SOURCE)).isEmpty();
     }
 

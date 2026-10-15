@@ -17,22 +17,17 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.syson.services.DefaultSysMLMoveElementService;
-import org.eclipse.syson.services.DeleteService;
-import org.eclipse.syson.services.SysMLMoveElementCheckerService;
-import org.eclipse.syson.services.SysMLMoveElementService;
 import org.eclipse.syson.sysml.ActionUsage;
-import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
-import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.common.data.modellingcore.TraceableElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
@@ -48,16 +43,7 @@ import org.polarsys.capella.core.data.fa.FunctionPkg;
  * @author Raphaël Pagé
  */
 public class MapperUtils {
-    public static final String MOVE_ERROR_MESSAGE = "Unable to move mapped target: ";
-
-    public static final String NO_MAPPED_PARENT_ERROR = "Unable to find a mapped source parent for :";
-
     private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
-
-    private static final SysMLMoveElementService MOVE_ELEMENT_SERVICE = new SysMLMoveElementService(List.of(),
-            new DefaultSysMLMoveElementService(new SysMLMoveElementCheckerService(object -> false)));
-
-    private static final DeleteService DELETE_SERVICE = new DeleteService();
 
     private MapperUtils() {
         // utility class
@@ -152,75 +138,12 @@ public class MapperUtils {
         return expectedType.cast(target);
     }
 
-    /**
-     * Moves a mapped element to its closest mapped source ancestor using SysON's semantic move service. When no mapped
-     * ancestor exists, the element keeps the placement established during creation.
-     *
-     * @param context
-     *            current transformation context
-     * @param source
-     *            source whose target is moved
-     * @return {@code true} when the target remains included in the transformation
-     */
-    public static boolean moveToSourceParent(TransformationContext context, EObject source) {
-        var traceability = context.traceability();
-
-        return traceability.lookupTarget(source)
-                .filter(Element.class::isInstance)
-                .map(Element.class::cast)
-                .map(target -> moveToClosestMappedAncestor(context, source, target, source))
-                .orElse(false);
-    }
-
-    private static boolean moveToClosestMappedAncestor(TransformationContext context, EObject source, Element target,
-            EObject currentSource) {
-        return Optional.ofNullable(currentSource.eContainer())
-                .map(parentSource -> moveToSourceAncestor(context, source, target, parentSource))
-                .orElse(true);
-    }
-
-    private static boolean moveToSourceAncestor(TransformationContext context, EObject source, Element target, EObject parentSource) {
-        var traceability = context.traceability();
-
-        if (traceability.isExcluded(parentSource)) {
-            return excludeTarget(context, source, NO_MAPPED_PARENT_ERROR + source);
-        }
-
-        return traceability.lookupTarget(parentSource)
-                .map(mappedParent -> moveToMappedParent(context, source, target, mappedParent))
-                .orElseGet(() -> moveToClosestMappedAncestor(context, source, target, parentSource));
-    }
-
-    private static boolean moveToMappedParent(TransformationContext context, EObject source, Element target,
-            EObject mappedParent) {
-        if (!(mappedParent instanceof Element destination)) {
-            return excludeTarget(context, source, NO_MAPPED_PARENT_ERROR + source);
-        }
-
-        if (target.getOwner() == destination) {
-            return true;
-        }
-
-        var status = MOVE_ELEMENT_SERVICE.moveSemanticElement(target, destination);
-
-        if (!status.isSuccess()) {
-            return excludeTarget(context, source, MOVE_ERROR_MESSAGE + status.message());
-        }
-
-        return true;
-    }
-
-    private static boolean excludeTarget(TransformationContext context, EObject source, String message) {
-        context.diagnostics().addError(source, message);
-
-        context.traceability()
-                .lookupTarget(source)
-                .filter(Element.class::isInstance)
-                .map(Element.class::cast)
-                .ifPresent(DELETE_SERVICE::deleteFromModel);
-
-        context.traceability().unregister(source);
-        return false;
+    /** Selects the nearest compatible source ancestor without crossing a perspective boundary. */
+    public static Optional<EObject> creationParent(EObject source, Class<? extends EObject> type) {
+        return Stream.iterate(source.eContainer(), Objects::nonNull, EObject::eContainer)
+                .takeWhile(parent -> !(parent instanceof BlockArchitecture))
+                .filter(type::isInstance)
+                .findFirst();
     }
 
     /**

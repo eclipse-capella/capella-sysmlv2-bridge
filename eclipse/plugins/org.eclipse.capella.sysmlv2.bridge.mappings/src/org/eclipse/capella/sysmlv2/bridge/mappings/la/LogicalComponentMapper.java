@@ -22,6 +22,8 @@ import org.eclipse.capella.model.services.logical.architecture.LAMutationService
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -51,16 +53,34 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
     }
 
     @Override
+    public List<EObject> getCreationDependencies(LogicalComponent source) {
+        if (MapperUtils.isArchitectureRootComponent(source)) {
+            return List.of();
+        }
+        return MapperUtils.creationParent(source, LogicalComponent.class).stream().toList();
+    }
+
+    @Override
     protected PartUsage createTarget(LogicalComponent source, TransformationContext context) {
         if (MapperUtils.isArchitectureRootComponent(source)) {
             return context.modelStructure().logicalArchitecture().systemPart().orElseThrow();
         }
 
+        var sourceParent = MapperUtils.creationParent(source, LogicalComponent.class);
+        Element parent;
+        if (sourceParent.isPresent()) {
+            parent = MapperUtils.require(context.traceability(), sourceParent.get(), PartUsage.class);
+        } else if (source.isActor()) {
+            parent = context.modelStructure().logicalArchitecture().structurePackage();
+        } else {
+            parent = context.modelStructure().logicalArchitecture().systemPart().orElseThrow();
+        }
+
         PartUsage target;
         if (source.isActor()) {
-            target = COMMON_CREATION_SERVICE.createActor(context.modelStructure().logicalArchitecture().structurePackage());
+            target = COMMON_CREATION_SERVICE.createActor(parent);
         } else {
-            target = laMutationService.createComponentLA(context.modelStructure().logicalArchitecture().systemPart().orElseThrow());
+            target = laMutationService.createComponentLA(parent);
         }
 
         if (target == null) {
@@ -73,14 +93,6 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
-    }
-
-    @Override
-    public void mapContainment(LogicalComponent source, TransformationContext context) {
-        if (MapperUtils.isArchitectureRootComponent(source)) {
-            return;
-        }
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

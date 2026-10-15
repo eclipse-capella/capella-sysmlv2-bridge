@@ -96,19 +96,18 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
     }
 
     /**
-     * Resolves the source containment after every target has been created.
+     * Returns the sources required by creation. Discovery must be read-only and independent of traceability.
      *
      * @param source
-     *            source element whose target must be placed
-     * @param context
-     *            current transformation context
+     *            source element to create
+     * @return creation prerequisites, empty by default
      */
-    public void mapContainment(S source, TransformationContext context) {
-        // No containment-specific work by default.
+    public List<EObject> getCreationDependencies(S source) {
+        return List.of();
     }
 
     /**
-     * Maps all declared features after creation and containment phases.
+     * Maps all declared features after all construction attempts finish.
      *
      * @param source
      *            source element owning the features

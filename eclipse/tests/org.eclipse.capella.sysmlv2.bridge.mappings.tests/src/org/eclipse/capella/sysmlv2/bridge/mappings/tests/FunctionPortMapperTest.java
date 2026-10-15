@@ -55,20 +55,14 @@ class FunctionPortMapperTest {
         assertPorts(PaFactory.eINSTANCE.createPhysicalFunction());
     }
 
+    @Test
+    void mapsOperationalActivityPorts() {
+        assertPorts(org.polarsys.capella.core.data.oa.OaFactory.eINSTANCE.createOperationalActivity());
+    }
+
     private void assertPorts(AbstractFunction function) {
         function.setName("Process data");
         function.setDescription("Processes data");
-        var child = LaFactory.eINSTANCE.createLogicalFunction();
-        child.setName("Validate data");
-        function.getOwnedFunctions().add(child);
-        var architecture = LaFactory.eINSTANCE.createLogicalArchitecture();
-        var functionPackage = LaFactory.eINSTANCE.createLogicalFunctionPkg();
-        architecture.setOwnedFunctionPkg(functionPackage);
-        var root = LaFactory.eINSTANCE.createLogicalFunction();
-        root.setName("Root Function");
-        functionPackage.getOwnedLogicalFunctions().add(root);
-        root.getOwnedFunctions().add(function);
-
         FunctionInputPort input = FaFactory.eINSTANCE.createFunctionInputPort();
         input.setName("Input");
         input.setDescription("Input description");
@@ -87,7 +81,7 @@ class FunctionPortMapperTest {
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 resourceSet);
 
-        var result = engine.transform(functionPackage, "IFE");
+        var result = engine.transformAll(java.util.List.of(output, input, function, input), "IFE");
 
         ActionUsage functionTarget = assertInstanceOf(ActionUsage.class,
                 result.traceability().lookupTarget(function).orElseThrow());

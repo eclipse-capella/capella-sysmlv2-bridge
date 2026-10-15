@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -33,7 +35,7 @@ import org.polarsys.capella.core.data.oa.Entity;
  * @author Raphaël Pagé
  */
 public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public EntityMapper() {
@@ -49,10 +51,26 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
     }
 
     @Override
+    public List<EObject> getCreationDependencies(Entity source) {
+        return MapperUtils.creationParent(source, Entity.class).stream().toList();
+    }
+
+    @Override
     protected PartUsage createTarget(Entity source, TransformationContext context) {
-        var parent = context.modelStructure().operationalAnalysis().perspectivePackage();
-        var target = source.isActor() ? COMMON_CREATION_SERVICE.createActor(parent)
-                : COMMON_CREATION_SERVICE.createComponent(parent);
+        var sourceParent = MapperUtils.creationParent(source, Entity.class);
+        Element parent;
+        if (sourceParent.isPresent()) {
+            parent = MapperUtils.require(context.traceability(), sourceParent.get(), PartUsage.class);
+        } else {
+            parent = context.modelStructure().operationalAnalysis().perspectivePackage();
+        }
+
+        PartUsage target;
+        if (source.isActor()) {
+            target = COMMON_CREATION_SERVICE.createActor(parent);
+        } else {
+            target = COMMON_CREATION_SERVICE.createComponent(parent);
+        }
 
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create an Operational Entity");
@@ -64,11 +82,6 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
-    }
-
-    @Override
-    public void mapContainment(Entity source, TransformationContext context) {
-        MapperUtils.moveToSourceParent(context, source);
     }
 
     @Override

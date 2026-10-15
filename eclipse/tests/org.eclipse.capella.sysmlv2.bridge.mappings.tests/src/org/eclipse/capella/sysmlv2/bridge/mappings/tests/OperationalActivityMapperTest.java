@@ -46,7 +46,8 @@ class OperationalActivityMapperTest {
         root.setName("Root Function");
         functionPackage.getOwnedOperationalActivities().add(root);
         root.getOwnedFunctions().add(source);
-        var result = transform(architecture);
+        var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
+                new CapellaForSysonResourceSet().getResourceSet()).transformAll(java.util.List.of(child, source, root), "IFE");
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Capture movement", target.getDeclaredName());
@@ -55,17 +56,11 @@ class OperationalActivityMapperTest {
         assertSame(target, COMMON_QUERY_SERVICE.getParentFunction(childTarget).orElseThrow());
         var rootFunction = assertInstanceOf(ActionUsage.class,
                 assertInstanceOf(OwningMembership.class, target.eContainer()).eContainer());
+        assertSame(result.traceability().lookupTarget(root).orElseThrow(), rootFunction);
         assertEquals("Root Function", rootFunction.getDeclaredName());
         assertEquals("Functions", assertInstanceOf(Package.class,
                 assertInstanceOf(OwningMembership.class, rootFunction.eContainer()).eContainer()).getDeclaredName());
         assertTrue(result.diagnostics().isEmpty());
     }
 
-    private static org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult transform(
-            org.polarsys.capella.core.data.oa.OperationalAnalysis source) {
-        var resourceSet = new CapellaForSysonResourceSet().getResourceSet();
-        return new TransformationEngine(
-                new MapperRegistry(CapellaMapperCatalog.createMappers()), resourceSet)
-                        .transform(source, "IFE");
-    }
 }
