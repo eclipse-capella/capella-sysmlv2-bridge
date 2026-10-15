@@ -69,9 +69,8 @@ Direct .capella semantic model loading
 Typed mapper registry resolution
         |
         v
-Three-phase TransformationEngine
+Dependency-driven TransformationEngine
         | creation and registration
-        | containment resolution
         | feature mapping
              |
              v
@@ -125,14 +124,13 @@ Production mappings use typed Capella APIs for source identity, names, and relat
 `MapperRegistry` resolves the first mapper whose typed source class is compatible with the source element, in registration order, and rejects duplicate source classes.
 There is no separate dispatcher or deferred reference resolver.
 
-`TransformationEngine` runs every transformation in three ordered steps:
+`TransformationEngine` constructs declared prerequisites recursively before their dependents, then maps features after all construction attempts finish. Source identity determines scope and deduplication; independent sources retain encounter order. Successful targets receive feature mappings once in construction-completion order.
 
-. **Creation and registration:** every source target is created below its architecture-specific default container and registered immediately in identity-based `Traceability`.
-. **Containment:** once creation is complete, mappers resolve the closest mapped owners from the source hierarchy. Targets without a mapped ancestor retain their initial placement. SysON's semantic move service preserves target identity and may convert owning memberships to suit the destination. An excluded ancestor, an incompatible mapped owner, or a failed move excludes the target, removes it from the model and traceability, and adds a diagnostic; descendants detect the exclusion during their containment pass.
-. **Features:** retained targets execute their `FeatureMapping` actions. Relations resolve targets from the complete traceability and report failures per feature.
+`getCreationDependencies(source)` inspects sources without traceability or mutations. Only dependencies within the supplied scope are resolved. Unsupported, excluded, failed, and out-of-scope prerequisites prevent dependent creation with a diagnostic. Cycles report the involved sources and fail their dependent chain; unrelated mappings continue. Discovery or creation exceptions and null targets exclude the source without retries.
 
-`transform(root, rootName)` traverses the root and its descendants. `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>`. Both methods invoke registered mappers only for supported sources, sorted from shallowest containment depth to deepest, counting unmapped ancestors. Sources at the same depth retain their encounter order when the collection is ordered. The bound mappers are materialized once and reused in the same order for every phase; the source collection is unchanged.
+Creation services receive mapped source parents where available and determine final containment. Architecture roots reuse the pre-created targets; ports require mapped owners. Cross-reference feature mappings remain outside the construction graph.
 
+`transform(root, rootName)` traverses the root and its descendants. `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>` without modifying it. No containment-depth sorting or relocation phase remains.
 The concrete `TransformationContext` owns the model structure, identity-based `Traceability` (including exclusion state), and `DiagnosticsCollector`. The engine accepts a `rootName` string to name the generated model root; there is no transformation options object or deferred reference resolver.
 
 === Arcadia Library
@@ -198,7 +196,7 @@ LogicalFunction, SystemFunction, PhysicalFunction, OperationalActivity
         -> typed by Arcadia::Function
 ----
 
-Mapped usages are first created below the relevant architecture root and then placed under their final source parent during the containment phase:
+Mapped usages are constructed after their declared prerequisites. Creation services receive mapped source parents where available and own the final containment; no relocation phase follows. Elements without compatible source ancestors use their existing perspective defaults:
 
 [source,text]
 ----

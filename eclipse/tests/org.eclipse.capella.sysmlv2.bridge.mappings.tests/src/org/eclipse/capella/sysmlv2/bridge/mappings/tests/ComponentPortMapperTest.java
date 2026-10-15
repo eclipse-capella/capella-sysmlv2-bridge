@@ -55,7 +55,7 @@ class ComponentPortMapperTest {
         var engine = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 targetModel.getResourceSet());
 
-        var result = engine.transform(architecture, "IFE");
+        var result = engine.transformAll(java.util.List.of(componentPort, component, rootComponent), "IFE");
 
         var componentTarget = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(component).orElseThrow());
@@ -67,8 +67,7 @@ class ComponentPortMapperTest {
         assertSame(componentTarget, target.getOwningUsage());
         assertTrue(COMMON_QUERY_SERVICE.isComponentPort(target));
         assertTrue(target.getNestedReference().stream()
-                .filter(reference -> reference.getName().endsWith("allocatedFunctionPorts"))
-                .findFirst().isPresent());
+                .anyMatch(reference -> reference.getName().endsWith("allocatedFunctionPorts")));
         assertTrue(result.diagnostics().isEmpty());
     }
 }

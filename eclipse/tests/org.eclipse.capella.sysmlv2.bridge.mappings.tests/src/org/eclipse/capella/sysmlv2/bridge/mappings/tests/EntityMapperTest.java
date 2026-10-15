@@ -16,6 +16,22 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 class EntityMapperTest {
 
     @Test
+    void createsNestedEntityUsingItsMappedParentBeforeMappingNames() {
+        var parent = org.polarsys.capella.core.data.oa.OaFactory.eINSTANCE.createEntity();
+        var child = org.polarsys.capella.core.data.oa.OaFactory.eINSTANCE.createEntity();
+        parent.getOwnedEntities().add(child);
+        child.setName("Crew");
+        var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
+                new CapellaForSysonResourceSet().getResourceSet())
+                        .transformAll(java.util.List.of(child, parent), "Entities");
+        var target = org.junit.jupiter.api.Assertions.assertInstanceOf(org.eclipse.syson.sysml.PartUsage.class,
+                result.traceability().lookupTarget(child).orElseThrow());
+        org.junit.jupiter.api.Assertions.assertSame(result.traceability().lookupTarget(parent).orElseThrow(), target.getOwner());
+        org.junit.jupiter.api.Assertions.assertEquals("Crew", target.getDeclaredName());
+        assertTrue(result.diagnostics().isEmpty());
+    }
+
+    @Test
     void retainsAnOperationalEntityWithoutMappedAncestor() {
         var source = org.polarsys.capella.core.data.oa.OaFactory.eINSTANCE.createEntity();
         source.setName("Pilot");

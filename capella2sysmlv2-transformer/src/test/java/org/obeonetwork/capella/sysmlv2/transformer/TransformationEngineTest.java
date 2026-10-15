@@ -50,7 +50,7 @@ class TransformationEngineTest {
                 .transform(source, ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
 
         assertThat(result.root()).isNotNull();
-        assertThat(result.diagnostics()).singleElement()
+        assertThat(result.diagnostics()).filteredOn(diagnostic -> diagnostic.message().equals("test diagnostic")).singleElement()
                 .satisfies(diagnostic -> assertThat(diagnostic.message()).isEqualTo("test diagnostic"));
     }
 
@@ -80,7 +80,7 @@ class TransformationEngineTest {
     }
 
     @Test
-    void processesSourcesByDepthWithStableOrderAcrossPhases() {
+    void constructsDependenciesOnceBeforeFeaturesInCompletionOrder() {
         var root = packageWithName("root");
         var first = packageWithName("first");
         var second = packageWithName("second");
@@ -97,8 +97,11 @@ class TransformationEngineTest {
             }
 
             @Override
-            public void mapContainment(EPackage source, TransformationContext context) {
-                executions.add(new Execution("containment", source.getName()));
+            public List<EObject> getCreationDependencies(EPackage source) {
+                if (source.eContainer() == null) {
+                    return List.of();
+                }
+                return List.of(source.eContainer());
             }
 
             @Override
@@ -107,19 +110,19 @@ class TransformationEngineTest {
                         (source, context) -> executions.add(new Execution("features", source.getName()))));
             }
         };
-        var sources = new ArrayList<EPackage>(List.of(grandchild, second, root, first));
+        var sources = new ArrayList<EPackage>(List.of(grandchild, second, root, first, grandchild, root));
 
         new TransformationEngine(new MapperRegistry(List.of(mapper)),
                 TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(sources,
                         ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
 
-        var depthOrder = List.of("root", "second", "first", "grandchild");
-        assertThat(executions).containsExactlyElementsOf(phaseExecutions(depthOrder, "create", "containment", "features"));
-        assertThat(sources).containsExactly(grandchild, second, root, first);
+        var completionOrder = List.of("root", "second", "grandchild", "first");
+        assertThat(executions).containsExactlyElementsOf(phaseExecutions(completionOrder, "create", "features"));
+        assertThat(sources).containsExactly(grandchild, second, root, first, grandchild, root);
     }
 
     @Test
-    void countsUnmappedAncestorsWhenOrderingByDepth() {
+    void preservesEncounterOrderForIndependentSourcesRegardlessOfContainment() {
         var shallow = packageWithName("shallow");
         var unmappedParent = packageWithName("unmappedParent");
         var unmappedGrandparent = packageWithName("unmappedGrandparent");
@@ -145,7 +148,123 @@ class TransformationEngineTest {
                 TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(List.of(deep, shallow),
                         ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
 
-        assertThat(transformed).containsExactly("shallow", "deep");
+        assertThat(transformed).containsExactly("deep", "shallow");
+    }
+
+    @Test
+    void isolatesUnavailableDependenciesAndNeverRetriesFailures() {
+        for (var failure : List.of("missing", "unsupported", "null", "creation exception", "discovery exception", "excluded")) {
+            var dependent = packageWithName("dependent");
+            EObject prerequisite;
+            if (failure.equals("unsupported")) {
+                prerequisite = EcoreFactory.eINSTANCE.createEClass();
+            } else {
+                prerequisite = packageWithName("prerequisite");
+            }
+            var unrelated = packageWithName("unrelated");
+            var excluder = packageWithName("excluder");
+            var creations = new ArrayList<EObject>();
+            var features = new ArrayList<EObject>();
+            var mapper = new ElementMapper<EPackage, EObject>(EPackage.class, "SysML::Element") {
+                @Override
+                public List<EObject> getCreationDependencies(EPackage source) {
+                    if (source == prerequisite && failure.equals("discovery exception")) {
+                        throw new IllegalStateException("discovery failed");
+                    }
+                    if (source == dependent) {
+                        return List.of(prerequisite);
+                    }
+                    return List.of();
+                }
+
+                @Override
+                protected EObject createTarget(EPackage source, TransformationContext context) {
+                    creations.add(source);
+                    if (source == excluder) {
+                        context.traceability().unregister(prerequisite);
+                    }
+                    if (source == prerequisite) {
+                        if (failure.equals("creation exception")) {
+                            throw new IllegalStateException("creation failed");
+                        }
+                        return null;
+                    }
+                    return EcoreFactory.eINSTANCE.createEPackage();
+                }
+
+                @Override
+                public List<FeatureMapping<EPackage>> getFeatureMappings() {
+                    return List.of(new FeatureMapping<>("name", "name", (source, context) -> features.add(source)));
+                }
+            };
+            var inputs = new ArrayList<EObject>();
+            if (failure.equals("excluded")) {
+                inputs.add(excluder);
+            }
+            inputs.add(dependent);
+            if (!failure.equals("missing")) {
+                inputs.addAll(List.of(prerequisite, prerequisite));
+            }
+            inputs.addAll(List.of(dependent, unrelated, unrelated));
+            var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
+                    TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(inputs, "Failures");
+
+            assertThat(creations).doesNotContain(dependent);
+            assertThat(creations.stream().filter(source -> source == prerequisite).count()).isLessThanOrEqualTo(1L);
+            assertThat(features).doesNotContain(dependent, prerequisite);
+            assertThat(features.stream().filter(source -> source == unrelated).count()).isEqualTo(1L);
+            assertThat(result.traceability().contains(unrelated)).isTrue();
+            assertThat(result.traceability().isExcluded(dependent)).isTrue();
+            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("prerequisite: " + prerequisite));
+        }
+    }
+
+    @Test
+    void failsSelfAndMultiElementCyclesAndTheirDependentsButContinuesUnrelatedSources() {
+        for (var selfCycle : List.of(true, false)) {
+            var first = packageWithName("first");
+            var second = packageWithName("second");
+            var dependent = packageWithName("dependent");
+            var unrelated = packageWithName("unrelated");
+            var creations = new ArrayList<EObject>();
+            var mapper = new ElementMapper<EPackage, EObject>(EPackage.class, "SysML::Element") {
+                @Override
+                public List<EObject> getCreationDependencies(EPackage source) {
+                    if (source == dependent || source == second) {
+                        return List.of(first);
+                    }
+                    if (source == first) {
+                        if (selfCycle) {
+                            return List.of(first);
+                        }
+                        return List.of(second);
+                    }
+                    return List.of();
+                }
+
+                @Override
+                protected EObject createTarget(EPackage source, TransformationContext context) {
+                    creations.add(source);
+                    return EcoreFactory.eINSTANCE.createEPackage();
+                }
+
+                @Override
+                public List<FeatureMapping<EPackage>> getFeatureMappings() {
+                    return List.of();
+                }
+            };
+            var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
+                    TestSysONModels.arcadiaLibrary().resourceSet())
+                            .transformAll(List.of(dependent, first, second, first, unrelated), "Cycles");
+            assertThat(creations).containsExactly(unrelated);
+            assertThat(result.traceability().isExcluded(first)).isTrue();
+            assertThat(result.traceability().isExcluded(second)).isTrue();
+            assertThat(result.traceability().isExcluded(dependent)).isTrue();
+            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", first.toString()));
+            if (!selfCycle) {
+                assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", second.toString()));
+            }
+        }
     }
 
     private static EPackage packageWithName(String name) {

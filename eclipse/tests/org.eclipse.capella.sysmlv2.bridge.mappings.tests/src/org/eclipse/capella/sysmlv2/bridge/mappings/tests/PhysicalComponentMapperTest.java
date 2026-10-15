@@ -50,7 +50,7 @@ class PhysicalComponentMapperTest {
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 new CapellaForSysonResourceSet().getResourceSet());
 
-        var result = engine.transform(architecture, "IFE");
+        var result = engine.transformAll(java.util.List.of(source, root), "IFE");
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

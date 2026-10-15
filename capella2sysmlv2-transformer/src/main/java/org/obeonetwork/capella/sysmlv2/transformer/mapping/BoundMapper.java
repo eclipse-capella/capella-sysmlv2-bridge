@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.mapping;
 
+import java.util.List;
+
 import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
@@ -53,13 +55,12 @@ public final class BoundMapper<S extends EObject> {
     }
 
     /**
-     * Maps containment for the bound source.
+     * Returns the creation prerequisites for the bound source.
      *
-     * @param context
-     *            current transformation context
+     * @return source prerequisites
      */
-    public void mapContainment(TransformationContext context) {
-        this.mapper.mapContainment(this.source, context);
+    public List<EObject> getCreationDependencies() {
+        return this.mapper.getCreationDependencies(this.source);
     }
 
     /**

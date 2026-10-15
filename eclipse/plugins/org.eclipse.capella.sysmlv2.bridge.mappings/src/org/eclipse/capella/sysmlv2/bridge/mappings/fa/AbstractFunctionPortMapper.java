@@ -20,18 +20,15 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
 import org.eclipse.syson.sysml.ItemUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
-import org.polarsys.capella.core.data.ctx.SystemFunction;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
 import org.polarsys.capella.core.data.fa.FunctionPort;
-import org.polarsys.capella.core.data.la.LogicalFunction;
-import org.polarsys.capella.core.data.oa.OperationalActivity;
-import org.polarsys.capella.core.data.pa.PhysicalFunction;
 
 /**
  * Maps a {@link FunctionPort}.
@@ -39,7 +36,7 @@ import org.polarsys.capella.core.data.pa.PhysicalFunction;
  * @author Raphaël Pagé
  */
 abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends ElementMapper<S, ItemUsage> {
-    
+
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     private final FeatureDirectionKind direction;
@@ -64,28 +61,14 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
             context.diagnostics().addError(source, "Unable to find the owning capella Function");
             return null;
         }
-        var defaultParent = context.traceability()
-                .lookupTarget(owner)
-                .filter(ActionUsage.class::isInstance)
-                .map(ActionUsage.class::cast)
-                .orElseGet(() -> rootFunction(owner, context));
-
-        return COMMON_CREATION_SERVICE.createFunctionPort(defaultParent, direction);
-    }
-
-    private static ActionUsage rootFunction(AbstractFunction owner, TransformationContext context) {
-        return switch (owner) {
-            case SystemFunction sf -> context.modelStructure().systemAnalysis().rootFunction();
-            case LogicalFunction lf -> context.modelStructure().logicalArchitecture().rootFunction();
-            case OperationalActivity oa -> context.modelStructure().operationalAnalysis().rootFunction();
-            case PhysicalFunction pf -> context.modelStructure().physicalArchitecture().rootFunction();
-            default -> throw new IllegalArgumentException("Unexpected value for port owner: " + owner.eClass());
-        };
+        return COMMON_CREATION_SERVICE.createFunctionPort(
+                MapperUtils.require(context.traceability(), owner, ActionUsage.class), direction);
     }
 
     @Override
-    public void mapContainment(S source, TransformationContext context) {
-        MapperUtils.moveToSourceParent(context, source);
+    public List<EObject> getCreationDependencies(S source) {
+        return List.of(findOwningCapellaFunction(source)
+                .orElseThrow(() -> new IllegalArgumentException("Missing owning function for " + source)));
     }
 
     @Override
