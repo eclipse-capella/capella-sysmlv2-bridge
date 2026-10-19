@@ -6,9 +6,9 @@ Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
+ target/arcadia-library,
  target/dependency/capella-loader-0.1.0-SNAPSHOT.jar,
  target/dependency/cli-0.1.0-SNAPSHOT.jar,
- target/dependency/arcadia-library-0.0.3.jar,
  target/dependency/org.eclipse.sirius.emfjson-2.5.3-SNAPSHOT.jar,
  target/dependency/gson-2.13.1.jar,
  target/dependency/java-uuid-generator-5.1.0.jar,

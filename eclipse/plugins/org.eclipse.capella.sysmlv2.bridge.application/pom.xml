@@ -46,11 +46,6 @@
             <version>${spring.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.arcadia</groupId>
-            <artifactId>arcadia-library</artifactId>
-            <version>${arcadia-library.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.sirius</groupId>
             <artifactId>org.eclipse.sirius.emfjson</artifactId>
             <version>${emfjson.version}</version>
@@ -85,6 +80,28 @@
 	    <plugins>
 	        <plugin>
 	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-antrun-plugin</artifactId>
+	            <version>${maven-antrun-plugin.version}</version>
+	            <executions>
+	                <execution>
+	                    <id>download-arcadia-library</id>
+	                    <phase>generate-resources</phase>
+	                    <goals>
+	                        <goal>run</goal>
+	                    </goals>
+	                    <configuration>
+	                        <target>
+	                            <mkdir dir="${project.build.directory}/arcadia-library/arcadia/library" />
+	                            <get src="${arcadia-library.url}"
+	                                 dest="${project.build.directory}/arcadia-library/arcadia/library/arcadia.json"
+	                                 skipexisting="false" />
+	                        </target>
+	                    </configuration>
+	                </execution>
+	            </executions>
+	        </plugin>
+	        <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
 	            <artifactId>maven-dependency-plugin</artifactId>
 	            <version>${maven-dependency-plugin.version}</version>
 	
@@ -106,7 +123,7 @@
 	                        </outputDirectory>
 	
 	                        <includeArtifactIds>
-                                capella-loader,cli,sirius-components-core,sirius-components-emf,syson-application-configuration,spring-core,arcadia-library,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3,commons-io
+                                capella-loader,cli,sirius-components-core,sirius-components-emf,syson-application-configuration,spring-core,org.eclipse.sirius.emfjson,gson,java-uuid-generator,commons-text,commons-lang3,commons-io
 	                        </includeArtifactIds>
 	
 	                        <excludeTransitive>false</excludeTransitive>
