@@ -98,22 +98,24 @@ final class ProductTestSupport {
                 execution.output());
         assertTrue(execution.output().contains("Source FunctionInputPort count: 248"), execution.output());
         assertTrue(execution.output().contains("Source FunctionOutputPort count: 234"), execution.output());
-        assertTrue(execution.output().contains("Generated PartUsage count: 100"),
-                execution.output());
+        assertTrue(execution.output().contains("Source ComponentPort count: 52"), execution.output());
+        assertTrue(execution.output().contains("Source FunctionalExchange count: 272"), execution.output());
+        assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
         assertTrue(execution.output().contains("Generated ActionUsage count: 235"), execution.output());
+        assertTrue(execution.output().contains("Generated FlowUsage count: 272"), execution.output());
         assertTrue(execution.output().contains("Generated ItemUsage count: 482"), execution.output());
-        assertTrue(execution.output().contains("Errors: 0"),
+        assertTrue(execution.output().contains("Generated PortUsage count: 52"), execution.output());
+        assertTrue(execution.output().contains("Errors: 0"), execution.output());
+        assertTrue(
+                execution.output().contains(
+                        "Capella Transformation Coverage: 12/252 (4.76%)"),
                 execution.output());
         assertTrue(
                 execution.output().contains(
-                        "Capella Transformation Coverage: 11/252 (4.37%)"),
-                execution.output());
-        assertTrue(
-                execution.output().contains(
-                        "Arcadia SysML v2 Library Utilization: 10/46 (21.74%)"),
+                        "Arcadia SysML v2 Library Utilization: 11/46 (23.91%)"),
                 execution.output());
         assertTrue(execution.output().contains(
-                "Arcadia SysML v2 Library Coverage of Capella: 11/252 (4.37%)"),
+                "Arcadia SysML v2 Library Coverage of Capella: 12/252 (4.76%)"),
                 execution.output());
 
         var xmiModel = applicationOutput

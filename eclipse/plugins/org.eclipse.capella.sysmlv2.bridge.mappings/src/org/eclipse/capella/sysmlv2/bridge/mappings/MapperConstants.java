@@ -53,6 +53,18 @@ public final class MapperConstants {
 
     public static final String CAPELLA_ALLOCATED_FUNCTION_PORTS = "allocatedFunctionPorts";
 
+    public static final String CAPELLA_OUT_FUNCTIONAL_EXCHANGE_REALIZATIONS = "outgoingFunctionalExchangeRealizations";
+
+    public static final String CAPELLA_IN_FUNCTIONAL_EXCHANGE_REALIZATIONS = "incomingFunctionalExchangeRealizations";
+
+    public static final String CAPELLA_SOURCE = "source";
+
+    public static final String CAPELLA_TARGET = "target";
+
+    public static final String CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT = "sourceFunctionOutputPort";
+
+    public static final String CAPELLA_TARGET_FUNCTION_INPUT_PORT = "targetFunctionInputPort";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";
@@ -84,11 +96,17 @@ public final class MapperConstants {
 
     public static final String ARCADIA_IS_HUMAN = "isHuman";
 
+    public static final String ARCADIA_FUNCTIONAL_EXCHANGE = "Arcadia::FunctionalExchange";
+
     public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
 
     public static final String SYSML_IS_ABSTRACT = "SysML" + SEPARATOR + "Feature" + SEPARATOR + "isAbstract";
+
+    public static final String SYSML_FLOW_USAGE_SOURCE = "SysML::FlowUsage::source";
+
+    public static final String SYSML_FLOW_USAGE_TARGET = "SysML::FlowUsage::target";
 
     private MapperConstants() {
         // Constant classes : do not instantiate
