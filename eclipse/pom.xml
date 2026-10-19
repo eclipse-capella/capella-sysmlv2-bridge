@@ -54,11 +54,6 @@
             <id>github-sirius-emfjson</id>
             <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
         </repository>
-        <repository>
-            <id>github-arcadia</id>
-            <!-- Temporary until the package is published by eclipse-capella. -->
-            <url>https://maven.pkg.github.com/obeo/arcadia-sysmlv2-lib</url>
-        </repository>
     </repositories>
 
     <build>

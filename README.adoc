@@ -4,7 +4,7 @@
 
 `capella2sysmlv2` is a standalone command-line tool that transforms a zipped Capella project into a SysML v2 model represented by the SysON metamodel.
 
-The generated model reuses concepts from the open-source https://github.com/eclipse-capella/arcadia-sysmlv2-lib[Arcadia SysML v2 library].
+The generated model reuses concepts from the open-source https://github.com/eclipse-capella/capella-for-syson/tree/main/backend/application/capella-application-configuration/src/main/resources/arcadia/library[Arcadia SysML v2 library].
 
 [NOTE]
 ====

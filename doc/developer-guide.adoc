@@ -56,17 +56,7 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
-To verify package access without reusing the local Maven cache:
-
-[source,bash]
-----
-TEST_M2=$(mktemp -d)
-mvn --settings .github/maven-settings.xml \
-  -Dmaven.repo.local="$TEST_M2" \
-  org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get \
-  -Dartifact=org.eclipse.arcadia:arcadia-library:0.0.3 \
-  -DremoteRepositories=github-arcadia::default::https://maven.pkg.github.com/eclipse-capella/arcadia-sysmlv2-lib
-----
+The Eclipse application build downloads `arcadia.json` from the `main` branch of the Capella for SysON repository into the application bundle.
 
 == Repository Structure
 

@@ -36,7 +36,7 @@ Build and contribution instructions are maintained in link:developer-guide.adoc[
 |2025.2.12
 
 |Arcadia SysML v2 library
-|`org.eclipse.arcadia:arcadia-library:0.0.3`
+|`capella-for-syson` repository `arcadia/library/arcadia.json`
 
 |Maven
 |3.9 or later
@@ -179,7 +179,7 @@ A GitHub Actions workflow is defined for pull requests, `main`, manual runs, and
 * verify the transformation summary and generated model content;
 * publish both archives in a GitHub Release only for tags and after successful acceptance tests.
 
-The package-access secrets are configured. The workflow temporarily resolves `org.eclipse.arcadia:arcadia-library:0.0.3` from the private Obeo package repository; Java 17 and Windows qualification remain pending until the workflow completes successfully.
+The workflow downloads the Arcadia library JSON from the Capella for SysON repository during the Eclipse application build. Java 17 and Windows qualification remain pending until the workflow completes successfully.
 
 == Current Mapping Coverage
 
@@ -305,10 +305,9 @@ A physically UI-free distribution would require repackaging Capella semantic cla
 
 === Release Infrastructure Qualification
 
-The package credentials are configured and Arcadia `0.0.3` is temporarily consumed from the private Obeo package repository.
+The build downloads the Arcadia library JSON from the Capella for SysON repository.
 The repository must complete Java 17 Linux and Windows qualification and a first tagged build, then check the resulting GitHub Release links from the user documentation.
 
-The Arcadia repository URL must move from `obeo/arcadia-sysmlv2-lib` to the official `eclipse-capella/arcadia-sysmlv2-lib` package repository once that artifact is published there.
 
 === Official Textual Export
 
