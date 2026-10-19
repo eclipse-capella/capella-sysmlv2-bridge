@@ -22,6 +22,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionInputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalFunctionMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.oa.EntityMapper;
@@ -66,7 +67,7 @@ public final class CapellaMapperCatalog {
         return List.of(new LogicalComponentMapper(), new EntityMapper(), new SystemComponentMapper(),
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
-                new FunctionOutputPortMapper(), new ComponentPortMapper());
+                new FunctionOutputPortMapper(), new ComponentPortMapper(), new FunctionalExchangeMapper());
     }
 
     /**
@@ -91,7 +92,6 @@ public final class CapellaMapperCatalog {
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
                 candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
-                candidate(FaPackage.Literals.FUNCTIONAL_EXCHANGE, "Arcadia::FunctionalExchange"),
                 candidate(InformationPackage.Literals.EXCHANGE_ITEM, "Arcadia::ExchangeItem"),
                 candidate(OaPackage.Literals.COMMUNICATION_MEAN, "Arcadia::ComponentExchange"),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain")));
@@ -131,8 +131,7 @@ public final class CapellaMapperCatalog {
                 entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION)));
         result.put("fa", List.of(
                 entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE),
-                entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN),
-                entry("fa", "FunctionalExchangeMapper", FaPackage.Literals.FUNCTIONAL_EXCHANGE)));
+                entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN)));
         result.put("information", List.of(
                 entry("information", "ExchangeItemMapper", InformationPackage.Literals.EXCHANGE_ITEM)));
         result.put("la", List.of());
