@@ -6,6 +6,9 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *     Obeo - initial API and implementation
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
@@ -41,6 +44,8 @@ public final class MapperConstants {
 
     public static final String CAPELLA_REALIZING_COMPONENTS = "realizingComponents";
 
+    public static final String CAPELLA_EXCHANGED_ITEMS = "exchangedItems";
+
     public static final String CAPELLA_OUT_FUNCTION_REALIZATIONS = "outFunctionRealizations";
 
     public static final String CAPELLA_IN_FUNCTION_REALIZATIONS = "inFunctionRealizations";
@@ -65,6 +70,14 @@ public final class MapperConstants {
 
     public static final String CAPELLA_TARGET_FUNCTION_INPUT_PORT = "targetFunctionInputPort";
 
+    public static final String CAPELLA_REALIZED_EXCHANGE_ITEMS = "realizedExchangeItems";
+
+    public static final String CAPELLA_REALIZING_EXCHANGE_ITEMS = "realizingExchangeItems";
+
+    public static final String CAPELLA_OUTGOING_EXCHANGE = "outgoingExchangeItems";
+
+    public static final String CAPELLA_INCOMING_EXCHANGE = "incomingExchangeItems";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";
@@ -83,6 +96,8 @@ public final class MapperConstants {
     public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + "::allocatedFunctions";
 
     public static final String ARCADIA_ELEMENT = "Arcadia::ArcadiaElement";
+
+    public static final String ARCADIA_EXCHANGE_ITEM = "Arcadia::ExchangeItem";
 
     public static final String ARCADIA_REALIZES = "realizes";
 
@@ -107,6 +122,12 @@ public final class MapperConstants {
     public static final String SYSML_FLOW_USAGE_SOURCE = "SysML::FlowUsage::source";
 
     public static final String SYSML_FLOW_USAGE_TARGET = "SysML::FlowUsage::target";
+
+    public static final String SYSML_ITEM_USAGE = "SysML::ItemUsage";
+
+    public static final String SYSML_FEATURE_VALUE = "SysML::Feature::value";
+
+    public static final String SYSML_FLOWUSAGE_PAYLOAD = "SysML::FlowUsage::payload";
 
     private MapperConstants() {
         // Constant classes : do not instantiate

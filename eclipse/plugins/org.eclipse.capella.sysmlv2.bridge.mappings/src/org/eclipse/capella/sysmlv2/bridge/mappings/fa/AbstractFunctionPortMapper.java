@@ -19,16 +19,23 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
+import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
+import org.eclipse.syson.sysml.Expression;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
+import org.eclipse.syson.sysml.FeatureReferenceExpression;
 import org.eclipse.syson.sysml.ItemUsage;
+import org.eclipse.syson.sysml.SysmlFactory;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.fa.FunctionInputPort;
+import org.polarsys.capella.core.data.fa.FunctionOutputPort;
 import org.polarsys.capella.core.data.fa.FunctionPort;
+import org.polarsys.capella.core.data.information.ExchangeItem;
 
 /**
  * Maps a {@link FunctionPort}.
@@ -42,27 +49,31 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
     private final FeatureDirectionKind direction;
 
     AbstractFunctionPortMapper(Class<S> sourceClass, FeatureDirectionKind direction) {
-        super(sourceClass, "SysML::ItemUsage");
+        super(sourceClass, MapperConstants.SYSML_ITEM_USAGE);
         this.direction = direction;
     }
 
     @Override
     public List<FeatureMapping<S>> getFeatureMappings() {
-        return Stream.concat(
+        var capellaFeature = MapperConstants.CAPELLA_OUTGOING_EXCHANGE;
+        if (direction == FeatureDirectionKind.IN) {
+            capellaFeature = MapperConstants.CAPELLA_INCOMING_EXCHANGE;
+        }
+        var itemBindings = Stream.of(new FeatureMapping<S>(capellaFeature, MapperConstants.SYSML_FEATURE_VALUE, this::mapExchangeItems));
+        return Stream.concat(itemBindings, Stream.concat(
                 FeatureMappingCatalog.<S> getPortRealizationMappings().stream(),
-                FeatureMappingCatalog.<S> getArcadiaElementMappings().stream())
+                FeatureMappingCatalog.<S> getArcadiaElementMappings().stream()))
                 .toList();
     }
 
     @Override
     protected ItemUsage createTarget(S source, TransformationContext context) {
-        AbstractFunction owner = findOwningCapellaFunction(source).orElse(null);
+        var owner = findOwningCapellaFunction(source).orElse(null);
         if (owner == null) {
             context.diagnostics().addError(source, "Unable to find the owning capella Function");
             return null;
         }
-        return COMMON_CREATION_SERVICE.createFunctionPort(
-                MapperUtils.require(context.traceability(), owner, ActionUsage.class), direction);
+        return COMMON_CREATION_SERVICE.createFunctionPort(MapperUtils.require(context.traceability(), owner, ActionUsage.class), direction);
     }
 
     @Override
@@ -80,5 +91,61 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
         return Optional.ofNullable(source.eContainer())
                 .filter(AbstractFunction.class::isInstance)
                 .map(AbstractFunction.class::cast);
+    }
+
+    private void mapExchangeItems(S source, TransformationContext context) {
+        var targetItems = findMappedExchangeItems(source, context);
+        var target = MapperUtils.require(context.traceability(), source, ItemUsage.class);
+
+        // TODO : couldn't find the equivalent code in the capella for syson repo, but it should exist
+        Expression value;
+        if (targetItems.size() == 1) {
+            value = referenceTo(targetItems.getFirst());
+        } else {
+            var tuple = SysmlFactory.eINSTANCE.createOperatorExpression();
+            tuple.setOperator(",");
+            for (ItemUsage item : targetItems) {
+                var parameter = SysmlFactory.eINSTANCE.createParameterMembership();
+                var parameterFeature = SysmlFactory.eINSTANCE.createFeature();
+                parameterFeature.setDirection(FeatureDirectionKind.IN);
+                parameter.getOwnedRelatedElement().add(parameterFeature);
+                var parameterValue = SysmlFactory.eINSTANCE.createFeatureValue();
+                parameterFeature.getOwnedRelationship().add(parameterValue);
+                parameterValue.getOwnedRelatedElement().add(referenceTo(item));
+                tuple.getOwnedRelationship().add(parameter);
+            }
+            value = tuple;
+        }
+        var featureValue = SysmlFactory.eINSTANCE.createFeatureValue();
+        featureValue.getOwnedRelatedElement().add(value);
+        target.getOwnedRelationship().add(featureValue);
+    }
+
+    private List<ItemUsage> findMappedExchangeItems(S source, TransformationContext context) {
+        List<ExchangeItem> sourceItems = List.of();
+        if (source instanceof FunctionInputPort input) {
+            sourceItems = input.getIncomingExchangeItems();
+        } else if (source instanceof FunctionOutputPort output) {
+            sourceItems = output.getOutgoingExchangeItems();
+        }
+
+        return sourceItems.stream().distinct()
+                .map(item -> context.traceability().lookupTarget(item)
+                        .filter(ItemUsage.class::isInstance)
+                        .map(ItemUsage.class::cast)
+                        .orElseGet(() -> {
+                            context.diagnostics().addError(source, "Unable to map exchange item " + item.getName());
+                            return null;
+                        }))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    private static FeatureReferenceExpression referenceTo(ItemUsage item) {
+        var reference = SysmlFactory.eINSTANCE.createFeatureReferenceExpression();
+        var membership = SysmlFactory.eINSTANCE.createMembership();
+        membership.setMemberElement(item);
+        reference.getOwnedRelationship().add(membership);
+        return reference;
     }
 }
