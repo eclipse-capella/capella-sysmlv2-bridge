@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
@@ -43,6 +44,8 @@ import org.polarsys.capella.core.data.oa.OperationalActivity;
  */
 public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExchange, FlowUsage> {
     private static final CommonCreationService CREATION_SERVICE = new CommonCreationService();
+
+    private static final CommonUpdateService UPDATE_SERVICE = new CommonUpdateService();
 
     public FunctionalExchangeMapper() {
         super(FunctionalExchange.class, MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE);
@@ -97,7 +100,8 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
                 new FeatureMapping<>(MapperConstants.CAPELLA_OUT_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizes(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
                 new FeatureMapping<>(MapperConstants.CAPELLA_IN_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionalExchangeRealizations(), context.traceability())));
+                        (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
+                new FeatureMapping<>(MapperConstants.CAPELLA_EXCHANGED_ITEMS, MapperConstants.SYSML_FLOWUSAGE_PAYLOAD, this::mapExchangedItems));
         List<FeatureMapping<FunctionalExchange>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
         return Stream.concat(arcadiaElementMappings.stream(), endpoints.stream()).toList();
     }
@@ -105,5 +109,20 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
     @Override
     public Set<String> getIgnoredFeatures() {
         return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+    }
+
+    private void mapExchangedItems(FunctionalExchange source, TransformationContext context) {
+        var items = source.getExchangedItems().stream().distinct()
+                .map(item -> context.traceability().lookupTarget(item)
+                        .filter(ItemUsage.class::isInstance)
+                        .map(ItemUsage.class::cast)
+                        .orElseGet(() -> {
+                            context.diagnostics().addError(source,
+                                    "Unable to map exchanged item " + item.getName());
+                            return null;
+                        }))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        UPDATE_SERVICE.setFunctionalExchangePayload(MapperUtils.require(context.traceability(), source, FlowUsage.class), items);
     }
 }

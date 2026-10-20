@@ -24,11 +24,12 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.information.InformationPackage;
 
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(12, CapellaMapperCatalog.createMappers().size());
+        assertEquals(13, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
@@ -40,12 +41,16 @@ class CapellaMapperCatalogTest {
     }
 
     @Test
-    void functionalExchangeAlignmentAndCoverageSupportEndpointsButNotPayload() {
+    void functionalExchangeAlignmentAndCoverageIncludePayload() {
         var alignment = CapellaMapperCatalog.getAlignmentCatalog().stream()
                 .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
         assertEquals("Arcadia::FunctionalExchange", alignment.target());
+        assertTrue(alignment.featureAlignments().stream()
+                .anyMatch(feature -> feature.sourceFeature().equals("exchangedItems")
+                        && feature.target().equals("SysML::FlowUsage::payload")
+                        && feature.status() == AlignmentStatus.SYSML_STANDARD));
         var endpoints = List.of("source", "target", "sourceFunctionOutputPort", "targetFunctionInputPort");
         endpoints.forEach(endpoint -> assertTrue(alignment.featureAlignments().stream()
                 .anyMatch(feature -> feature.sourceFeature().equals(endpoint)
@@ -56,7 +61,16 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertTrue(coverage.mappedFeatures().containsAll(endpoints));
-        assertTrue(coverage.remainingFeatures().contains("exchangedItems"));
+        assertTrue(coverage.mappedFeatures().contains("exchangedItems"));
         assertTrue(coverage.remainingFeatures().contains("categories"));
+    }
+
+    @Test
+    void exchangeItemAlignmentIsConfirmed() {
+        var alignment = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                .filter(value -> value.sourceType() == InformationPackage.Literals.EXCHANGE_ITEM)
+                .findFirst().orElseThrow();
+        assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
+        assertEquals("Arcadia::ExchangeItem", alignment.target());
     }
 }
