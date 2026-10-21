@@ -24,6 +24,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionInputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalChainMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.information.ExchangeItemMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
@@ -71,7 +72,7 @@ public final class CapellaMapperCatalog {
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
                 new FunctionOutputPortMapper(), new ComponentPortMapper(), new FunctionalExchangeMapper(),
-                new ExchangeItemMapper(), new ComponentExchangeMapper(), new CapabilityMapper());
+                new ExchangeItemMapper(), new ComponentExchangeMapper(), new CapabilityMapper(), new FunctionalChainMapper());
     }
 
     /**
@@ -92,9 +93,7 @@ public final class CapellaMapperCatalog {
         var result = new ArrayList<MetaclassAlignment>();
         createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
         result.addAll(List.of(
-                candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
-                candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
-                candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain")));
+                candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission")));
         return List.copyOf(result);
     }
 
@@ -128,12 +127,10 @@ public final class CapellaMapperCatalog {
         var result = new LinkedHashMap<String, List<MapperBacklogEntry>>();
         result.put("ctx", List.of(
                 entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION)));
-        result.put("fa", List.of(
-                entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN)));
+        result.put("fa", List.of());
         result.put("information", List.of());
         result.put("la", List.of());
-        result.put("oa", List.of(
-                entry("oa", "OperationalProcessMapper", OaPackage.Literals.OPERATIONAL_PROCESS)));
+        result.put("oa", List.of());
         result.put("pa", List.of());
         return result;
     }
