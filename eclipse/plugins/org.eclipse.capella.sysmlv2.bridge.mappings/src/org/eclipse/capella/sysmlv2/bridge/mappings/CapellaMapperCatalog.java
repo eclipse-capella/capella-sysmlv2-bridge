@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.CapabilityMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
@@ -70,7 +71,7 @@ public final class CapellaMapperCatalog {
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
                 new FunctionOutputPortMapper(), new ComponentPortMapper(), new FunctionalExchangeMapper(),
-                new ExchangeItemMapper(), new ComponentExchangeMapper());
+                new ExchangeItemMapper(), new ComponentExchangeMapper(), new CapabilityMapper());
     }
 
     /**
@@ -91,7 +92,6 @@ public final class CapellaMapperCatalog {
         var result = new ArrayList<MetaclassAlignment>();
         createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
         result.addAll(List.of(
-                candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain")));
@@ -127,7 +127,6 @@ public final class CapellaMapperCatalog {
     private static Map<String, List<MapperBacklogEntry>> createBacklog() {
         var result = new LinkedHashMap<String, List<MapperBacklogEntry>>();
         result.put("ctx", List.of(
-                entry("ctx", "CapabilityMapper", CtxPackage.Literals.CAPABILITY),
                 entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION)));
         result.put("fa", List.of(
                 entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN)));

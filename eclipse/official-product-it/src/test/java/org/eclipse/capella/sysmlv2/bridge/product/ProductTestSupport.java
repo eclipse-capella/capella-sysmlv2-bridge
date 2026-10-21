@@ -102,18 +102,21 @@ final class ProductTestSupport {
         assertTrue(execution.output().contains("Source FunctionalExchange count: 272"), execution.output());
         assertTrue(execution.output().contains("Source ExchangeItem count: 17"), execution.output());
         assertTrue(execution.output().contains("Source ComponentExchange count: 25"), execution.output());
+        assertTrue(execution.output().contains("Source Capability count: 13"), execution.output());
+
         assertTrue(execution.output().contains("Generated ActionUsage count: 235"), execution.output());
         assertTrue(execution.output().contains("Generated FlowUsage count: 272"), execution.output());
         assertTrue(execution.output().contains("Generated InterfaceUsage count: 25"), execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
         assertTrue(execution.output().contains("Generated ItemUsage count: 499"), execution.output());
+        assertTrue(execution.output().contains("Generated OccurrenceUsage count: 13"), execution.output());
         assertTrue(execution.output().contains("Generated PortUsage count: 52"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
-        assertTrue(execution.output().contains("Capella Transformation Coverage: 14/252 (5.56%)"),
+        assertTrue(execution.output().contains("Capella Transformation Coverage: 15/252 (5.95%)"),
                 execution.output());
-        assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 17/46 (36.96%)"),
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 20/46 (43.48%)"),
                 execution.output());
-        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 14/252 (5.56%)"),
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 15/252 (5.95%)"),
                 execution.output());
 
         var xmiModel = applicationOutput
