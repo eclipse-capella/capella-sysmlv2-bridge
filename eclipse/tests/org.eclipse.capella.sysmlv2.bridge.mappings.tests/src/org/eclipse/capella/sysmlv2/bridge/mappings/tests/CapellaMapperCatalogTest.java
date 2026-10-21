@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
@@ -29,11 +30,11 @@ import org.polarsys.capella.core.data.information.InformationPackage;
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(13, CapellaMapperCatalog.createMappers().size());
+        assertEquals(14, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
-        assertEquals(List.of("ComponentExchangeMapper", "FunctionalChainMapper"),
+        assertEquals(List.of("FunctionalChainMapper"),
                 backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
         assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
                 .noneMatch(entry -> entry.mapperName().endsWith("FunctionMapper")
@@ -63,6 +64,27 @@ class CapellaMapperCatalogTest {
         assertTrue(coverage.mappedFeatures().containsAll(endpoints));
         assertTrue(coverage.mappedFeatures().contains("exchangedItems"));
         assertTrue(coverage.remainingFeatures().contains("categories"));
+    }
+
+    @Test
+    void componentExchangesHaveConfirmedAlignment() {
+        var alignments = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList();
+        assertEquals(1, alignments.size());
+        assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
+        assertEquals("Arcadia::ComponentExchange", alignments.getFirst().target());
+        assertTrue(alignments.getFirst().featureAlignments().stream()
+                .anyMatch(feature -> feature.sourceFeature().equals("allocatedFunctionalExchanges")));
+        assertTrue(CapellaMapperCatalog.backlogByPackage().values().stream().flatMap(List::stream)
+                .noneMatch(entry -> entry.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE));
+
+        var report = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE),
+                List.of(new ComponentExchangeMapper()), List.of(), CapellaMapperCatalog.getAlignmentCatalog().stream()
+                        .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList());
+        var coverage = report.metaclassCoverages().stream()
+                .filter(value -> value.metaclass() == FaPackage.Literals.COMPONENT_EXCHANGE).findFirst().orElseThrow();
+        assertTrue(coverage.mappedFeatures().containsAll(List.of("source", "target", "sourcePort", "targetPort", "convoyedInformations", "allocatedFunctionalExchanges")));
+        assertTrue(coverage.remainingFeatures().containsAll(List.of("kind", "categories")));
     }
 
     @Test

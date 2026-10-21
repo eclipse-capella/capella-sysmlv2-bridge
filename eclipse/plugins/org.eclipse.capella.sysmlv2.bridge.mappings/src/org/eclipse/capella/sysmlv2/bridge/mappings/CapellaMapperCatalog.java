@@ -19,6 +19,7 @@ import java.util.Map;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionInputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
@@ -69,7 +70,7 @@ public final class CapellaMapperCatalog {
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
                 new FunctionOutputPortMapper(), new ComponentPortMapper(), new FunctionalExchangeMapper(),
-                new ExchangeItemMapper());
+                new ExchangeItemMapper(), new ComponentExchangeMapper());
     }
 
     /**
@@ -92,9 +93,7 @@ public final class CapellaMapperCatalog {
         result.addAll(List.of(
                 candidate(CtxPackage.Literals.CAPABILITY, "Arcadia::Capability"),
                 candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission"),
-                candidate(FaPackage.Literals.COMPONENT_EXCHANGE, "Arcadia::ComponentExchange"),
                 candidate(FaPackage.Literals.FUNCTIONAL_CHAIN, "Arcadia::FunctionalChain"),
-                candidate(OaPackage.Literals.COMMUNICATION_MEAN, "Arcadia::ComponentExchange"),
                 candidate(OaPackage.Literals.OPERATIONAL_PROCESS, "Arcadia::FunctionalChain")));
         return List.copyOf(result);
     }
@@ -131,12 +130,10 @@ public final class CapellaMapperCatalog {
                 entry("ctx", "CapabilityMapper", CtxPackage.Literals.CAPABILITY),
                 entry("ctx", "MissionMapper", CtxPackage.Literals.MISSION)));
         result.put("fa", List.of(
-                entry("fa", "ComponentExchangeMapper", FaPackage.Literals.COMPONENT_EXCHANGE),
                 entry("fa", "FunctionalChainMapper", FaPackage.Literals.FUNCTIONAL_CHAIN)));
         result.put("information", List.of());
         result.put("la", List.of());
         result.put("oa", List.of(
-                entry("oa", "CommunicationMeanMapper", OaPackage.Literals.COMMUNICATION_MEAN),
                 entry("oa", "OperationalProcessMapper", OaPackage.Literals.OPERATIONAL_PROCESS)));
         result.put("pa", List.of());
         return result;

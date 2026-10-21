@@ -83,7 +83,6 @@
 				
 				<configuration>
 					<failIfNoTests>false</failIfNoTests>
-					<providerHint>junit5</providerHint>
 					<useUIHarness>false</useUIHarness>
 					<useUIThread>false</useUIThread>
 				</configuration>
