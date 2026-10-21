@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.mappings.tests
 Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
+ org.eclipse.emf.transaction,
  org.eclipse.core.runtime,
  org.eclipse.capella.sysmlv2.bridge.application,
  org.eclipse.capella.sysmlv2.bridge.mappings,
@@ -13,8 +14,10 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.polarsys.capella.common.re.gen,
  org.polarsys.capella.common.model,
  org.polarsys.capella.common.model.helpers,
+ org.polarsys.capella.common.platform.sirius.ted,
  org.junit,
- junit-jupiter-api
+ junit-jupiter-api,
+ junit-jupiter-params
 Automatic-Module-Name: org.eclipse.capella.sysmlv2.bridge.mappings.tests
 Bundle-ClassPath: target/dependency/slf4j-api-2.0.18.jar,
  .

@@ -78,6 +78,18 @@ public final class MapperConstants {
 
     public static final String CAPELLA_INCOMING_EXCHANGE = "incomingExchangeItems";
 
+    public static final String CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES = "allocatedFunctionalExchanges";
+
+    public static final String CAPELLA_CONVOYED_INFORMATIONS = "convoyedInformations";
+
+    public static final String CAPELLA_IN_COMPONENT_EXCHANGE_REALIZATIONS = "incomingComponentExchangeRealizations";
+
+    public static final String CAPELLA_OUT_COMPONENT_EXCHANGE_REALIZATIONS = "outgoingComponentExchangeRealizations";
+
+    public static final String CAPELLA_SOURCE_PORT = "sourcePort";
+
+    public static final String CAPELLA_TARGET_PORT = "targetPort";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";
@@ -87,7 +99,25 @@ public final class MapperConstants {
     public static final String ARCADIA_COMPONENT_PORT_DIRECTION = ARCADIA_COMPONENT_PORT + SEPARATOR + "portDirection";
 
     public static final String ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS = ARCADIA_COMPONENT_PORT + SEPARATOR
-            + "allocatedFunctionPorts";
+            + CAPELLA_ALLOCATED_FUNCTION_PORTS;
+
+    public static final String ARCADIA_FUNCTIONAL_EXCHANGE = "Arcadia::FunctionalExchange";
+
+    public static final String ARCADIA_COMPONENT_EXCHANGE = "Arcadia::ComponentExchange";
+
+    public static final String ARCADIA_COMPONENT_EXCHANGE_CP1 = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR + "cp1";
+
+    public static final String ARCADIA_COMPONENT_EXCHANGE_CP2 = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR + "cp2";
+
+    public static final String ARCADIA_ALLOCATED_EXCHANGE_ITEMS = "allocatedExchangeItems";
+
+    public static final String ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES = "allocatedFunctionalExchanges";
+
+    public static final String ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_EXCHANGE_ITEMS = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR
+            + ARCADIA_ALLOCATED_EXCHANGE_ITEMS;
+
+    public static final String ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR
+            + ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES;
 
     public static final String ARCADIA_COMPONENT_IS_ACTOR = ARCADIA_COMPONENT + "::isActor";
 
@@ -110,8 +140,6 @@ public final class MapperConstants {
     public static final String ARCADIA_IS_ACTOR = "isActor";
 
     public static final String ARCADIA_IS_HUMAN = "isHuman";
-
-    public static final String ARCADIA_FUNCTIONAL_EXCHANGE = "Arcadia::FunctionalExchange";
 
     public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
 

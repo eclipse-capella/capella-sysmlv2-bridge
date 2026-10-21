@@ -92,31 +92,28 @@ final class ProductTestSupport {
         assertTrue(
                 execution.output().contains("Source PhysicalComponent count: 64"),
                 execution.output());
-        assertTrue(execution.output().contains("Source LogicalFunction count: 64"), execution.output());
         assertTrue(execution.output().contains("Source OperationalActivity count: 24"), execution.output());
         assertTrue(execution.output().contains("Source SystemFunction count: 44"), execution.output());
+        assertTrue(execution.output().contains("Source LogicalFunction count: 64"), execution.output());
         assertTrue(execution.output().contains("Source PhysicalFunction count: 103"), execution.output());
         assertTrue(execution.output().contains("Source FunctionInputPort count: 248"), execution.output());
         assertTrue(execution.output().contains("Source FunctionOutputPort count: 234"), execution.output());
         assertTrue(execution.output().contains("Source ComponentPort count: 52"), execution.output());
         assertTrue(execution.output().contains("Source FunctionalExchange count: 272"), execution.output());
         assertTrue(execution.output().contains("Source ExchangeItem count: 17"), execution.output());
-        assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
+        assertTrue(execution.output().contains("Source ComponentExchange count: 25"), execution.output());
         assertTrue(execution.output().contains("Generated ActionUsage count: 235"), execution.output());
         assertTrue(execution.output().contains("Generated FlowUsage count: 272"), execution.output());
+        assertTrue(execution.output().contains("Generated InterfaceUsage count: 25"), execution.output());
+        assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
         assertTrue(execution.output().contains("Generated ItemUsage count: 499"), execution.output());
         assertTrue(execution.output().contains("Generated PortUsage count: 52"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
-        assertTrue(
-                execution.output().contains(
-                        "Capella Transformation Coverage: 13/252 (5.16%)"),
+        assertTrue(execution.output().contains("Capella Transformation Coverage: 14/252 (5.56%)"),
                 execution.output());
-        assertTrue(
-                execution.output().contains(
-                        "Arcadia SysML v2 Library Utilization: 12/46 (26.09%)"),
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 17/46 (36.96%)"),
                 execution.output());
-        assertTrue(execution.output().contains(
-                "Arcadia SysML v2 Library Coverage of Capella: 13/252 (5.16%)"),
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 14/252 (5.56%)"),
                 execution.output());
 
         var xmiModel = applicationOutput
