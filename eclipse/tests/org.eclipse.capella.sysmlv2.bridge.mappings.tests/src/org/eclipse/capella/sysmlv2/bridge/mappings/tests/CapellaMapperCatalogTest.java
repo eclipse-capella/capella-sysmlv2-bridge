@@ -12,6 +12,20 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_EXCHANGE_ITEM;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_CONVOYED_INFORMATIONS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_EXCHANGED_ITEMS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_PORT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET_FUNCTION_INPUT_PORT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET_PORT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,7 +44,7 @@ import org.polarsys.capella.core.data.information.InformationPackage;
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(14, CapellaMapperCatalog.createMappers().size());
+        assertEquals(15, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
@@ -47,12 +61,13 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
-        assertEquals("Arcadia::FunctionalExchange", alignment.target());
+        assertEquals(ARCADIA_FUNCTIONAL_EXCHANGE, alignment.target());
         assertTrue(alignment.featureAlignments().stream()
-                .anyMatch(feature -> feature.sourceFeature().equals("exchangedItems")
-                        && feature.target().equals("SysML::FlowUsage::payload")
+                .anyMatch(feature -> feature.sourceFeature().equals(CAPELLA_EXCHANGED_ITEMS)
+                        && feature.target().equals(SYSML_FLOWUSAGE_PAYLOAD)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD));
-        var endpoints = List.of("source", "target", "sourceFunctionOutputPort", "targetFunctionInputPort");
+        var endpoints = List.of(CAPELLA_SOURCE, CAPELLA_TARGET,
+                CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT, CAPELLA_TARGET_FUNCTION_INPUT_PORT);
         endpoints.forEach(endpoint -> assertTrue(alignment.featureAlignments().stream()
                 .anyMatch(feature -> feature.sourceFeature().equals(endpoint)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD)));
@@ -62,7 +77,7 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertTrue(coverage.mappedFeatures().containsAll(endpoints));
-        assertTrue(coverage.mappedFeatures().contains("exchangedItems"));
+        assertTrue(coverage.mappedFeatures().contains(CAPELLA_EXCHANGED_ITEMS));
         assertTrue(coverage.remainingFeatures().contains("categories"));
     }
 
@@ -72,9 +87,9 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList();
         assertEquals(1, alignments.size());
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
-        assertEquals("Arcadia::ComponentExchange", alignments.getFirst().target());
+        assertEquals(ARCADIA_COMPONENT_EXCHANGE, alignments.getFirst().target());
         assertTrue(alignments.getFirst().featureAlignments().stream()
-                .anyMatch(feature -> feature.sourceFeature().equals("allocatedFunctionalExchanges")));
+                .anyMatch(feature -> feature.sourceFeature().equals(CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES)));
         assertTrue(CapellaMapperCatalog.backlogByPackage().values().stream().flatMap(List::stream)
                 .noneMatch(entry -> entry.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE));
 
@@ -83,8 +98,21 @@ class CapellaMapperCatalogTest {
                         .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList());
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.COMPONENT_EXCHANGE).findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(List.of("source", "target", "sourcePort", "targetPort", "convoyedInformations", "allocatedFunctionalExchanges")));
+        assertTrue(coverage.mappedFeatures().containsAll(List.of(CAPELLA_SOURCE, CAPELLA_TARGET,
+                CAPELLA_SOURCE_PORT, CAPELLA_TARGET_PORT, CAPELLA_CONVOYED_INFORMATIONS,
+                CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES)));
         assertTrue(coverage.remainingFeatures().containsAll(List.of("kind", "categories")));
+    }
+
+    @Test
+    void capabilityAlignmentIsConfirmed() {
+        var alignments = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                .filter(value -> value.sourceType() == org.polarsys.capella.core.data.ctx.CtxPackage.Literals.CAPABILITY).toList();
+        assertEquals(1, alignments.size());
+        assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
+        assertEquals(ARCADIA_CAPABILITY, alignments.getFirst().target());
+        assertTrue(CapellaMapperCatalog.backlogByPackage().get("ctx").stream()
+                .noneMatch(entry -> entry.mapperName().equals("CapabilityMapper")));
     }
 
     @Test
@@ -93,6 +121,6 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == InformationPackage.Literals.EXCHANGE_ITEM)
                 .findFirst().orElseThrow();
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
-        assertEquals("Arcadia::ExchangeItem", alignment.target());
+        assertEquals(ARCADIA_EXCHANGE_ITEM, alignment.target());
     }
 }

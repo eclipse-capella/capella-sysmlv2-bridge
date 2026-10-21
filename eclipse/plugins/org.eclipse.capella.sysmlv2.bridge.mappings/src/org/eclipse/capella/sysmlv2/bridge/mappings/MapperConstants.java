@@ -90,6 +90,8 @@ public final class MapperConstants {
 
     public static final String CAPELLA_TARGET_PORT = "targetPort";
 
+    public static final String ARCADIA_CAPABILITY = "Arcadia::Capability";
+
     public static final String ARCADIA_COMPONENT = "Arcadia::Component";
 
     public static final String ARCADIA_FUNCTION = "Arcadia::Function";
@@ -141,6 +143,18 @@ public final class MapperConstants {
 
     public static final String ARCADIA_IS_HUMAN = "isHuman";
 
+    public static final String ARCADIA_INVOLVED_FUNCTIONS = "involvedFunctions";
+
+    public static final String ARCADIA_INVOLVED_FUNCTIONAL_CHAINS = "involvedFunctionalChains";
+
+    public static final String ARCADIA_INVOLVED_COMPONENTS = "involvedComponents";
+
+    public static final String ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS = ARCADIA_CAPABILITY + SEPARATOR + ARCADIA_INVOLVED_FUNCTIONS;
+
+    public static final String ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS = ARCADIA_CAPABILITY + SEPARATOR + ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
+
+    public static final String ARCADIA_CAPABILITY_INVOLVED_COMPONENTS = ARCADIA_CAPABILITY + SEPARATOR + ARCADIA_INVOLVED_COMPONENTS;
+
     public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
@@ -156,6 +170,16 @@ public final class MapperConstants {
     public static final String SYSML_FEATURE_VALUE = "SysML::Feature::value";
 
     public static final String SYSML_FLOWUSAGE_PAYLOAD = "SysML::FlowUsage::payload";
+
+    public static final String CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS = "involvedAbstractFunctions";
+
+    public static final String CAPELLA_INVOLVED_FUNCTIONAL_CHAINS = "involvedFunctionalChains";
+
+    public static final String CAPELLA_INVOLVED_SYSTEM_COMPONENTS = "involvedSystemComponents";
+
+    public static final String CAPELLA_OUTGOING_CAPABILITY_ALLOCATION = "outgoingCapabilityAllocation";
+
+    public static final String CAPELLA_INCOMING_CAPABILITY_ALLOCATION = "incomingCapabilityAllocation";
 
     private MapperConstants() {
         // Constant classes : do not instantiate
