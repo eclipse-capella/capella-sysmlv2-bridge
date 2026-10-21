@@ -1,0 +1,340 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Obeo.
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
+import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
+import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalChainMapper;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.syson.sysml.ActionUsage;
+import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
+import org.polarsys.capella.core.data.ctx.CtxFactory;
+import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.fa.FaFactory;
+import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.fa.FunctionalChain;
+import org.polarsys.capella.core.data.fa.FunctionalChainInvolvement;
+import org.polarsys.capella.core.data.fa.FunctionalExchange;
+import org.polarsys.capella.core.data.la.LaFactory;
+import org.polarsys.capella.core.data.oa.OaFactory;
+import org.polarsys.capella.core.data.oa.OaPackage;
+import org.polarsys.capella.core.data.pa.PaFactory;
+
+class FunctionalChainMapperTest {
+    private static final CommonQueryService QUERY = new CommonQueryService();
+
+    @Test
+    void letsTheServiceChooseContainmentFromInvolvedExchanges() {
+        for (String perspective : List.of("Operational", "System", "Logical", "Physical")) {
+            var fixture = fixture(perspective);
+            fixture.first().getOwnedFunctionalChains().add(fixture.chain());
+            involveExchange(fixture.chain(), fixture.exchange());
+            involveFunction(fixture.chain(), fixture.second());
+            var mapper = new FunctionalChainMapper();
+            assertEquals(List.of(fixture.first(), fixture.exchange()), mapper.getCreationDependencies(fixture.chain()));
+            var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
+            sources.remove(fixture.chain());
+            sources.addFirst(fixture.chain());
+            var result = transform(sources);
+            assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(), target(fixture, result).getOwner());
+            assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        }
+    }
+
+    @Test
+    void rejectsChainsWhenTheirParentIsOutsideTheTransformation() {
+        var fixture = fixture("Logical");
+        involveExchange(fixture.chain(), fixture.exchange());
+        fixture.first().getOwnedFunctionalChains().add(fixture.chain());
+        var sources = EObjectUtils.allContents(fixture.architecture()).stream()
+                .filter(source -> source != fixture.first()).toList();
+        var result = transform(sources);
+        assertTrue(result.traceability().lookupTarget(fixture.chain()).isEmpty());
+        assertTrue(result.traceability().isExcluded(fixture.chain()));
+        assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("prerequisite")));
+    }
+
+    @Test
+    void declaresCapabilityParentsAsDependenciesWithoutRelocatingTheirChains() {
+        var capability = CtxFactory.eINSTANCE.createCapability();
+        var chain = FaFactory.eINSTANCE.createFunctionalChain();
+        capability.getOwnedFunctionalChains().add(chain);
+        var exchange = FaFactory.eINSTANCE.createFunctionalExchange();
+        involveExchange(chain, exchange);
+        assertEquals(List.of(capability, exchange), new FunctionalChainMapper().getCreationDependencies(chain));
+        var result = transform(List.of(chain, capability));
+        assertTrue(result.traceability().lookupTarget(chain).isEmpty());
+        assertTrue(result.traceability().isExcluded(chain));
+        assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("prerequisite")));
+    }
+
+    @Test
+    void createsChainsAndExchangeReferencesAcrossAllPerspectivesWithOneMapper() {
+        for (String perspective : List.of("Operational", "System", "Logical", "Physical")) {
+            var fixture = fixture(perspective);
+            involveFunction(fixture.chain(), fixture.first());
+            involveFunction(fixture.chain(), fixture.second());
+            involveFunction(fixture.chain(), fixture.first());
+            involveExchange(fixture.chain(), fixture.exchange());
+            involveExchange(fixture.chain(), fixture.exchange());
+            var before = EcoreUtil.copy(fixture.architecture());
+            var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
+            sources.remove(fixture.chain());
+            sources.addFirst(fixture.chain());
+            var result = transform(sources);
+            var target = target(fixture, result);
+            assertTrue(QUERY.isFunctionalChain(target));
+            assertEquals("Read movement", target.getDeclaredName());
+            assertEquals("Read sensor data", QUERY.getArcadiaElementDescription(target));
+            assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(), target.getOwner());
+            assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
+                    QUERY.getFeatureReferenceValue(target, "involvedFunctionalExchanges"));
+            assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(),
+                    ((ActionUsage) result.traceability().lookupTarget(fixture.first()).orElseThrow()).getOwner());
+            assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+            assertTrue(EcoreUtil.equals(before, fixture.architecture()));
+        }
+    }
+
+    @Test
+    void logsAndSkipsEmptyChainsWhileContinuingTheTransformation() {
+        for (String perspective : List.of("Operational", "System", "Logical", "Physical")) {
+            var fixture = fixture(perspective);
+            var result = transform(EObjectUtils.allContents(fixture.architecture()));
+            assertTrue(result.traceability().lookupTarget(fixture.chain()).isEmpty());
+            assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("no involved functional exchanges")
+                    && value.severity().name().equals("WARNING")));
+            assertTrue(result.traceability().lookupTarget(fixture.first()).isPresent());
+            assertTrue(result.traceability().lookupTarget(fixture.exchange()).isPresent());
+        }
+    }
+
+    @Test
+    void logsEmptyChainsWithoutRequiringAParent() {
+        var chain = FaFactory.eINSTANCE.createFunctionalChain();
+        assertTrue(new FunctionalChainMapper().getCreationDependencies(chain).isEmpty());
+        var result = transform(List.of(chain));
+        assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("no involved functional exchanges")));
+    }
+
+    @Test
+    void functionInvolvementsDoNotPreventExchangeMapping() {
+        var fixture = fixture("Logical");
+        involveFunction(fixture.chain(), fixture.first());
+        involveFunction(fixture.chain(), LaFactory.eINSTANCE.createLogicalFunction());
+        involveExchange(fixture.chain(), fixture.exchange());
+        var result = transform(EObjectUtils.allContents(fixture.architecture()));
+        assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
+                QUERY.getFeatureReferenceValue(target(fixture, result), "involvedFunctionalExchanges"));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+    }
+
+    @Test
+    void rejectsChainsWithUnavailableExchangeDependenciesAndContinuesMapping() {
+        var fixture = fixture("Logical");
+        involveExchange(fixture.chain(), FaFactory.eINSTANCE.createFunctionalExchange());
+        var result = transform(EObjectUtils.allContents(fixture.architecture()));
+        assertTrue(result.traceability().lookupTarget(fixture.chain()).isEmpty());
+        assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("prerequisite")));
+        assertTrue(result.traceability().lookupTarget(fixture.exchange()).isPresent());
+    }
+
+    @Test
+    void featureMappingPreservesServiceCreatedExchangeReferences() {
+        var fixture = fixture("Logical");
+        involveExchange(fixture.chain(), fixture.exchange());
+        var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Test", new CapellaForSysonResourceSet().getResourceSet()));
+        var mapper = new FunctionalChainMapper();
+        var created = transform(EObjectUtils.allContents(fixture.architecture()));
+        context.traceability().register(fixture.chain(), target(fixture, created));
+        mapper.mapFeatures(fixture.chain(), context);
+        mapper.mapFeatures(fixture.chain(), context);
+        var target = (ActionUsage) context.traceability().lookupTarget(fixture.chain()).orElseThrow();
+        assertEquals(List.of(created.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
+                QUERY.getFeatureReferenceValue(target, "involvedFunctionalExchanges"));
+        assertTrue(context.diagnostics().collect().isEmpty());
+    }
+
+    @Test
+    void preservesTheSourceAndExchangeSelectionWithControlFlowAndNestedReferences() {
+        var fixture = fixture("Logical");
+        var first = involveFunction(fixture.chain(), fixture.first());
+        var second = involveFunction(fixture.chain(), fixture.second());
+        var link = FaFactory.eINSTANCE.createFunctionalChainInvolvementLink();
+        link.setInvolved(fixture.exchange());
+        link.setSource(first);
+        link.setTarget(second);
+        fixture.chain().getOwnedFunctionalChainInvolvements().add(link);
+        fixture.chain().getOwnedSequenceNodes().add(FaFactory.eINSTANCE.createControlNode());
+        fixture.chain().getOwnedSequenceLinks().add(FaFactory.eINSTANCE.createSequenceLink());
+        var nested = FaFactory.eINSTANCE.createFunctionalChainReference();
+        nested.setInvolved(FaFactory.eINSTANCE.createFunctionalChain());
+        fixture.chain().getOwnedFunctionalChainInvolvements().add(nested);
+        fixture.chain().getOwnedFunctionalChainInvolvements().add(FaFactory.eINSTANCE.createFunctionalChainInvolvementFunction());
+        var before = EcoreUtil.copy(fixture.architecture());
+        var result = transform(EObjectUtils.allContents(fixture.architecture()));
+        assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
+                QUERY.getFeatureReferenceValue(target(fixture, result), "involvedFunctionalExchanges"));
+        assertTrue(EcoreUtil.equals(before, fixture.architecture()));
+    }
+
+    @Test
+    void rejectsChainsWithoutAParent() {
+        var chain = FaFactory.eINSTANCE.createFunctionalChain();
+        involveExchange(chain, FaFactory.eINSTANCE.createFunctionalExchange());
+        var result = transform(List.of(chain));
+        assertTrue(result.traceability().lookupTarget(chain).isEmpty());
+        assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("functional chain parent")));
+    }
+
+    @Test
+    void registersOneMapperForBothMetaclassesAndDocumentsServiceOwnedExchangeMapping() {
+        var mappers = CapellaMapperCatalog.createMappers();
+        assertEquals(1, mappers.stream().filter(FunctionalChainMapper.class::isInstance).count());
+        var registry = new MapperRegistry(mappers);
+        assertTrue(registry.get(FaFactory.eINSTANCE.createFunctionalChain()).isPresent());
+        assertTrue(registry.get(OaFactory.eINSTANCE.createOperationalProcess()).isPresent());
+        var alignments = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_CHAIN).toList();
+        assertEquals(1, alignments.size());
+        assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
+        assertEquals("Arcadia::FunctionalChain", alignments.getFirst().target());
+        assertTrue(alignments.getFirst().featureAlignments().stream()
+                .anyMatch(value -> value.sourceFeature().equals("involvedFunctionalExchanges")));
+        var report = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, OaPackage.eINSTANCE),
+                List.of(new FunctionalChainMapper()), List.of(), CapellaMapperCatalog.getAlignmentCatalog().stream()
+                        .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_CHAIN
+                                || value.sourceType() == OaPackage.Literals.OPERATIONAL_PROCESS).toList());
+        var coverage = report.metaclassCoverages().stream().filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_CHAIN).findFirst().orElseThrow();
+        assertTrue(coverage.mappedFeatures().containsAll(List.of("name", "description", "involvedFunctionalExchanges")));
+        assertTrue(coverage.remainingFeatures().containsAll(List.of("involvedFunctions", "ownedSequenceNodes", "ownedSequenceLinks")));
+        assertTrue(coverage.ignoredFeatures().containsAll(List.of("preCondition", "postCondition")));
+    }
+
+    private static org.polarsys.capella.core.data.fa.FunctionalChainInvolvementFunction involveFunction(FunctionalChain chain, AbstractFunction function) {
+        var involvement = FaFactory.eINSTANCE.createFunctionalChainInvolvementFunction();
+        involvement.setInvolved(function);
+        chain.getOwnedFunctionalChainInvolvements().add(involvement);
+        return involvement;
+    }
+
+    private static void involveExchange(FunctionalChain chain, FunctionalExchange exchange) {
+        FunctionalChainInvolvement involvement = FaFactory.eINSTANCE.createFunctionalChainInvolvementLink();
+        involvement.setInvolved(exchange);
+        chain.getOwnedFunctionalChainInvolvements().add(involvement);
+    }
+
+    private static ActionUsage target(Fixture fixture, TransformationResult result) {
+        return assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(fixture.chain()).orElseThrow());
+    }
+
+    private static TransformationResult transform(List<? extends EObject> sources) {
+        return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), new CapellaForSysonResourceSet().getResourceSet())
+                .transformAll(sources, "Test");
+    }
+
+    private static Fixture fixture(String perspective) {
+        BlockArchitecture architecture;
+        AbstractFunction root;
+        switch (perspective) {
+            case "Operational" -> {
+                var arch = OaFactory.eINSTANCE.createOperationalAnalysis();
+                var pkg = OaFactory.eINSTANCE.createOperationalActivityPkg();
+                var function = OaFactory.eINSTANCE.createOperationalActivity();
+                arch.setOwnedFunctionPkg(pkg);
+                pkg.getOwnedOperationalActivities().add(function);
+                architecture = arch;
+                root = function;
+            }
+            case "System" -> {
+                var arch = CtxFactory.eINSTANCE.createSystemAnalysis();
+                var pkg = CtxFactory.eINSTANCE.createSystemFunctionPkg();
+                var function = CtxFactory.eINSTANCE.createSystemFunction();
+                arch.setOwnedFunctionPkg(pkg);
+                pkg.getOwnedSystemFunctions().add(function);
+                architecture = arch;
+                root = function;
+            }
+            case "Logical" -> {
+                var arch = LaFactory.eINSTANCE.createLogicalArchitecture();
+                var pkg = LaFactory.eINSTANCE.createLogicalFunctionPkg();
+                var function = LaFactory.eINSTANCE.createLogicalFunction();
+                arch.setOwnedFunctionPkg(pkg);
+                pkg.getOwnedLogicalFunctions().add(function);
+                architecture = arch;
+                root = function;
+            }
+            case "Physical" -> {
+                var arch = PaFactory.eINSTANCE.createPhysicalArchitecture();
+                var pkg = PaFactory.eINSTANCE.createPhysicalFunctionPkg();
+                var function = PaFactory.eINSTANCE.createPhysicalFunction();
+                arch.setOwnedFunctionPkg(pkg);
+                pkg.getOwnedPhysicalFunctions().add(function);
+                architecture = arch;
+                root = function;
+            }
+            default -> throw new IllegalArgumentException(perspective);
+        }
+        root.setName("Root Function");
+        var first = (AbstractFunction) EcoreUtil.create(root.eClass());
+        var second = (AbstractFunction) EcoreUtil.create(root.eClass());
+        first.setName("First");
+        second.setName("Second");
+        root.getOwnedFunctions().addAll(List.of(first, second));
+        var exchange = FaFactory.eINSTANCE.createFunctionalExchange();
+        first.getOwnedFunctionalExchanges().add(exchange);
+        if (perspective.equals("Operational")) {
+            exchange.setSource(first);
+            exchange.setTarget(second);
+        } else {
+            var output = FaFactory.eINSTANCE.createFunctionOutputPort();
+            var input = FaFactory.eINSTANCE.createFunctionInputPort();
+            first.getOutputs().add(output);
+            second.getInputs().add(input);
+            exchange.setSource(output);
+            exchange.setTarget(input);
+        }
+        FunctionalChain chain = FaFactory.eINSTANCE.createFunctionalChain();
+        if (perspective.equals("Operational")) {
+            chain = OaFactory.eINSTANCE.createOperationalProcess();
+        }
+        chain.setName("Read movement");
+        chain.setDescription("Read sensor data");
+        root.getOwnedFunctionalChains().add(chain);
+        var resource = new ResourceImpl(URI.createURI("test:/chain.capella"));
+        resource.getContents().add(architecture);
+        return new Fixture(architecture, root, first, second, exchange, chain);
+    }
+
+    private record Fixture(BlockArchitecture architecture, AbstractFunction root, AbstractFunction first,
+            AbstractFunction second, FunctionalExchange exchange, FunctionalChain chain) {
+    }
+}

@@ -40,6 +40,14 @@ public final class MapperConstants {
 
     public static final String CAPELLA_ALLOCATED_FUNCTIONS = "allocatedFunctions";
 
+    public static final String CAPELLA_INVOLVED_FUNCTIONS = "involvedFunctions";
+
+    public static final String CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES = "involvedFunctionalExchanges";
+
+    public static final String CAPELLA_PRE_CONDITION = "preCondition";
+
+    public static final String CAPELLA_POST_CONDITION = "postCondition";
+
     public static final String CAPELLA_REALIZED_COMPONENTS = "realizedComponents";
 
     public static final String CAPELLA_REALIZING_COMPONENTS = "realizingComponents";
@@ -105,6 +113,13 @@ public final class MapperConstants {
 
     public static final String ARCADIA_FUNCTIONAL_EXCHANGE = "Arcadia::FunctionalExchange";
 
+    public static final String ARCADIA_FUNCTIONAL_CHAIN = "Arcadia::FunctionalChain";
+
+    public static final String ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES = "involvedFunctionalExchanges";
+
+    public static final String ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES = ARCADIA_FUNCTIONAL_CHAIN + SEPARATOR
+            + ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES;
+
     public static final String ARCADIA_COMPONENT_EXCHANGE = "Arcadia::ComponentExchange";
 
     public static final String ARCADIA_COMPONENT_EXCHANGE_CP1 = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR + "cp1";
@@ -158,6 +173,8 @@ public final class MapperConstants {
     public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
+
+    public static final String SYSML_PERFORM_ACTION_USAGE = "SysML" + SEPARATOR + "PerformActionUsage";
 
     public static final String SYSML_IS_ABSTRACT = "SysML" + SEPARATOR + "Feature" + SEPARATOR + "isAbstract";
 

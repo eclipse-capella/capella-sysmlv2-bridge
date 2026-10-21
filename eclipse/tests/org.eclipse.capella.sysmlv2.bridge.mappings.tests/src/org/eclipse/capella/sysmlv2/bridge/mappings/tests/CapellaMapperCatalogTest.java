@@ -48,8 +48,8 @@ class CapellaMapperCatalogTest {
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
-        assertEquals(List.of("FunctionalChainMapper"),
-                backlog.get("fa").stream().map(MapperBacklogEntry::mapperName).toList());
+        assertTrue(backlog.get("fa").isEmpty());
+        assertTrue(backlog.get("oa").isEmpty());
         assertTrue(backlog.values().stream().flatMap(java.util.Collection::stream)
                 .noneMatch(entry -> entry.mapperName().endsWith("FunctionMapper")
                         || entry.mapperName().equals("OperationalActivityMapper")));
