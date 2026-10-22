@@ -17,8 +17,10 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_EXCHANGE_ITEM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_CATEGORIES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_CONVOYED_INFORMATIONS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_EXCHANGED_ITEMS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_KIND;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_PORT;
@@ -32,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperBacklogEntry;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ import org.polarsys.capella.core.data.information.InformationPackage;
 class CapellaMapperCatalogTest {
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(15, CapellaMapperCatalog.createMappers().size());
+        assertEquals(16, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
@@ -78,7 +79,7 @@ class CapellaMapperCatalogTest {
                 .findFirst().orElseThrow();
         assertTrue(coverage.mappedFeatures().containsAll(endpoints));
         assertTrue(coverage.mappedFeatures().contains(CAPELLA_EXCHANGED_ITEMS));
-        assertTrue(coverage.remainingFeatures().contains("categories"));
+        assertTrue(coverage.remainingFeatures().contains(CAPELLA_CATEGORIES));
     }
 
     @Test
@@ -101,7 +102,7 @@ class CapellaMapperCatalogTest {
         assertTrue(coverage.mappedFeatures().containsAll(List.of(CAPELLA_SOURCE, CAPELLA_TARGET,
                 CAPELLA_SOURCE_PORT, CAPELLA_TARGET_PORT, CAPELLA_CONVOYED_INFORMATIONS,
                 CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES)));
-        assertTrue(coverage.remainingFeatures().containsAll(List.of("kind", "categories")));
+        assertTrue(coverage.remainingFeatures().containsAll(List.of(CAPELLA_KIND, CAPELLA_CATEGORIES)));
     }
 
     @Test

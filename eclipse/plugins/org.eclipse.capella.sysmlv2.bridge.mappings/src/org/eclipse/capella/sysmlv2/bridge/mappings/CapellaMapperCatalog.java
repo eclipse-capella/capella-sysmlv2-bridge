@@ -12,6 +12,9 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_MISSION;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_PREFIX;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -93,7 +96,7 @@ public final class CapellaMapperCatalog {
         var result = new ArrayList<MetaclassAlignment>();
         createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
         result.addAll(List.of(
-                candidate(CtxPackage.Literals.MISSION, "Arcadia::Mission")));
+                candidate(CtxPackage.Literals.MISSION, ARCADIA_MISSION)));
         return List.copyOf(result);
     }
 
@@ -102,7 +105,7 @@ public final class CapellaMapperCatalog {
                 .sorted(java.util.Comparator.comparing(FeatureMapping::getCapellaFeature))
                 .map(feature -> {
                     AlignmentStatus alignment;
-                    if (feature.getSysmlFeature().startsWith("Arcadia::")) {
+                    if (feature.getSysmlFeature().startsWith(ARCADIA_PREFIX)) {
                         alignment = AlignmentStatus.CONFIRMED;
                     } else {
                         alignment = AlignmentStatus.SYSML_STANDARD;

@@ -12,11 +12,15 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.fa;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_POST_CONDITION;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_PRE_CONDITION;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZED_FUNCTIONAL_CHAINS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_FUNCTIONAL_CHAINS;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,7 +37,6 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
-import org.polarsys.capella.core.data.fa.AbstractFunctionalChainContainer;
 import org.polarsys.capella.core.data.fa.FunctionalChain;
 import org.polarsys.capella.core.data.fa.FunctionalChainInvolvement;
 import org.polarsys.capella.core.data.fa.FunctionalExchange;
@@ -52,18 +55,7 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
 
     @Override
     public List<EObject> getCreationDependencies(FunctionalChain source) {
-        var exchanges = involvedExchanges(source);
-        if (exchanges.isEmpty()) {
-            return List.of();
-        }
-        var parent = source.eContainer();
-        if (!(parent instanceof AbstractFunctionalChainContainer)) {
-            throw new IllegalArgumentException("Missing or unsupported functional chain parent");
-        }
-        var dependencies = new ArrayList<EObject>();
-        dependencies.add(parent);
-        dependencies.addAll(exchanges);
-        return dependencies;
+        return new ArrayList<>(involvedExchanges(source));
     }
 
     @Override
@@ -72,11 +64,12 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
                 .map(exchange -> (Object) MapperUtils.require(context.traceability(), exchange, FlowUsage.class))
                 .toList();
         if (exchanges.isEmpty()) {
-            context.diagnostics().addWarning(source, "Skipping functional chain with no involved functional exchanges");
+            context.traceability().skip(source);
+            context.diagnostics().addWarning(source, "Skipping functional chain " + source.getName() + " (id " + source.getId() + ") with no involved functional exchanges");
             return null;
         }
-        var parent = MapperUtils.require(context.traceability(), getCreationDependencies(source).getFirst(), ActionUsage.class);
-        var target = CREATION_SERVICE.createFunctionalChain(parent, exchanges);
+        // The service derives containment from the exchanges and ignores its container argument.
+        var target = CREATION_SERVICE.createFunctionalChain((FlowUsage) exchanges.getFirst(), exchanges);
         if (target == null) {
             context.diagnostics().addError(source, "Unable to create functional chain");
         }
@@ -98,6 +91,10 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
     public List<FeatureMapping<FunctionalChain>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<FunctionalChain>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(new DocumentingMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES, ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES));
+        mappings.add(new FeatureMapping<>(CAPELLA_REALIZED_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_REALIZES,
+                (source, context) -> MapperUtils.mapRealizes(source.getOwnedFunctionalChainRealizations(), context.traceability())));
+        mappings.add(new FeatureMapping<>(CAPELLA_REALIZING_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionalChainRealizations(), context.traceability())));
         return mappings;
     }
 

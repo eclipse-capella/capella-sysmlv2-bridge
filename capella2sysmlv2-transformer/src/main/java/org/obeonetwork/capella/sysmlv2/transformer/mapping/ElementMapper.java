@@ -90,7 +90,7 @@ public abstract class ElementMapper<S extends EObject, T extends EObject> {
         var target = this.createTarget(source, context);
         if (target != null) {
             context.traceability().register(source, target);
-        } else {
+        } else if (!context.traceability().isSkipped(source)) {
             context.traceability().unregister(source);
         }
     }

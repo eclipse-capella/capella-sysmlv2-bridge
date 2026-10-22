@@ -14,13 +14,16 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.ctx;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_COMPONENTS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INCOMING_CAPABILITY_ALLOCATION;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_CHAINS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_SYSTEM_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUTGOING_CAPABILITY_ALLOCATION;
 
@@ -43,6 +46,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.ctx.Capability;
 import org.polarsys.capella.core.data.ctx.SystemAnalysis;
+import org.polarsys.capella.core.data.fa.FunctionalChain;
 
 /**
  * Maps System Analysis capabilities to Arcadia capability occurrences.
@@ -80,6 +84,10 @@ public final class CapabilityMapper extends ElementMapper<Capability, Occurrence
         var mappings = new ArrayList<FeatureMapping<Capability>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
                 (source, context) -> mapReferences(source, source.getInvolvedAbstractFunctions(), ARCADIA_INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
+        mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_CHAINS,
+                ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
+                (source, context) -> mapReferences(source, source.getInvolvedFunctionalChains(),
+                        ARCADIA_INVOLVED_FUNCTIONAL_CHAINS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
         mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_SYSTEM_COMPONENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
                 (source, context) -> mapReferences(source, source.getInvolvedSystemComponents(), ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context)));
         mappings.add(new FeatureMapping<>(CAPELLA_OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
@@ -95,6 +103,11 @@ public final class CapabilityMapper extends ElementMapper<Capability, Occurrence
             var target = context.traceability().lookupTarget(value).filter(type::isInstance);
             if (target.isPresent()) {
                 targets.add((Feature) target.get());
+            } else if (ARCADIA_INVOLVED_FUNCTIONAL_CHAINS.equals(name) && context.traceability().isSkipped(value)) {
+                var functionalChain = (FunctionalChain) value;
+                context.diagnostics().addWarning(source, "Omitting reference from capability '" + source.getName()
+                        + "' (id: " + source.getId() + ")"
+                        + "' to intentionally skipped functional  chain '" + functionalChain.getName() + "' (id: " + functionalChain.getId() + ")");
             } else {
                 context.diagnostics().addError(source, "Unable to map " + name + " reference: " + value);
             }

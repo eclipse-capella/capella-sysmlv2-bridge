@@ -54,6 +54,9 @@ public final class ModelTransformationUtils {
         var mappers = CapellaMapperCatalog.createMappers();
         var engine = new TransformationEngine(new MapperRegistry(mappers), targetModel.getResourceSet());
         var result = engine.transform(root, modelName);
+        result.diagnostics().stream()
+                .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.WARNING)
+                .forEach(diagnostic -> LOGGER.warning(diagnostic.message()));
         var errors = result.diagnostics().stream()
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)
                 .toList();
@@ -63,7 +66,7 @@ public final class ModelTransformationUtils {
             throw new IllegalStateException("Transformation produced "
                     + errorCount + " error diagnostic(s)");
         }
-        return new ModelTransformation(modelName, sources, targetModel, mappers, result, errorCount); 
+        return new ModelTransformation(modelName, sources, targetModel, mappers, result, errorCount);
     }
 
     private static CapellaForSysonResourceSet loadCapellaForSysonResourceSet() {

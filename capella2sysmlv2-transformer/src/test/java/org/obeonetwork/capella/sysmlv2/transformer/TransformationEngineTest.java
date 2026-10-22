@@ -153,7 +153,7 @@ class TransformationEngineTest {
 
     @Test
     void isolatesUnavailableDependenciesAndNeverRetriesFailures() {
-        for (var failure : List.of("missing", "unsupported", "null", "creation exception", "discovery exception", "excluded")) {
+        for (var failure : List.of("missing", "unsupported", "null", "creation exception", "discovery exception", "excluded", "warning", "skip then exception")) {
             var dependent = packageWithName("dependent");
             EObject prerequisite;
             if (failure.equals("unsupported")) {
@@ -184,6 +184,13 @@ class TransformationEngineTest {
                         context.traceability().unregister(prerequisite);
                     }
                     if (source == prerequisite) {
+                        if (failure.equals("warning")) {
+                            context.diagnostics().addWarning(source, "A warning is not an intentional skip");
+                        }
+                        if (failure.equals("skip then exception")) {
+                            context.traceability().skip(source);
+                            throw new IllegalStateException("creation failed after skip");
+                        }
                         if (failure.equals("creation exception")) {
                             throw new IllegalStateException("creation failed");
                         }
@@ -215,7 +222,54 @@ class TransformationEngineTest {
             assertThat(features.stream().filter(source -> source == unrelated).count()).isEqualTo(1L);
             assertThat(result.traceability().contains(unrelated)).isTrue();
             assertThat(result.traceability().isExcluded(dependent)).isTrue();
+            assertThat(result.traceability().isSkipped(prerequisite)).isFalse();
             assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("prerequisite: " + prerequisite));
+        }
+    }
+
+    @Test
+    void skipsOnceWithoutFeaturesButStillFailsRequiredDependents() {
+        for (var withDependent : List.of(false, true)) {
+            var skipped = packageWithName("skipped");
+            var dependent = packageWithName("dependent");
+            var unrelated = packageWithName("unrelated");
+            var creations = new ArrayList<EObject>();
+            var features = new ArrayList<EObject>();
+            var mapper = new ElementMapper<EPackage, EObject>(EPackage.class, "SysML::Element") {
+                @Override
+                public List<EObject> getCreationDependencies(EPackage source) {
+                    return source == dependent ? List.of(skipped) : List.of();
+                }
+
+                @Override
+                protected EObject createTarget(EPackage source, TransformationContext context) {
+                    creations.add(source);
+                    if (source == skipped) {
+                        context.traceability().skip(source);
+                        context.diagnostics().addWarning(source, "Intentionally skipped");
+                        return null;
+                    }
+                    return EcoreFactory.eINSTANCE.createEPackage();
+                }
+
+                @Override
+                public List<FeatureMapping<EPackage>> getFeatureMappings() {
+                    return List.of(new FeatureMapping<>("name", "name", (source, context) -> features.add(source)));
+                }
+            };
+            var inputs = new ArrayList<EObject>(List.of(skipped, skipped, unrelated));
+            if (withDependent) {
+                inputs.add(dependent);
+            }
+            var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
+                    TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(inputs, "Skips");
+            assertThat(creations).containsExactly(skipped, unrelated);
+            assertThat(features).containsExactly(unrelated);
+            assertThat(result.traceability().isSkipped(skipped)).isTrue();
+            assertThat(result.traceability().lookupTarget(skipped)).isEmpty();
+            assertThat(result.diagnostics().stream().filter(value -> value.severity().name().equals("ERROR")).count())
+                    .isEqualTo(withDependent ? 1L : 0L);
+            assertThat(result.diagnostics().stream().filter(value -> value.severity().name().equals("WARNING")).count()).isEqualTo(1L);
         }
     }
 
