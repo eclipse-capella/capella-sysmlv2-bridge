@@ -29,6 +29,8 @@ public final class Traceability {
 
     private final Set<EObject> excluded = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
 
+    private final Set<EObject> skipped = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+
     /**
      * Registers a source-to-target correspondence.
      *
@@ -46,6 +48,8 @@ public final class Traceability {
         if (previous != null && previous != target) {
             throw new IllegalStateException("A target is already registered for source " + source);
         }
+        excluded.remove(source);
+        skipped.remove(source);
     }
 
     /**
@@ -58,6 +62,23 @@ public final class Traceability {
         Objects.requireNonNull(source);
         mappings.remove(source);
         excluded.add(source);
+        skipped.remove(source);
+    }
+
+    /**
+     * Marks a source as intentionally omitted, without a target.
+     */
+    public void skip(EObject source) {
+        unregister(source);
+        skipped.add(source);
+    }
+
+    /**
+     * Returns whether the source was intentionally omitted rather than failed.
+     */
+    public boolean isSkipped(EObject source) {
+        Objects.requireNonNull(source);
+        return skipped.contains(source);
     }
 
     /**

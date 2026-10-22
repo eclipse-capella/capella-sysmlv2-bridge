@@ -9,6 +9,8 @@
  */
 package org.eclipse.capella.sysmlv2.bridge.application.tests;
 
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ABSTRACT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_IS_ABSTRACT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,6 +20,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService;
 import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
@@ -33,8 +40,46 @@ import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.fa.FaFactory;
 
 class ApplicationServicesTest {
+
+    @Test
+    void logsSkippedChainWarningOnceWithoutFailingTransformation() {
+        var architecture = logicalArchitectureContaining(LaFactory.eINSTANCE.createLogicalComponent());
+        var functions = LaFactory.eINSTANCE.createLogicalFunctionPkg();
+        architecture.setOwnedFunctionPkg(functions);
+        var function = LaFactory.eINSTANCE.createLogicalFunction();
+        functions.getOwnedLogicalFunctions().add(function);
+        var chain = FaFactory.eINSTANCE.createFunctionalChain();
+        function.getOwnedFunctionalChains().add(chain);
+        var records = new ArrayList<LogRecord>();
+        var handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        var logger = Logger.getLogger(ModelTransformationUtils.class.getName());
+        logger.addHandler(handler);
+        try {
+            var transformation = ModelTransformationUtils.transform(architecture, "Warnings");
+            assertEquals(0, transformation.errorCount());
+            assertTrue(transformation.result().traceability().isSkipped(chain));
+            assertEquals(1, records.stream().filter(record -> record.getLevel() == Level.WARNING
+                    && record.getMessage().contains("no involved functional exchanges")).count());
+        } finally {
+            logger.removeHandler(handler);
+        }
+    }
 
     @Test
     void loadingServiceRejectsMissingArchive() throws IOException {
@@ -95,7 +140,7 @@ class ApplicationServicesTest {
                 ".capella2sysmlv2/mapping-coverage.json")));
         var coverageReport = Files.readString(outputDirectory.resolve(
                 ".capella2sysmlv2/mapping-coverage.md"));
-        assertTrue(coverageReport.contains("abstract -> SysML::Feature::isAbstract"));
+        assertTrue(coverageReport.contains(CAPELLA_ABSTRACT + " -> " + SYSML_IS_ABSTRACT));
     }
 
     @Test

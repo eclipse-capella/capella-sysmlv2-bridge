@@ -16,9 +16,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import org.junit.jupiter.api.Test;
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 
 class TraceabilityTest {
+
+    @Test
+    void distinguishesSkippedSourcesAndClearsTheirStatusOnFailureOrRegistration() {
+        var source = EcoreFactory.eINSTANCE.createEClass();
+        var other = EcoreFactory.eINSTANCE.createEClass();
+        var target = EcoreFactory.eINSTANCE.createEClass();
+        var traceability = new Traceability();
+        traceability.register(source, target);
+        traceability.skip(source);
+        assertThat(traceability.lookupTarget(source)).isEmpty();
+        assertThat(traceability.isExcluded(source)).isTrue();
+        assertThat(traceability.isSkipped(source)).isTrue();
+        assertThat(traceability.isSkipped(other)).isFalse();
+        traceability.unregister(source);
+        assertThat(traceability.isSkipped(source)).isFalse();
+        assertThat(traceability.isExcluded(source)).isTrue();
+        traceability.skip(source);
+        traceability.register(source, target);
+        assertThat(traceability.lookupTarget(source)).contains(target);
+        assertThat(traceability.isExcluded(source)).isFalse();
+        assertThat(traceability.isSkipped(source)).isFalse();
+    }
 
     @Test
     void registersAndLooksUpTargetBySourceIdentity() {

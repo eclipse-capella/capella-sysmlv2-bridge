@@ -24,6 +24,10 @@ public final class MapperConstants {
 
     public static final String CAPELLA_DESCRIPTION = "description";
 
+    public static final String CAPELLA_KIND = "kind";
+
+    public static final String CAPELLA_CATEGORIES = "categories";
+
     public static final String CAPELLA_ACTOR = "actor";
 
     public static final String CAPELLA_HUMAN = "human";
@@ -43,6 +47,10 @@ public final class MapperConstants {
     public static final String CAPELLA_INVOLVED_FUNCTIONS = "involvedFunctions";
 
     public static final String CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES = "involvedFunctionalExchanges";
+
+    public static final String CAPELLA_OWNED_SEQUENCE_NODES = "ownedSequenceNodes";
+
+    public static final String CAPELLA_OWNED_SEQUENCE_LINKS = "ownedSequenceLinks";
 
     public static final String CAPELLA_PRE_CONDITION = "preCondition";
 
@@ -78,6 +86,10 @@ public final class MapperConstants {
 
     public static final String CAPELLA_TARGET_FUNCTION_INPUT_PORT = "targetFunctionInputPort";
 
+    public static final String CAPELLA_REALIZED_FUNCTIONAL_CHAINS = "realizedFunctionalChains";
+
+    public static final String CAPELLA_REALIZING_FUNCTIONAL_CHAINS = "realizingFunctionalChains";
+
     public static final String CAPELLA_REALIZED_EXCHANGE_ITEMS = "realizedExchangeItems";
 
     public static final String CAPELLA_REALIZING_EXCHANGE_ITEMS = "realizingExchangeItems";
@@ -98,29 +110,33 @@ public final class MapperConstants {
 
     public static final String CAPELLA_TARGET_PORT = "targetPort";
 
-    public static final String ARCADIA_CAPABILITY = "Arcadia::Capability";
+    public static final String ARCADIA_PREFIX = "Arcadia" + SEPARATOR;
 
-    public static final String ARCADIA_COMPONENT = "Arcadia::Component";
+    public static final String ARCADIA_CAPABILITY = ARCADIA_PREFIX + "Capability";
 
-    public static final String ARCADIA_FUNCTION = "Arcadia::Function";
+    public static final String ARCADIA_MISSION = ARCADIA_PREFIX + "Mission";
 
-    public static final String ARCADIA_COMPONENT_PORT = "Arcadia::ComponentPort";
+    public static final String ARCADIA_COMPONENT = ARCADIA_PREFIX + "Component";
+
+    public static final String ARCADIA_FUNCTION = ARCADIA_PREFIX + "Function";
+
+    public static final String ARCADIA_COMPONENT_PORT = ARCADIA_PREFIX + "ComponentPort";
 
     public static final String ARCADIA_COMPONENT_PORT_DIRECTION = ARCADIA_COMPONENT_PORT + SEPARATOR + "portDirection";
 
     public static final String ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS = ARCADIA_COMPONENT_PORT + SEPARATOR
             + CAPELLA_ALLOCATED_FUNCTION_PORTS;
 
-    public static final String ARCADIA_FUNCTIONAL_EXCHANGE = "Arcadia::FunctionalExchange";
+    public static final String ARCADIA_FUNCTIONAL_EXCHANGE = ARCADIA_PREFIX + "FunctionalExchange";
 
-    public static final String ARCADIA_FUNCTIONAL_CHAIN = "Arcadia::FunctionalChain";
+    public static final String ARCADIA_FUNCTIONAL_CHAIN = ARCADIA_PREFIX + "FunctionalChain";
 
     public static final String ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES = "involvedFunctionalExchanges";
 
     public static final String ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES = ARCADIA_FUNCTIONAL_CHAIN + SEPARATOR
             + ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES;
 
-    public static final String ARCADIA_COMPONENT_EXCHANGE = "Arcadia::ComponentExchange";
+    public static final String ARCADIA_COMPONENT_EXCHANGE = ARCADIA_PREFIX + "ComponentExchange";
 
     public static final String ARCADIA_COMPONENT_EXCHANGE_CP1 = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR + "cp1";
 
@@ -136,15 +152,19 @@ public final class MapperConstants {
     public static final String ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES = ARCADIA_COMPONENT_EXCHANGE + SEPARATOR
             + ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES;
 
-    public static final String ARCADIA_COMPONENT_IS_ACTOR = ARCADIA_COMPONENT + "::isActor";
+    public static final String ARCADIA_IS_ACTOR = "isActor";
 
-    public static final String ARCADIA_COMPONENT_IS_HUMAN = ARCADIA_COMPONENT + "::isHuman";
+    public static final String ARCADIA_IS_HUMAN = "isHuman";
 
-    public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + "::allocatedFunctions";
+    public static final String ARCADIA_COMPONENT_IS_ACTOR = ARCADIA_COMPONENT + SEPARATOR + ARCADIA_IS_ACTOR;
 
-    public static final String ARCADIA_ELEMENT = "Arcadia::ArcadiaElement";
+    public static final String ARCADIA_COMPONENT_IS_HUMAN = ARCADIA_COMPONENT + SEPARATOR + ARCADIA_IS_HUMAN;
 
-    public static final String ARCADIA_EXCHANGE_ITEM = "Arcadia::ExchangeItem";
+    public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + SEPARATOR + CAPELLA_ALLOCATED_FUNCTIONS;
+
+    public static final String ARCADIA_ELEMENT = ARCADIA_PREFIX + "ArcadiaElement";
+
+    public static final String ARCADIA_EXCHANGE_ITEM = ARCADIA_PREFIX + "ExchangeItem";
 
     public static final String ARCADIA_REALIZES = "realizes";
 
@@ -153,10 +173,6 @@ public final class MapperConstants {
     public static final String ARCADIA_ELEMENT_REALIZES = ARCADIA_ELEMENT + SEPARATOR + ARCADIA_REALIZES;
 
     public static final String ARCADIA_ELEMENT_IS_REALIZED_BY = ARCADIA_ELEMENT + SEPARATOR + ARCADIA_IS_REALIZED_BY;
-
-    public static final String ARCADIA_IS_ACTOR = "isActor";
-
-    public static final String ARCADIA_IS_HUMAN = "isHuman";
 
     public static final String ARCADIA_INVOLVED_FUNCTIONS = "involvedFunctions";
 
@@ -170,23 +186,27 @@ public final class MapperConstants {
 
     public static final String ARCADIA_CAPABILITY_INVOLVED_COMPONENTS = ARCADIA_CAPABILITY + SEPARATOR + ARCADIA_INVOLVED_COMPONENTS;
 
-    public static final String SYSML_DECLARED_NAME = "SysML" + SEPARATOR + "Element" + SEPARATOR + "declaredName";
+    public static final String SYSML_PREFIX = "SysML" + SEPARATOR;
+
+    public static final String SYSML_DECLARED_NAME = SYSML_PREFIX + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
 
-    public static final String SYSML_PERFORM_ACTION_USAGE = "SysML" + SEPARATOR + "PerformActionUsage";
+    public static final String SYSML_PERFORM_ACTION_USAGE = SYSML_PREFIX + "PerformActionUsage";
 
-    public static final String SYSML_IS_ABSTRACT = "SysML" + SEPARATOR + "Feature" + SEPARATOR + "isAbstract";
+    public static final String SYSML_IS_ABSTRACT = SYSML_PREFIX + "Feature" + SEPARATOR + "isAbstract";
 
-    public static final String SYSML_FLOW_USAGE_SOURCE = "SysML::FlowUsage::source";
+    public static final String SYSML_FLOW_USAGE = SYSML_PREFIX + "FlowUsage";
 
-    public static final String SYSML_FLOW_USAGE_TARGET = "SysML::FlowUsage::target";
+    public static final String SYSML_FLOW_USAGE_SOURCE = SYSML_FLOW_USAGE + SEPARATOR + "source";
 
-    public static final String SYSML_ITEM_USAGE = "SysML::ItemUsage";
+    public static final String SYSML_FLOW_USAGE_TARGET = SYSML_FLOW_USAGE + SEPARATOR + "target";
 
-    public static final String SYSML_FEATURE_VALUE = "SysML::Feature::value";
+    public static final String SYSML_ITEM_USAGE = SYSML_PREFIX + "ItemUsage";
 
-    public static final String SYSML_FLOWUSAGE_PAYLOAD = "SysML::FlowUsage::payload";
+    public static final String SYSML_FEATURE_VALUE = SYSML_PREFIX + "Feature" + SEPARATOR + "value";
+
+    public static final String SYSML_FLOWUSAGE_PAYLOAD = SYSML_FLOW_USAGE + SEPARATOR + "payload";
 
     public static final String CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS = "involvedAbstractFunctions";
 

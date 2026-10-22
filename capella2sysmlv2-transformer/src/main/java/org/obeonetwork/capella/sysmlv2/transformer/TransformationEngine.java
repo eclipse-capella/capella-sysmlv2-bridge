@@ -105,7 +105,7 @@ public final class TransformationEngine {
     }
 
     private enum State {
-        CONSTRUCTING, READY, FAILED
+        CONSTRUCTING, READY, SKIPPED, FAILED
     }
 
     /**
@@ -141,7 +141,7 @@ public final class TransformationEngine {
                 return false;
             }
             var state = states.get(source);
-            if (state == State.FAILED) {
+            if (state == State.FAILED || state == State.SKIPPED) {
                 return false;
             }
             if (context.traceability().isExcluded(source)) {
@@ -163,6 +163,10 @@ public final class TransformationEngine {
                     }
                 }
                 mapper.createAndRegister(context);
+                if (context.traceability().isSkipped(source)) {
+                    states.put(source, State.SKIPPED);
+                    return false;
+                }
                 if (!context.traceability().contains(source) || context.traceability().isExcluded(source)) {
                     return fail(source, "Creation returned no target or excluded the source");
                 }
