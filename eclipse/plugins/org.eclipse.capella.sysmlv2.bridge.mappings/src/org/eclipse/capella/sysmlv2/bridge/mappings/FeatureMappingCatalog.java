@@ -33,18 +33,21 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELL
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZED_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REVIEW;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_STATUS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUMMARY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_DOC;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_LM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DECLARED_NAME;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DESCRIPTION;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_IS_ABSTRACT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_STATUS;
 
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.Feature;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -82,7 +85,27 @@ public final class FeatureMappingCatalog {
         return List.of(
                 new FeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
                 new FeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION,
-                        (source, context) -> COMMON_UPDATE_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())));
+                        (source, context) -> COMMON_UPDATE_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())),
+                new FeatureMapping<>(CAPELLA_STATUS, SYSML_STATUS, FeatureMappingCatalog::mapStatus));
+    }
+
+    private static void mapStatus(NamedElement source, TransformationContext context) {
+        if (source.getStatus() == null) {
+            return;
+        }
+        var status = switch (source.getStatus().getName()) {
+            case "DRAFT" -> "tbd";
+            case "TO BE REVIEWED" -> "tbr";
+            case "TO BE DISCUSSED" -> "tbc";
+            case "REWORK NECESSARY", "UNDER REWORK" -> "open";
+            case "REVIEWED" -> "done";
+            case null, default -> null;
+        };
+        if (status == null) {
+            context.diagnostics().addWarning(source, "Unable to map custom progress status: " + source.getStatus().getName());
+        } else {
+            COMMON_UPDATE_SERVICE.setStatusKind(MapperUtils.require(context.traceability(), source, Feature.class), status);
+        }
     }
 
     /**

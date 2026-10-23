@@ -84,8 +84,6 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
             context.diagnostics().addError(source, "Unable to create a System Component");
             return null;
         }
-        // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing
-        // context anymore
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;
