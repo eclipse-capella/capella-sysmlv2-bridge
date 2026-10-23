@@ -88,8 +88,6 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
             return null;
         }
 
-        // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing
-        // context anymore
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         return target;

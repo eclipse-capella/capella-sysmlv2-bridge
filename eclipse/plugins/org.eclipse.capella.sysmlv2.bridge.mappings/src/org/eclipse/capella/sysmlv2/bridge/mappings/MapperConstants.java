@@ -28,6 +28,8 @@ public final class MapperConstants {
 
     public static final String CAPELLA_CATEGORIES = "categories";
 
+    public static final String CAPELLA_STATUS = "status";
+
     public static final String CAPELLA_ACTOR = "actor";
 
     public static final String CAPELLA_HUMAN = "human";
@@ -191,6 +193,8 @@ public final class MapperConstants {
     public static final String SYSML_DECLARED_NAME = SYSML_PREFIX + "Element" + SEPARATOR + "declaredName";
 
     public static final String SYSML_DESCRIPTION = "doc description /* */";
+
+    public static final String SYSML_STATUS = "ModelingMetadata::StatusInfo::status";
 
     public static final String SYSML_PERFORM_ACTION_USAGE = SYSML_PREFIX + "PerformActionUsage";
 

@@ -86,8 +86,6 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
             return null;
         }
 
-        // TODO : progress status -> waiting for transverseMutationService#setStatusKind to not depend on editing
-        // context anymore
         // TODO : GeneralizedComponents
         // TODO : Allocated Roles
         // TODO : physicalComponentNature
