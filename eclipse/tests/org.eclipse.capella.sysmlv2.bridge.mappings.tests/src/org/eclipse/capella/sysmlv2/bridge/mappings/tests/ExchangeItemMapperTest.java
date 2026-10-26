@@ -42,7 +42,7 @@ import org.polarsys.capella.core.data.pa.PaFactory;
 
 class ExchangeItemMapperTest {
     @Test
-    void mapsRealizationsInBothDirections() {
+    void rejectsSamePerspectiveRealizations() {
         var architecture = LaFactory.eINSTANCE.createLogicalArchitecture();
         var realizing = addNestedItem(architecture);
         var realized = InformationFactory.eINSTANCE.createExchangeItem("realized");
@@ -54,8 +54,8 @@ class ExchangeItemMapperTest {
         var result = transform(architecture);
         var source = assertInstanceOf(ItemUsage.class, result.traceability().lookupTarget(realizing).orElseThrow());
         var target = assertInstanceOf(ItemUsage.class, result.traceability().lookupTarget(realized).orElseThrow());
-        assertEquals(List.of(target), QUERY.getFeatureReferenceValue(source, "realizes"));
-        assertEquals(List.of(source), QUERY.getFeatureReferenceValue(target, "isRealizedBy"));
+        assertTrue(QUERY.getFeatureReferenceValue(source, "realizes").isEmpty());
+        assertTrue(QUERY.getFeatureReferenceValue(target, "isRealizedBy").isEmpty());
         assertTrue(QUERY.getFeatureReferenceValue(target, "realizes").isEmpty());
         assertTrue(QUERY.getFeatureReferenceValue(source, "isRealizedBy").isEmpty());
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());

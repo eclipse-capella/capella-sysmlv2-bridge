@@ -113,9 +113,9 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
         mappings.add(new FeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES, ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES,
                 (source, context) -> mapReferences(source, source.getAllocatedFunctionalExchanges(), ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES, SysmlPackage.eINSTANCE.getFlowUsage(), context)));
         mappings.add(new FeatureMapping<>(CAPELLA_OUT_COMPONENT_EXCHANGE_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
-                (source, context) -> MapperUtils.mapRealizes(source.getOwnedComponentExchangeRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentExchangeRealizations(), context.traceability())));
         mappings.add(new FeatureMapping<>(CAPELLA_IN_COMPONENT_EXCHANGE_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentExchangeRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentExchangeRealizations(), context.traceability())));
         return mappings;
     }
 

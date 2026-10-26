@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
@@ -29,6 +30,7 @@ import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.tests.CapellaTestFixtures.ComponentExchangeFixture;
 import org.eclipse.capella.sysmlv2.bridge.mappings.tests.CapellaTestFixtures.Perspective;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.InterfaceUsage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -144,7 +146,7 @@ class ComponentExchangeMapperTest {
     }
 
     @Test
-    void mapsRealizationsInBothDirections() {
+    void rejectsSamePerspectiveRealizations() {
         var fixture = componentExchange(Perspective.LOGICAL);
         var realized = FaFactory.eINSTANCE.createComponentExchange();
         realized.setKind(ComponentExchangeKind.FLOW);
@@ -158,8 +160,8 @@ class ComponentExchangeMapperTest {
 
         var result = transform(fixture);
         var target = mapped(fixture.exchange(), result);
-        assertEquals(List.of(mapped(realized, result)), QUERY.getFeatureReferenceValue(target, "realizes"));
-        assertEquals(List.of(target), QUERY.getFeatureReferenceValue(mapped(realized, result), "isRealizedBy"));
+        assertTrue(QUERY.getFeatureReferenceValue(target, "realizes").isEmpty());
+        assertTrue(QUERY.getFeatureReferenceValue(mapped(realized, result), "isRealizedBy").isEmpty());
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
     }
 
@@ -178,6 +180,22 @@ class ComponentExchangeMapperTest {
         var fixture = componentExchange(Perspective.OPERATIONAL);
         fixture.exchange().setTarget(fixture.exchange().getSource());
         assertRejected(fixture, transform(fixture));
+    }
+
+    @Test
+    void mapsRealizationsAcrossPerspectives() {
+        var realizing = componentExchange(Perspective.LOGICAL);
+        var realized = componentExchange(Perspective.SYSTEM);
+        var realization = FaFactory.eINSTANCE.createComponentExchangeRealization();
+        realization.setSourceElement(realizing.exchange());
+        realization.setTargetElement(realized.exchange());
+        realizing.exchange().getOwnedComponentExchangeRealizations().add(realization);
+        var result = transform(realizing, realized);
+        var source = mapped(realizing.exchange(), result);
+        var target = mapped(realized.exchange(), result);
+        assertEquals(List.of(target), QUERY.getFeatureReferenceValue(source, "realizes"));
+        assertEquals(List.of(source), QUERY.getFeatureReferenceValue(target, "isRealizedBy"));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
     }
 
     private static void assertMapped(ComponentExchangeFixture fixture, TransformationResult result) {
@@ -201,8 +219,16 @@ class ComponentExchangeMapperTest {
         return assertInstanceOf(InterfaceUsage.class, result.traceability().lookupTarget(source).orElseThrow());
     }
 
-    private static TransformationResult transform(ComponentExchangeFixture fixture) {
+    private static TransformationResult transform(ComponentExchangeFixture... fixtures) {
+        var inputs = new ArrayList<EObject>();
+        for (var fixture : List.of(fixtures).reversed()) {
+            inputs.addAll(fixture.inputs());
+        }
+        for (var fixture : fixtures) {
+            inputs.remove(fixture.exchange());
+            inputs.addFirst(fixture.exchange());
+        }
         return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(fixture.inputs(), "Exchanges");
+                new CapellaForSysonResourceSet().getResourceSet()).transformAll(inputs, "Exchanges");
     }
 }

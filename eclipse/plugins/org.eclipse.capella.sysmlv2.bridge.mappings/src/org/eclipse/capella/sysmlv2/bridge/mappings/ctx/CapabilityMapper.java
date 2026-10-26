@@ -91,9 +91,9 @@ public final class CapabilityMapper extends ElementMapper<Capability, Occurrence
         mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_SYSTEM_COMPONENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
                 (source, context) -> mapReferences(source, source.getInvolvedSystemComponents(), ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context)));
         mappings.add(new FeatureMapping<>(CAPELLA_OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
-                (source, context) -> MapperUtils.mapRealizes(source.getOutgoingCapabilityAllocation(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOutgoingCapabilityAllocation(), context.traceability())));
         mappings.add(new FeatureMapping<>(CAPELLA_INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                (source, context) -> MapperUtils.mapIsRealizedBy(source.getIncomingCapabilityAllocation(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getIncomingCapabilityAllocation(), context.traceability())));
         return mappings;
     }
 
