@@ -12,24 +12,17 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
-
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
-import org.eclipse.syson.sysml.SysmlPackage;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
-import org.polarsys.capella.common.data.modellingcore.TraceableElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
@@ -69,46 +62,21 @@ public class MapperUtils {
     }
 
     /**
-     * Maps Capella realization traces to SysML {@code realizes} references.
+     * Maps Capella realization traces using the service that maintains both realization directions.
      *
      * @param realizations
      *            realization traces to map
-     * @param context
-     *            current transformation context
+     * @param traceability
+     *            source-to-target correspondences
      */
-    public static void mapRealizes(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
-        realizations.forEach(it -> mapToFeatureReference(traceability, it.getSourceElement(), it.getTargetElement(), ARCADIA_ELEMENT, ARCADIA_REALIZES, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
-    }
-
-    /**
-     * Maps Capella realization traces to SysML {@code isRealizedBy} references.
-     *
-     * @param realizations
-     *            realization traces to map
-     * @param context
-     *            current transformation context
-     */
-    public static void mapIsRealizedBy(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
-        realizations
-                .forEach(it -> mapToFeatureReference(traceability, it.getTargetElement(), it.getSourceElement(), ARCADIA_ELEMENT, ARCADIA_IS_REALIZED_BY, SysmlPackage.eINSTANCE.getOccurrenceUsage()));
-    }
-
-    private static void mapToFeatureReference(Traceability traceability, TraceableElement sourceElement, TraceableElement targetElement, String libraryPrefix, String attributeName,
-            EClass referencedFeatureType) {
-        var optMappedSource = traceability.lookupTarget(sourceElement)
-                .filter(Usage.class::isInstance)
-                .map(Usage.class::cast);
-
-        var optMappedTarget = traceability.lookupTarget(targetElement)
-                .filter(Usage.class::isInstance)
-                .map(Usage.class::cast);
-
-        if (optMappedSource.isPresent() && optMappedTarget.isPresent()) {
-            var mappedSource = optMappedSource.get();
-            var mappedTarget = optMappedTarget.get();
-
-            COMMON_UPDATE_SERVICE.addFeatureReferenceValue(mappedSource, libraryPrefix, attributeName, mappedTarget, referencedFeatureType);
-        }
+    public static void mapRealizationLinks(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
+        realizations.forEach(realization -> {
+            var source = traceability.lookupTarget(realization.getSourceElement()).filter(Usage.class::isInstance).map(Usage.class::cast);
+            var target = traceability.lookupTarget(realization.getTargetElement()).filter(Usage.class::isInstance);
+            if (source.isPresent() && target.isPresent()) {
+                COMMON_UPDATE_SERVICE.setRealizes(source.get(), target.get());
+            }
+        });
     }
 
     /**

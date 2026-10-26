@@ -11,18 +11,56 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalFunctionMapper;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
+import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.la.LogicalFunction;
 
 class MapperUtilsTest {
+    @Test
+    void realizationServiceMaintainsBothDirectionsAndRejectsIneligibleTargets() {
+        var resourceSet = new CapellaForSysonResourceSet().getResourceSet();
+        var structure = new ArcadiaModelStructureBuilder().build("Realizations", resourceSet);
+        var resource = new ResourceImpl();
+        resourceSet.getResources().add(resource);
+        resource.getContents().add(structure.root());
+        var creation = new CommonCreationService();
+        var source = LaFactory.eINSTANCE.createLogicalFunction();
+        var mappedSource = creation.createFunction(structure.logicalArchitecture().rootFunction());
+        var traceability = new Traceability();
+        traceability.register(source, mappedSource);
+        var first = creation.createFunction(structure.systemAnalysis().rootFunction());
+        var second = creation.createFunction(structure.systemAnalysis().rootFunction());
+        var ineligible = creation.createFunction(structure.logicalArchitecture().rootFunction());
+        for (var mappedTarget : List.of(first, second, ineligible)) {
+            var target = LaFactory.eINSTANCE.createLogicalFunction();
+            traceability.register(target, mappedTarget);
+            var realization = FaFactory.eINSTANCE.createFunctionRealization();
+            realization.setSourceElement(source);
+            realization.setTargetElement(target);
+            var traces = List.of(realization);
+            MapperUtils.mapRealizationLinks(traces, traceability);
+        }
+        var query = new CommonQueryService();
+        assertEquals(2, query.getRealizes(mappedSource).size());
+        assertTrue(query.getRealizes(mappedSource).containsAll(List.of(first, second)));
+        assertEquals(List.of(mappedSource), query.getIsRealizedBy(first));
+        assertEquals(List.of(mappedSource), query.getIsRealizedBy(second));
+        assertTrue(query.getIsRealizedBy(ineligible).isEmpty());
+    }
+
     @Test
     void selectsNearestCompatibleAncestorThroughUnmappedPackages() {
         var outer = LaFactory.eINSTANCE.createLogicalFunction();

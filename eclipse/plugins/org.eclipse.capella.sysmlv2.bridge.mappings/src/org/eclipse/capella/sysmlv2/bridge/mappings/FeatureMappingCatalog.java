@@ -118,10 +118,10 @@ public final class FeatureMappingCatalog {
     public static <S extends AbstractFunction> List<FeatureMapping<S>> getFunctionMappings() {
         return List.of(
                 new FeatureMapping<>(CAPELLA_OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedFunctionRealizations(),
+                        (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionRealizations(),
                                 context.traceability())),
                 new FeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionRealizations(),
+                        (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionRealizations(),
                                 context.traceability())));
     }
 
@@ -135,10 +135,10 @@ public final class FeatureMappingCatalog {
     public static <S extends Port> List<FeatureMapping<S>> getPortRealizationMappings() {
         return List.of(
                 new FeatureMapping<>(CAPELLA_OUT_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
-                        (S source, TransformationContext context) -> MapperUtils.mapRealizes(source.getOwnedPortRealizations(),
+                        (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedPortRealizations(),
                                 context.traceability())),
                 new FeatureMapping<>(CAPELLA_IN_PORT_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (S source, TransformationContext context) -> MapperUtils.mapIsRealizedBy(source.getOwnedPortRealizations(),
+                        (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedPortRealizations(),
                                 context.traceability())));
     }
 
@@ -156,9 +156,9 @@ public final class FeatureMappingCatalog {
                 new FeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
                         (source, context) -> MapperUtils.addFunctionAllocation(source, MapperUtils.require(context.traceability(), source, Usage.class), context.traceability())),
                 new FeatureMapping<>(CAPELLA_REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
-                        (source, context) -> MapperUtils.mapRealizes(source.getOwnedComponentRealizations(), context.traceability())),
+                        (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentRealizations(), context.traceability())),
                 new FeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedComponentRealizations(), context.traceability())),
+                        (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentRealizations(), context.traceability())),
                 new FeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
                         (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
                                 source.isActor())),

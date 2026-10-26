@@ -70,9 +70,9 @@ public final class ExchangeItemMapper extends ElementMapper<ExchangeItem, ItemUs
     public List<FeatureMapping<ExchangeItem>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<ExchangeItem>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(new FeatureMapping<>(CAPELLA_REALIZED_EXCHANGE_ITEMS, ARCADIA_ELEMENT_REALIZES,
-                (source, context) -> MapperUtils.mapRealizes(source.getOwnedInformationRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedInformationRealizations(), context.traceability())));
         mappings.add(new FeatureMapping<>(CAPELLA_REALIZING_EXCHANGE_ITEMS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedInformationRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedInformationRealizations(), context.traceability())));
         return mappings;
     }
 

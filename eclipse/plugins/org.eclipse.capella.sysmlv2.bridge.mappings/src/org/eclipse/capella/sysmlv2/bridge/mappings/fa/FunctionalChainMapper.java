@@ -92,9 +92,9 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
         var mappings = new ArrayList<FeatureMapping<FunctionalChain>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(new DocumentingMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES, ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES));
         mappings.add(new FeatureMapping<>(CAPELLA_REALIZED_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_REALIZES,
-                (source, context) -> MapperUtils.mapRealizes(source.getOwnedFunctionalChainRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalChainRealizations(), context.traceability())));
         mappings.add(new FeatureMapping<>(CAPELLA_REALIZING_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                (source, context) -> MapperUtils.mapIsRealizedBy(source.getOwnedFunctionalChainRealizations(), context.traceability())));
+                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalChainRealizations(), context.traceability())));
         return mappings;
     }
 
