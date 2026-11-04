@@ -61,6 +61,20 @@ public final class CapellaMapperCatalog {
 
     private static final Map<String, List<MapperBacklogEntry>> BACKLOG = createBacklog();
 
+    private static final Map<String, String> NON_MAPPING_DECISIONS = Map.ofEntries(
+            Map.entry("Arcadia::ArcadiaElement",
+                    "No standalone mapping for this abstract base; common fields and realizations are mapped by concrete mappers."),
+            Map.entry("Arcadia::ArcadiaPackage",
+                    "Perspective packages are created by name only; engineeringPerspective metadata is not emitted by the current structure builder."),
+            Map.entry("Arcadia::ArcadiaEngineeringPerspective",
+                    "No enum-valued perspective annotations are emitted, including Generic and SystemEngineering; retain the existing named package structure."),
+            Map.entry("Arcadia::ExchangeAllocation",
+                    "Use ComponentExchange::allocatedFunctionalExchanges references instead of duplicating the relation as an ExchangeAllocation usage and its functionalExchange/componentExchange ends."),
+            Map.entry("Arcadia::ArcadiaRequirement",
+                    "Defer Requirements Viewpoint/add-on migration, including text, IDs and allocations, until its source metamodel and statement/description conventions are supported."),
+            Map.entry("Arcadia::FunctionalChain::involvedFunctions",
+                    "Only exchange membership is migrated; function involvements are calculated by the tooling."));
+
     private CapellaMapperCatalog() {
         /* This utility class should not be instantiated */
     }
@@ -85,6 +99,16 @@ public final class CapellaMapperCatalog {
      */
     public static Map<String, List<MapperBacklogEntry>> backlogByPackage() {
         return BACKLOG;
+    }
+
+    /**
+     * Returns explicit decisions not to emit standalone concepts or feature semantics. Keys identify definitions or
+     * members declared in lib/arcadia.sysml. Values explain the omitted information and why it is not migrated.
+     *
+     * @return immutable non-mapping decisions, independent of mapper coverage metrics
+     */
+    public static Map<String, String> getNonMappingDecisions() {
+        return NON_MAPPING_DECISIONS;
     }
 
     /**

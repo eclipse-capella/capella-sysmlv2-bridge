@@ -14,11 +14,13 @@ package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService.ModelTransformation;
@@ -26,12 +28,15 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
+import org.obeonetwork.capella.sysmlv2.cli.ArcadiaConceptSummary;
 import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
 import org.obeonetwork.capella.sysmlv2.cli.ElementCount;
 import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.CoverageMetric;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
@@ -85,7 +90,39 @@ public final class TransformationReportingUtils {
                 generatedEltscount,
                 transformation.errorCount(),
                 outputModel,
-                coverageSummary);
+                coverageSummary,
+                arcadiaConceptSummary(report));
+    }
+
+    private static ArcadiaConceptSummary arcadiaConceptSummary(TransformationCoverageReport report) {
+        var backlogTypes = CapellaMapperCatalog.backlogByPackage().values().stream()
+                .flatMap(List::stream)
+                .map(entry -> entry.sourceType())
+                .collect(Collectors.toSet());
+
+        var candidateTargets = report.alignments().stream()
+                .filter(alignment -> alignment.status() == AlignmentStatus.CANDIDATE && backlogTypes.contains(alignment.sourceType()))
+                .map(MetaclassAlignment::target)
+                .collect(Collectors.toSet());
+
+        var decisions = CapellaMapperCatalog.getNonMappingDecisions();
+        var implemented = new ArrayList<String>();
+        var candidates = new ArrayList<String>();
+        var nonMappingDecisions = new LinkedHashMap<String, String>();
+        var unassessed = new ArrayList<String>();
+        for (var concept : report.arcadiaUtilization().concepts()) {
+            var name = concept.element().qualifiedName();
+            if (concept.used()) {
+                implemented.add(name);
+            } else if (candidateTargets.contains(name)) {
+                candidates.add(name);
+            } else if (decisions.containsKey(name)) {
+                nonMappingDecisions.put(name, decisions.get(name));
+            } else {
+                unassessed.add(name);
+            }
+        }
+        return new ArcadiaConceptSummary(implemented, candidates, nonMappingDecisions, unassessed);
     }
 
     private static void persistAndValidate(TransformationResult result,

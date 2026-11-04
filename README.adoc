@@ -146,8 +146,12 @@ Errors: 0
 Capella Transformation Coverage: <mapped>/<concrete> (<percentage>%)
 Arcadia SysML v2 Library Utilization: <used>/<eligible> (<percentage>%)
 Arcadia SysML v2 Library Coverage of Capella: <confirmed>/<concrete> (<percentage>%)
+Arcadia Library Concept Assessment: <assessed>/<declared> (<percentage>%)
+  Implemented: <count>, candidates: <count>, explicit non-mappings: <count>, unassessed: <count>
 XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
 ----
+
+Concepts are discovered from the bundled Arcadia library. Assessed concepts include implemented mappings, backlog candidates and explicit non-mapping decisions; this percentage does not measure implementation completeness. Any unassessed concept names are also printed.
 
 == Output
 
