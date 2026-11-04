@@ -296,6 +296,8 @@ The main metric counts only confirmed metaclass alignments over all concrete Cap
 Feature alignments and the unassessed metaclass count are reported separately.
 
 Coverage values are observations only. The build defines no threshold or regression gate.
+`TransformationSummary.arcadiaConcepts()` also partitions the loaded library definitions into implemented concepts, backlog candidates, explicit non-mapping decisions (with reasons), and unassessed concepts.
+The command prints assessed coverage and the four counts, followed by any unassessed concept names.
 Linux and Windows smoke jobs append the Markdown report to the GitHub step summary and upload both formats as qualification evidence.
 
 == Release Automation

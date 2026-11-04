@@ -78,6 +78,13 @@ public final class Capella2SysMLV2Command {
                     + result.mappingCoverage().arcadiaUtilization().display());
             out.accept("Arcadia SysML v2 Library Coverage of Capella: "
                     + result.mappingCoverage().arcadiaCoverageOfCapella().display());
+            var concepts = result.arcadiaConcepts();
+            out.accept("Arcadia Library Concept Assessment: " + concepts.assessment().display());
+            out.accept("  Implemented: " + concepts.implemented().size()
+                    + ", candidates: " + concepts.candidates().size()
+                    + ", explicit non-mappings: " + concepts.nonMappingDecisions().size()
+                    + ", unassessed: " + concepts.unassessed().size());
+            concepts.unassessed().forEach(name -> out.accept("Unassessed Arcadia concept: " + name));
             out.accept("XMI model: " + result.outputModel());
             return SUCCESS;
         } catch (TransformationCommandException exception) {

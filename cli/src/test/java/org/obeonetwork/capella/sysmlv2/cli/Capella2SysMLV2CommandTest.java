@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,10 @@ class Capella2SysMLV2CommandTest {
                             new ElementCount("ActionUsage", 2)), 0, outputFile,
                     new MappingCoverageSummary(new CoverageValue(1, 10),
                             new CoverageValue(1, 42),
-                            new CoverageValue(1, 10)));
+                            new CoverageValue(1, 10)),
+                    new ArcadiaConceptSummary(List.of("Arcadia::Component"), List.of("Arcadia::Mission"),
+                            Map.of("Arcadia::ArcadiaPackage", "Perspective metadata is not emitted"),
+                            List.of("Arcadia::NewConcept")));
         });
         var exitCode = command.execute(new String[] { "project.zip", "output" },
                 new PrintWriter(output), new PrintWriter(new StringWriter()));
@@ -58,6 +62,9 @@ class Capella2SysMLV2CommandTest {
                 .contains("Arcadia SysML v2 Library Utilization: 1/42 (2.38%)")
                 .contains(
                         "Arcadia SysML v2 Library Coverage of Capella: 1/10 (10.00%)")
+                .contains("Arcadia Library Concept Assessment: 3/4 (75.00%)")
+                .contains("Implemented: 1, candidates: 1, explicit non-mappings: 1, unassessed: 1")
+                .contains("Unassessed Arcadia concept: Arcadia::NewConcept")
                 .contains("XMI model: " + outputFile);
     }
 

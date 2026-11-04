@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -32,11 +35,16 @@ import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaResourceLoa
 import org.eclipse.capella.sysmlv2.bridge.application.loading.HeadlessSemanticEditingDomainProviders;
 import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationReportingUtils;
 import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
+import org.eclipse.syson.sysml.LibraryPackage;
+import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.cli.ExitCodes;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
@@ -132,6 +140,16 @@ class ApplicationServicesTest {
         var transformation = ModelTransformationUtils.transform(architecture,
                 "IFE");
 
+        var library = transformation.targetModel().getArcadiaLibrary();
+        var arcadia = library.stream().flatMap(root -> EObjectUtils.allContents(root).stream())
+                .filter(LibraryPackage.class::isInstance).map(LibraryPackage.class::cast)
+                .filter(element -> "Arcadia".equals(element.getDeclaredName())).findFirst().orElseThrow();
+        var newConcept = SysmlFactory.eINSTANCE.createActionDefinition();
+        newConcept.setDeclaredName("NewConcept");
+        var membership = SysmlFactory.eINSTANCE.createOwningMembership();
+        membership.getOwnedRelatedElement().add(newConcept);
+        arcadia.getOwnedRelationship().add(membership);
+
         var summary = TransformationReportingUtils.generate(
                 transformation, outputDirectory);
 
@@ -141,6 +159,23 @@ class ApplicationServicesTest {
         var coverageReport = Files.readString(outputDirectory.resolve(
                 ".capella2sysmlv2/mapping-coverage.md"));
         assertTrue(coverageReport.contains(CAPELLA_ABSTRACT + " -> " + SYSML_IS_ABSTRACT));
+        var concepts = summary.arcadiaConcepts();
+        assertTrue(concepts.implemented().contains("Arcadia::Component"));
+        assertTrue(concepts.candidates().contains("Arcadia::Mission"));
+        assertFalse(concepts.nonMappingDecisions().containsKey("Arcadia::Mission"));
+        assertFalse(concepts.nonMappingDecisions().get("Arcadia::ArcadiaPackage").isBlank());
+        assertFalse(concepts.nonMappingDecisions().containsKey("Arcadia::FunctionalChain::involvedFunctions"));
+        assertEquals(List.of("Arcadia::NewConcept"), concepts.unassessed());
+        var declaredConcepts = new ArcadiaLibraryInventory().inspect(library).stream()
+                .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT)
+                .map(element -> element.qualifiedName()).collect(Collectors.toSet());
+        var reportedConcepts = new HashSet<>(concepts.implemented());
+        reportedConcepts.addAll(concepts.candidates());
+        reportedConcepts.addAll(concepts.nonMappingDecisions().keySet());
+        reportedConcepts.addAll(concepts.unassessed());
+        assertEquals(declaredConcepts, reportedConcepts);
+        assertEquals(declaredConcepts.size(), concepts.assessment().denominator());
+        assertEquals(declaredConcepts.size() - 1, concepts.assessment().numerator());
     }
 
     @Test

@@ -29,20 +29,59 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELL
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET_PORT;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.polarsys.capella.core.data.ctx.CtxFactory;
+import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.information.InformationPackage;
 
 class CapellaMapperCatalogTest {
+    @Test
+    void everyLibraryConceptHasAMapperBacklogCandidateOrExplicitNonMappingDecision() {
+        var library = new CapellaForSysonResourceSet().getArcadiaLibrary();
+        var inventory = new ArcadiaLibraryInventory().inspect(library);
+        var concepts = inventory.stream()
+                .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT).toList();
+        assertFalse(concepts.isEmpty(), "Bundled Arcadia library must declare concepts");
+        var implemented = CapellaMapperCatalog.createMappers().stream()
+                .map(mapper -> mapper.getTargetQualifiedName()).collect(Collectors.toSet());
+        var backlogTypes = CapellaMapperCatalog.backlogByPackage().values().stream()
+                .flatMap(List::stream).map(entry -> entry.sourceType()).collect(Collectors.toSet());
+        var candidates = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                .filter(alignment -> alignment.status() == AlignmentStatus.CANDIDATE && backlogTypes.contains(alignment.sourceType()))
+                .map(alignment -> alignment.target()).collect(Collectors.toSet());
+        var decisions = CapellaMapperCatalog.getNonMappingDecisions();
+        var declaredElements = inventory.stream().map(element -> element.qualifiedName()).collect(Collectors.toSet());
+        for (var concept : concepts) {
+            assertTrue(implemented.contains(concept.qualifiedName()) || candidates.contains(concept.qualifiedName())
+                    || decisions.containsKey(concept.qualifiedName()),
+                    () -> "Unaddressed Arcadia concept: " + concept.qualifiedName());
+        }
+        decisions.forEach((concept, reason) -> {
+            assertTrue(declaredElements.contains(concept), () -> "Non-mapping decision outside arcadia.sysml: " + concept);
+            assertFalse(reason.isBlank(), concept);
+            assertFalse(implemented.contains(concept), () -> "Implemented concept also declared unmapped: " + concept);
+            assertFalse(candidates.contains(concept), () -> "Backlog candidate also declared unmapped: " + concept);
+        });
+        assertThrows(UnsupportedOperationException.class, () -> decisions.put("Arcadia::NewConcept", "reason"));
+    }
+
     @Test
     void catalogRegistersOnlyImplementedMappers() {
         assertEquals(16, CapellaMapperCatalog.createMappers().size());

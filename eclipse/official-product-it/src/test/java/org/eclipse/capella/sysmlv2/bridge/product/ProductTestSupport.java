@@ -124,6 +124,10 @@ final class ProductTestSupport {
                 execution.output());
         assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 16/252 (6.35%)"),
                 execution.output());
+        assertTrue(execution.output().contains("Arcadia Library Concept Assessment: 14/14 (100.00%)"),
+                execution.output());
+        assertTrue(execution.output().contains("Implemented: 8, candidates: 1, explicit non-mappings: 5, unassessed: 0"),
+                execution.output());
 
         var xmiModel = applicationOutput
                 .resolve("In-Flight Entertainment System.sysml.xmi");

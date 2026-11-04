@@ -18,7 +18,7 @@ import java.util.Objects;
 
 public record TransformationSummary(List<ElementCount> sourceElementCounts,
         List<ElementCount> generatedElementCounts, int errorCount,
-        Path outputModel, MappingCoverageSummary mappingCoverage) {
+        Path outputModel, MappingCoverageSummary mappingCoverage, ArcadiaConceptSummary arcadiaConcepts) {
 
     public TransformationSummary {
         sourceElementCounts = List.copyOf(Objects.requireNonNull(
@@ -33,5 +33,6 @@ public record TransformationSummary(List<ElementCount> sourceElementCounts,
         Objects.requireNonNull(outputModel, "outputModel must not be null");
         Objects.requireNonNull(mappingCoverage,
                 "mappingCoverage must not be null");
+        Objects.requireNonNull(arcadiaConcepts, "arcadiaConcepts must not be null");
     }
 }
