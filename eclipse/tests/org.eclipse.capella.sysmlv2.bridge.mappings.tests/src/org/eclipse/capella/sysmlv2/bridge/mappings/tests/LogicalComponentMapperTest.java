@@ -13,6 +13,7 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -63,11 +64,9 @@ class LogicalComponentMapperTest {
                 result.traceability().lookupTarget(root).orElseThrow());
         assertEquals("In-Flight Entertainment System", system.getDeclaredName());
         assertEquals("The logical system root", COMMON_QUERY_SERVICE.getArcadiaElementDescription(system));
-        assertTrue(system.isIsAbstract());
         var target = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(source).orElseThrow());
         assertEquals(sourceName, target.getDeclaredName());
-        assertTrue(target.isIsAbstract());
         assertEquals(sourceDescription, COMMON_QUERY_SERVICE.getArcadiaElementDescription(target));
         var typing = assertInstanceOf(FeatureTyping.class, target.getOwnedRelationship().get(0));
         assertSame(target, typing.getTypedFeature());

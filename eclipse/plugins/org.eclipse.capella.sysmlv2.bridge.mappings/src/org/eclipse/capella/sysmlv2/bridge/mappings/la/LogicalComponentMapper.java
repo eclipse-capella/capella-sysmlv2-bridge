@@ -16,6 +16,7 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
@@ -88,13 +89,15 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
             return null;
         }
 
-        // TODO : GeneralizedComponents
-        // TODO : Allocated Roles
         return target;
     }
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        var arcadiaElementIgnoredFeat = FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        var generalizableElementIgnoreFeat = FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE;
+
+        return Stream.concat(arcadiaElementIgnoredFeat.stream(), generalizableElementIgnoreFeat.stream())
+                .collect(Collectors.toSet());
     }
 }

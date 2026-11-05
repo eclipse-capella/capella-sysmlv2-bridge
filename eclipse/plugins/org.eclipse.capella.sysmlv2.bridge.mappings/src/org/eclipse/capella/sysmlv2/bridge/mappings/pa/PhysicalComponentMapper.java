@@ -13,9 +13,12 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.pa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_KIND;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
@@ -86,15 +89,17 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
             return null;
         }
 
-        // TODO : GeneralizedComponents
-        // TODO : Allocated Roles
-        // TODO : physicalComponentNature
-        // TODO : physicalComponentKind
         return target;
     }
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return Stream.of(
+                FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES,
+                FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE,
+                List.of(CAPELLA_KIND))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
     }
 }

@@ -34,12 +34,13 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELL
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REVIEW;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_STATUS;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUB;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUMMARY;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUPER;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_DOC;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_LM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DECLARED_NAME;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DESCRIPTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_IS_ABSTRACT;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_STATUS;
 
 import java.util.List;
@@ -69,6 +70,8 @@ public final class FeatureMappingCatalog {
      * Features commonly ignored when mapping Arcadia elements.
      */
     public static final Set<String> ARCADIA_ELEMENT_IGNORED_FEATURES = Set.of(CAPELLA_SUMMARY, CAPELLA_VISIBLE_IN_DOC, CAPELLA_VISIBLE_IN_LM, CAPELLA_REVIEW);
+
+    public static final Set<String> GENERALIZABLE_ELEMENT_IGNORE_FEATURE = Set.of(CAPELLA_ABSTRACT, CAPELLA_SUPER, CAPELLA_SUB);
 
     private FeatureMappingCatalog() {
         /* This utility class should not be instantiated */
@@ -164,9 +167,7 @@ public final class FeatureMappingCatalog {
                                 source.isActor())),
                 new FeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
                         (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
-                                source.isHuman())),
-                new FeatureMapping<>(CAPELLA_ABSTRACT, SYSML_IS_ABSTRACT,
-                        (source, context) -> MapperUtils.require(context.traceability(), source, Usage.class).setIsAbstract(source.isAbstract())));
+                                source.isHuman())));
     }
 
 }

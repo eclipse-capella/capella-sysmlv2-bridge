@@ -9,8 +9,6 @@
  */
 package org.eclipse.capella.sysmlv2.bridge.application.tests;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ABSTRACT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_IS_ABSTRACT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -158,7 +156,6 @@ class ApplicationServicesTest {
                 ".capella2sysmlv2/mapping-coverage.json")));
         var coverageReport = Files.readString(outputDirectory.resolve(
                 ".capella2sysmlv2/mapping-coverage.md"));
-        assertTrue(coverageReport.contains(CAPELLA_ABSTRACT + " -> " + SYSML_IS_ABSTRACT));
         var concepts = summary.arcadiaConcepts();
         assertTrue(concepts.implemented().contains("Arcadia::Component"));
         assertTrue(concepts.candidates().contains("Arcadia::Mission"));
