@@ -13,9 +13,12 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_ROLES;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
@@ -77,14 +80,16 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
             return null;
         }
 
-        // TODO : GeneralizedComponents
-        // TODO : Allocated Roles
         return target;
     }
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        return Stream.of(List.of(CAPELLA_ALLOCATED_ROLES),
+                FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES,
+                FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
     }
 
 }

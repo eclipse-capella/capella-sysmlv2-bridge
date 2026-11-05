@@ -112,6 +112,12 @@ public final class MapperConstants {
 
     public static final String CAPELLA_TARGET_PORT = "targetPort";
 
+    public static final String CAPELLA_SUPER = "super";
+
+    public static final String CAPELLA_SUB = "sub";
+
+    public static final String CAPELLA_ALLOCATED_ROLES = "allocatedRoles";
+
     public static final String ARCADIA_PREFIX = "Arcadia" + SEPARATOR;
 
     public static final String ARCADIA_CAPABILITY = ARCADIA_PREFIX + "Capability";

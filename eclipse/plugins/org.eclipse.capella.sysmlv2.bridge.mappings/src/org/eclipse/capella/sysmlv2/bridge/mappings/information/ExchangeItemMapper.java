@@ -20,6 +20,8 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELL
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
@@ -78,7 +80,11 @@ public final class ExchangeItemMapper extends ElementMapper<ExchangeItem, ItemUs
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        var arcadiaElementIgnoredFeat = FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES;
+        var generalizableElementIgnoreFeat = FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE;
+
+        return Stream.concat(arcadiaElementIgnoredFeat.stream(), generalizableElementIgnoreFeat.stream())
+                .collect(Collectors.toSet());
     }
 
     private static BlockArchitecture owningArchitecture(EObject source) {
