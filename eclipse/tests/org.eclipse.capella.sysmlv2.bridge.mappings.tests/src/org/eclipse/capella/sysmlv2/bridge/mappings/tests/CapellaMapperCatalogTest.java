@@ -84,7 +84,7 @@ class CapellaMapperCatalogTest {
 
     @Test
     void catalogRegistersOnlyImplementedMappers() {
-        assertEquals(16, CapellaMapperCatalog.createMappers().size());
+        assertEquals(18, CapellaMapperCatalog.createMappers().size());
         var backlog = CapellaMapperCatalog.backlogByPackage();
         assertEquals(List.of("ctx", "fa", "information", "la", "oa", "pa"),
                 List.copyOf(backlog.keySet()));
@@ -153,6 +153,22 @@ class CapellaMapperCatalogTest {
         assertEquals(ARCADIA_CAPABILITY, alignments.getFirst().target());
         assertTrue(CapellaMapperCatalog.backlogByPackage().get("ctx").stream()
                 .noneMatch(entry -> entry.mapperName().equals("CapabilityMapper")));
+    }
+
+    @Test
+    void newCapabilityAlignmentsIncludeTheirComponentAccessors() {
+        var expected = java.util.Map.of(
+                org.polarsys.capella.core.data.oa.OaPackage.Literals.OPERATIONAL_CAPABILITY, "involvedEntities",
+                org.polarsys.capella.core.data.la.LaPackage.Literals.CAPABILITY_REALIZATION, "involvedComponents");
+        expected.forEach((sourceType, componentFeature) -> {
+            var alignment = CapellaMapperCatalog.getAlignmentCatalog().stream()
+                    .filter(value -> value.sourceType() == sourceType).findFirst().orElseThrow();
+            assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
+            assertEquals("Arcadia::Capability", alignment.target());
+            for (var feature : List.of(componentFeature, "involvedAbstractFunctions", "involvedFunctionalChains")) {
+                assertTrue(alignment.featureAlignments().stream().anyMatch(value -> value.sourceFeature().equals(feature)));
+            }
+        });
     }
 
     @Test

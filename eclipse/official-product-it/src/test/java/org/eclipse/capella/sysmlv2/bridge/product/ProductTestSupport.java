@@ -103,6 +103,8 @@ final class ProductTestSupport {
         assertTrue(execution.output().contains("Source ExchangeItem count: 17"), execution.output());
         assertTrue(execution.output().contains("Source ComponentExchange count: 25"), execution.output());
         assertTrue(execution.output().contains("Source Capability count: 13"), execution.output());
+        assertTrue(execution.output().contains("Source OperationalCapability count: 3"), execution.output());
+        assertTrue(execution.output().contains("Source CapabilityRealization count: 23"), execution.output());
         assertTrue(execution.output().contains("Source FunctionalChain count: 37"), execution.output());
 
         assertTrue(execution.output().contains("Generated ActionUsage count: 257"), execution.output());
@@ -110,19 +112,19 @@ final class ProductTestSupport {
         assertTrue(execution.output().contains("Generated InterfaceUsage count: 25"), execution.output());
         assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
         assertTrue(execution.output().contains("Generated ItemUsage count: 499"), execution.output());
-        assertTrue(execution.output().contains("Generated OccurrenceUsage count: 13"), execution.output());
+        assertTrue(execution.output().contains("Generated OccurrenceUsage count: 39"), execution.output());
         assertTrue(execution.output().contains("Generated PortUsage count: 52"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
         assertFalse(execution.output().contains("[SEVERE]"), execution.output());
         assertEquals(15, execution.output().lines()
                 .filter(line -> line.contains("[WARNING] Skipping functional chain ")).count(), execution.output());
-        assertEquals(5, execution.output().lines()
+        assertEquals(15, execution.output().lines()
                 .filter(line -> line.contains("[WARNING] Omitting reference from capability ")).count(), execution.output());
-        assertTrue(execution.output().contains("Capella Transformation Coverage: 16/252 (6.35%)"),
+        assertTrue(execution.output().contains("Capella Transformation Coverage: 18/252 (7.14%)"),
                 execution.output());
         assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 23/46 (50.00%)"),
                 execution.output());
-        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 16/252 (6.35%)"),
+        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 18/252 (7.14%)"),
                 execution.output());
         assertTrue(execution.output().contains("Arcadia Library Concept Assessment: 14/14 (100.00%)"),
                 execution.output());

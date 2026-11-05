@@ -70,7 +70,9 @@ class RealizationCoverageTest {
                 Map.entry("FunctionalExchange", List.of("outgoingFunctionalExchangeRealizations", "incomingFunctionalExchangeRealizations")),
                 Map.entry("FunctionalChain", List.of("realizedFunctionalChains", "realizingFunctionalChains")),
                 Map.entry("ExchangeItem", List.of("realizedExchangeItems", "realizingExchangeItems")),
-                Map.entry("Capability", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")));
+                Map.entry("Capability", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")),
+                Map.entry("OperationalCapability", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")),
+                Map.entry("CapabilityRealization", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")));
         new TransformationCoverageWriter().write(report, output);
         var json = Files.readString(output.resolve(TransformationCoverageWriter.JSON_FILE_NAME));
         var markdown = Files.readString(output.resolve(TransformationCoverageWriter.MARKDOWN_FILE_NAME));
