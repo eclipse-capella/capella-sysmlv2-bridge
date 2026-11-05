@@ -118,7 +118,9 @@ class FunctionalChainMapperTest {
             var result = transform(sources);
             assertTrue(result.traceability().lookupTarget(capability).isEmpty());
             assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(), target(fixture, result).getOwner());
-            assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+            assertEquals(2, result.diagnostics().size(), result.diagnostics().toString());
+            assertTrue(result.diagnostics().getFirst().message().contains("owning architecture"));
+            assertTrue(result.diagnostics().stream().allMatch(value -> value.source() == capability && value.severity().name().equals("ERROR")));
         }
     }
 

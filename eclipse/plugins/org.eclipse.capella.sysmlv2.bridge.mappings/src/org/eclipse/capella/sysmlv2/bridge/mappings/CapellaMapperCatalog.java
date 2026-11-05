@@ -30,10 +30,12 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionOutputPortMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalChainMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.information.ExchangeItemMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.la.CapabilityRealizationMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalFunctionMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.oa.EntityMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.oa.OperationalActivityMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.oa.OperationalCapabilityMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalFunctionMapper;
 import org.eclipse.emf.ecore.EClass;
@@ -89,7 +91,8 @@ public final class CapellaMapperCatalog {
                 new PhysicalComponentMapper(), new OperationalActivityMapper(), new SystemFunctionMapper(),
                 new LogicalFunctionMapper(), new PhysicalFunctionMapper(), new FunctionInputPortMapper(),
                 new FunctionOutputPortMapper(), new ComponentPortMapper(), new FunctionalExchangeMapper(),
-                new ExchangeItemMapper(), new ComponentExchangeMapper(), new CapabilityMapper(), new FunctionalChainMapper());
+                new ExchangeItemMapper(), new ComponentExchangeMapper(), new CapabilityMapper(), new OperationalCapabilityMapper(),
+                new CapabilityRealizationMapper(), new FunctionalChainMapper());
     }
 
     /**

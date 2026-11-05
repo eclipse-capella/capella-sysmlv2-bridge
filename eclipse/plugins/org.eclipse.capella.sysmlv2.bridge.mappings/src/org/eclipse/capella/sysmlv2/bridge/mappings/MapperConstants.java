@@ -222,6 +222,10 @@ public final class MapperConstants {
 
     public static final String CAPELLA_INVOLVED_FUNCTIONAL_CHAINS = "involvedFunctionalChains";
 
+    public static final String CAPELLA_INVOLVED_ENTITIES = "involvedEntities";
+
+    public static final String CAPELLA_INVOLVED_COMPONENTS = "involvedComponents";
+
     public static final String CAPELLA_INVOLVED_SYSTEM_COMPONENTS = "involvedSystemComponents";
 
     public static final String CAPELLA_OUTGOING_CAPABILITY_ALLOCATION = "outgoingCapabilityAllocation";

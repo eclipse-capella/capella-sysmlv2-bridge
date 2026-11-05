@@ -17,10 +17,13 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
@@ -34,13 +37,94 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
+import org.polarsys.capella.core.data.capellacommon.CapellacommonFactory;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
+import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.ctx.CtxFactory;
+import org.polarsys.capella.core.data.fa.AbstractFunction;
 import org.polarsys.capella.core.data.fa.FaFactory;
+import org.polarsys.capella.core.data.interaction.AbstractCapability;
 import org.polarsys.capella.core.data.interaction.InteractionFactory;
+import org.polarsys.capella.core.data.la.LaFactory;
+import org.polarsys.capella.core.data.oa.OaFactory;
+import org.polarsys.capella.core.data.pa.PaFactory;
 
 class CapabilityMapperTest {
+    @Test
+    void mapsOperationalAndRealizationCapabilitiesInTheirOwnPerspectives() {
+        for (var perspective : List.of("Operational", "Logical", "Physical")) {
+            var fixture = fixture(perspective);
+            fixture.capability().setName("Move Cursor");
+            fixture.capability().setDescription("Moves the cursor on screen");
+            var model = new CapellaForSysonResourceSet();
+            var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Test", model.getResourceSet()));
+            var structure = context.modelStructure();
+            var output = new ResourceImpl(URI.createURI("test:/capabilities.sysml"));
+            model.getResourceSet().getResources().add(output);
+            output.getContents().add(structure.root());
+            var targetPerspective = switch (perspective) {
+                case "Operational" -> structure.operationalAnalysis();
+                case "Logical" -> structure.logicalArchitecture();
+                case "Physical" -> structure.physicalArchitecture();
+                default -> throw new IllegalArgumentException(perspective);
+            };
+            var creation = new CommonCreationService();
+            var functionTarget = creation.createFunction(targetPerspective.rootFunction());
+            var componentTarget = creation.createComponent(targetPerspective.structurePackage());
+            var chainTarget = SysmlFactory.eINSTANCE.createActionUsage();
+            context.traceability().register(fixture.function(), functionTarget);
+            context.traceability().register(fixture.component(), componentTarget);
+            var chain = FaFactory.eINSTANCE.createFunctionalChain();
+            context.traceability().register(chain, chainTarget);
+            for (int index = 0; index < 2; index++) {
+                var functionInvolvement = InteractionFactory.eINSTANCE.createAbstractFunctionAbstractCapabilityInvolvement();
+                functionInvolvement.setInvolved(fixture.function());
+                fixture.capability().getOwnedAbstractFunctionAbstractCapabilityInvolvements().add(functionInvolvement);
+                var chainInvolvement = InteractionFactory.eINSTANCE.createFunctionalChainAbstractCapabilityInvolvement();
+                chainInvolvement.setInvolved(chain);
+                fixture.capability().getOwnedFunctionalChainAbstractCapabilityInvolvements().add(chainInvolvement);
+            }
+            var mapper = new MapperRegistry(CapellaMapperCatalog.createMappers()).get(fixture.capability()).orElseThrow();
+            mapper.createAndRegister(context);
+            mapper.mapFeatures(context);
+            var target = assertInstanceOf(OccurrenceUsage.class, context.traceability().lookupTarget(fixture.capability()).orElseThrow());
+            assertSame(targetPerspective.capabilitiesPackage(), target.getOwner(), perspective);
+            assertEquals("Move Cursor", target.getDeclaredName());
+            var query = new CommonQueryService();
+            assertEquals("Moves the cursor on screen", query.getArcadiaElementDescription(target));
+            assertEquals(List.of(functionTarget), query.getFeatureReferenceValue(target, "involvedFunctions"));
+            assertEquals(List.of(componentTarget), query.getFeatureReferenceValue(target, "involvedComponents"));
+            assertEquals(List.of(chainTarget), query.getFeatureReferenceValue(target, "involvedFunctionalChains"));
+            assertTrue(context.diagnostics().collect().isEmpty(), context.diagnostics().collect().toString());
+
+            var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
+            sources.addAll(List.of(fixture.function(), fixture.component(), chain));
+            var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), model.getResourceSet())
+                    .transformAll(sources, "Test");
+            var occurrence = assertInstanceOf(OccurrenceUsage.class, result.traceability().lookupTarget(fixture.capability()).orElseThrow());
+            assertEquals(List.of(result.traceability().lookupTarget(fixture.function()).orElseThrow()),
+                    query.getFeatureReferenceValue(occurrence, "involvedFunctions"));
+            assertEquals(List.of(result.traceability().lookupTarget(fixture.component()).orElseThrow()),
+                    query.getFeatureReferenceValue(occurrence, "involvedComponents"));
+            assertTrue(query.getFeatureReferenceValue(occurrence, "involvedFunctionalChains").isEmpty());
+            assertTrue(result.traceability().isSkipped(chain));
+            assertEquals(2, result.diagnostics().size(), result.diagnostics().toString());
+            assertTrue(result.diagnostics().stream().allMatch(value -> value.severity().name().equals("WARNING")), result.diagnostics().toString());
+        }
+    }
+
+    @Test
+    void reportsNewCapabilityTypesWithoutArchitecture() {
+        for (var capability : List.of(OaFactory.eINSTANCE.createOperationalCapability(), LaFactory.eINSTANCE.createCapabilityRealization())) {
+            var result = transform(capability);
+            assertTrue(result.traceability().lookupTarget(capability).isEmpty());
+            assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains("owning architecture")));
+        }
+    }
+
     @Test
     void missingFailedAndWronglyTypedChainReferencesRemainErrors() {
         for (var status : List.of("missing", "failed", "wrong type")) {
@@ -110,7 +194,46 @@ class CapabilityMapperTest {
         var capability = CtxFactory.eINSTANCE.createCapability();
         var result = transform(capability);
         assertTrue(result.traceability().lookupTarget(capability).isEmpty());
-        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains("owning System Analysis")));
+        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains("owning architecture")));
+    }
+
+    private static Fixture fixture(String perspective) {
+        if (perspective.equals("Operational")) {
+            var architecture = OaFactory.eINSTANCE.createOperationalAnalysis();
+            var root = OaFactory.eINSTANCE.createOperationalCapabilityPkg();
+            var nested = OaFactory.eINSTANCE.createOperationalCapabilityPkg();
+            architecture.setOwnedAbstractCapabilityPkg(root);
+            root.getOwnedOperationalCapabilityPkgs().add(nested);
+            var capability = OaFactory.eINSTANCE.createOperationalCapability();
+            nested.getOwnedOperationalCapabilities().add(capability);
+            var entity = OaFactory.eINSTANCE.createEntity();
+            var involvement = OaFactory.eINSTANCE.createEntityOperationalCapabilityInvolvement();
+            involvement.setInvolved(entity);
+            capability.getOwnedEntityOperationalCapabilityInvolvements().add(involvement);
+            return new Fixture(architecture, capability, OaFactory.eINSTANCE.createOperationalActivity(), entity);
+        }
+        BlockArchitecture architecture = perspective.equals("Logical")
+                ? LaFactory.eINSTANCE.createLogicalArchitecture()
+                : PaFactory.eINSTANCE.createPhysicalArchitecture();
+        var root = LaFactory.eINSTANCE.createCapabilityRealizationPkg();
+        var nested = LaFactory.eINSTANCE.createCapabilityRealizationPkg();
+        architecture.setOwnedAbstractCapabilityPkg(root);
+        root.getOwnedCapabilityRealizationPkgs().add(nested);
+        var capability = LaFactory.eINSTANCE.createCapabilityRealization();
+        nested.getOwnedCapabilityRealizations().add(capability);
+        var component = perspective.equals("Logical")
+                ? LaFactory.eINSTANCE.createLogicalComponent()
+                : PaFactory.eINSTANCE.createPhysicalComponent();
+        var involvement = CapellacommonFactory.eINSTANCE.createCapabilityRealizationInvolvement();
+        involvement.setInvolved(component);
+        capability.getOwnedCapabilityRealizationInvolvements().add(involvement);
+        AbstractFunction function = perspective.equals("Logical")
+                ? LaFactory.eINSTANCE.createLogicalFunction()
+                : PaFactory.eINSTANCE.createPhysicalFunction();
+        return new Fixture(architecture, capability, function, component);
+    }
+
+    private record Fixture(BlockArchitecture architecture, AbstractCapability capability, AbstractFunction function, Component component) {
     }
 
     private static TransformationResult transform(EObject source) {
