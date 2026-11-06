@@ -18,16 +18,14 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
-import org.eclipse.syson.sysml.Expression;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
-import org.eclipse.syson.sysml.FeatureReferenceExpression;
 import org.eclipse.syson.sysml.ItemUsage;
-import org.eclipse.syson.sysml.SysmlFactory;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -45,6 +43,8 @@ import org.polarsys.capella.core.data.information.ExchangeItem;
 abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends ElementMapper<S, ItemUsage> {
 
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
+
+    private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
 
     private final FeatureDirectionKind direction;
 
@@ -97,28 +97,7 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
         var targetItems = findMappedExchangeItems(source, context);
         var target = MapperUtils.require(context.traceability(), source, ItemUsage.class);
 
-        // TODO : couldn't find the equivalent code in the capella for syson repo, but it should exist
-        Expression value;
-        if (targetItems.size() == 1) {
-            value = referenceTo(targetItems.getFirst());
-        } else {
-            var tuple = SysmlFactory.eINSTANCE.createOperatorExpression();
-            tuple.setOperator(",");
-            for (ItemUsage item : targetItems) {
-                var parameter = SysmlFactory.eINSTANCE.createParameterMembership();
-                var parameterFeature = SysmlFactory.eINSTANCE.createFeature();
-                parameterFeature.setDirection(FeatureDirectionKind.IN);
-                parameter.getOwnedRelatedElement().add(parameterFeature);
-                var parameterValue = SysmlFactory.eINSTANCE.createFeatureValue();
-                parameterFeature.getOwnedRelationship().add(parameterValue);
-                parameterValue.getOwnedRelatedElement().add(referenceTo(item));
-                tuple.getOwnedRelationship().add(parameter);
-            }
-            value = tuple;
-        }
-        var featureValue = SysmlFactory.eINSTANCE.createFeatureValue();
-        featureValue.getOwnedRelatedElement().add(value);
-        target.getOwnedRelationship().add(featureValue);
+        COMMON_UPDATE_SERVICE.setFunctionPortExchangeItems(target, targetItems);
     }
 
     private List<ItemUsage> findMappedExchangeItems(S source, TransformationContext context) {
@@ -139,13 +118,5 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
                         }))
                 .filter(java.util.Objects::nonNull)
                 .toList();
-    }
-
-    private static FeatureReferenceExpression referenceTo(ItemUsage item) {
-        var reference = SysmlFactory.eINSTANCE.createFeatureReferenceExpression();
-        var membership = SysmlFactory.eINSTANCE.createMembership();
-        membership.setMemberElement(item);
-        reference.getOwnedRelationship().add(membership);
-        return reference;
     }
 }
