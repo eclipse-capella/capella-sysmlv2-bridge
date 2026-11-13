@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Definition;
@@ -39,6 +40,20 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
  * @author Raphaël Pagé
  */
 public final class ArcadiaLibraryInventory {
+
+    /**
+     * Returns every concrete definition in the library.
+     */
+    public Set<String> concreteDefinitionNames(Collection<? extends EObject> roots) {
+        return roots.stream()
+                .flatMap(root -> EObjectUtils.allContents(root).stream())
+                .filter(Definition.class::isInstance)
+                .map(Definition.class::cast)
+                .filter(definition -> !definition.isIsAbstract())
+                .map(Definition::getQualifiedName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
+    }
 
     public List<ArcadiaElementDescriptor> inspect(Collection<? extends EObject> roots) {
         Objects.requireNonNull(roots, "roots must not be null");
@@ -119,6 +134,6 @@ public final class ArcadiaLibraryInventory {
     }
 
     private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
+        return Optional.ofNullable(value).orElse("");
     }
 }

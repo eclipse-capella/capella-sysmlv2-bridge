@@ -24,7 +24,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  *
  * @author Raphaël Pagé
  */
-public record MetaclassCoverage(EClass metaclass, MappingStatus status, String mapperClass,
+public record MetaclassCoverage(EClass metaclass, MappingStatus status, String mapperClass, String target,
         List<String> mappedFeatures, List<String> ignoredFeatures, List<String> remainingFeatures,
         Map<String, String> featureTargets) {
 

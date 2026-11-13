@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
@@ -38,7 +41,8 @@ class TransformationCoverageAnalyzerTest {
         var mapper = mapper(TestMetamodels.LogicalComponent.class, "name");
 
         var report = TransformationCoverageAnalyzer
-                .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of());
+                .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(new MetaclassAlignment(
+                        (EClass) ePackage.getEClassifier("LogicalFunction"), null, AlignmentStatus.NO_EQUIVALENT, List.of())));
 
         assertThat(report.concreteMetaclassCount()).isEqualTo(2);
         assertThat(report.partialMetaclassCount()).isEqualTo(1);
@@ -57,6 +61,8 @@ class TransformationCoverageAnalyzerTest {
                 });
         assertThat(coverageFor(report, "LogicalFunction").status())
                 .isEqualTo(MappingStatus.UNMAPPED);
+        assertThat(report.isUnsupported((EClass) ePackage.getEClassifier("LogicalFunction"))).isTrue();
+        assertThat(report.isUnsupported((EClass) ePackage.getEClassifier("LogicalComponent"))).isFalse();
     }
 
     @Test

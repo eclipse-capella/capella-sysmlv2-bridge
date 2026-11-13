@@ -29,7 +29,10 @@ public record CoverageMetric(long numerator, long denominator) {
     }
 
     public double percentage() {
-        return this.denominator == 0 ? 0.0 : this.numerator * 100.0 / this.denominator;
+        if (this.denominator == 0) {
+            return 0.0;
+        }
+        return this.numerator * 100.0 / this.denominator;
     }
 
     public String formattedPercentage() {
