@@ -14,6 +14,10 @@ package org.obeonetwork.capella.sysmlv2.transformer.reporting;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.eclipse.emf.ecore.EClass;
 
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
 
@@ -23,7 +27,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  * @author Raphaël Pagé
  */
 public record TransformationCoverageReport(int packageCount, List<MetaclassCoverage> metaclassCoverages,
-        ArcadiaUtilizationCoverage arcadiaUtilization, List<MetaclassAlignment> alignments) {
+        ArcadiaUtilizationCoverage arcadiaUtilization, Set<String> concreteLibraryClasses, List<MetaclassAlignment> alignments) {
 
     public TransformationCoverageReport {
         if (packageCount < 0) {
@@ -31,6 +35,7 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
         }
         metaclassCoverages = List.copyOf(Objects.requireNonNull(metaclassCoverages, "metaclassCoverages must not be null"));
         Objects.requireNonNull(arcadiaUtilization, "arcadiaUtilization must not be null");
+        concreteLibraryClasses = Set.copyOf(concreteLibraryClasses);
         alignments = List.copyOf(Objects.requireNonNull(alignments, "alignments must not be null"));
     }
 
@@ -134,6 +139,24 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
                 .filter(TransformationCoverageReport::isConcrete)
                 .mapToLong(coverage -> coverage.metaclass().getEAllStructuralFeatures().size())
                 .sum();
+    }
+
+    /**
+     * Returns whether a source class is explicitly declared unsupported.
+     */
+    public boolean isUnsupported(EClass sourceType) {
+        return this.alignments.stream().anyMatch(alignment -> alignment.sourceType() == sourceType
+                && alignment.status() == AlignmentStatus.NO_EQUIVALENT);
+    }
+
+    /**
+     * Returns distinct concrete library definitions declared as mapper targets.
+     */
+    public Set<String> declaredLibraryClasses() {
+        return this.metaclassCoverages.stream()
+                .filter(coverage -> coverage.mapperClass() != null)
+                .map(MetaclassCoverage::target).filter(this.concreteLibraryClasses::contains)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private static boolean isConcrete(MetaclassCoverage coverage) {
