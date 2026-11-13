@@ -200,8 +200,8 @@ jobs:
           grep -F "Arcadia SysML v2 Library Utilization:" run.log
           grep -F "Arcadia SysML v2 Library Coverage of Capella:" run.log
           test -f "output/In-Flight Entertainment System.sysml.xmi"
-          test -f "output/.capella2sysmlv2/mapping-coverage.json"
-          test -f "output/.capella2sysmlv2/mapping-coverage.md"
+          test -f "output/.capella2sysmlv2/transformation-instance-report.md"
+          test -f "output/.capella2sysmlv2/transformation-meta-report.md"
           grep -F "sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#" \
             "output/In-Flight Entertainment System.sysml.xmi"
 
@@ -209,8 +209,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if test -f "output/.capella2sysmlv2/mapping-coverage.md"; then
-            cat "output/.capella2sysmlv2/mapping-coverage.md" >> "$GITHUB_STEP_SUMMARY"
+          if test -f "output/.capella2sysmlv2/transformation-meta-report.md"; then
+            cat "output/.capella2sysmlv2/transformation-meta-report.md" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload Linux qualification evidence
@@ -221,8 +221,8 @@ jobs:
           path: |
             run.log
             output/In-Flight Entertainment System.sysml.xmi
-            output/.capella2sysmlv2/mapping-coverage.json
-            output/.capella2sysmlv2/mapping-coverage.md
+            output/.capella2sysmlv2/transformation-instance-report.md
+            output/.capella2sysmlv2/transformation-meta-report.md
           if-no-files-found: ignore
           retention-days: 7
 
@@ -286,8 +286,8 @@ jobs:
             throw "Generated model does not reference the Arcadia library"
           }
           @(
-            "output\.capella2sysmlv2\mapping-coverage.json",
-            "output\.capella2sysmlv2\mapping-coverage.md"
+            "output\.capella2sysmlv2\transformation-instance-report.md",
+            "output\.capella2sysmlv2\transformation-meta-report.md"
           ) | ForEach-Object {
             if (-not (Test-Path -Path $_ -PathType Leaf)) {
               throw "Missing mapping coverage evidence: $_"
@@ -298,7 +298,7 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $report = "output\.capella2sysmlv2\mapping-coverage.md"
+          $report = "output\.capella2sysmlv2\transformation-meta-report.md"
           if (Test-Path -Path $report -PathType Leaf) {
             Get-Content -Path $report | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
           }
@@ -311,8 +311,8 @@ jobs:
           path: |
             run.log
             output/In-Flight Entertainment System.sysml.xmi
-            output/.capella2sysmlv2/mapping-coverage.json
-            output/.capella2sysmlv2/mapping-coverage.md
+            output/.capella2sysmlv2/transformation-instance-report.md
+            output/.capella2sysmlv2/transformation-meta-report.md
           if-no-files-found: ignore
           retention-days: 7
 

@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
-
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
 
 /**
@@ -26,13 +25,10 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  *
  * @author Raphaël Pagé
  */
-public record TransformationCoverageReport(int packageCount, List<MetaclassCoverage> metaclassCoverages,
+public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCoverages,
         ArcadiaUtilizationCoverage arcadiaUtilization, Set<String> concreteLibraryClasses, List<MetaclassAlignment> alignments) {
 
     public TransformationCoverageReport {
-        if (packageCount < 0) {
-            throw new IllegalArgumentException("packageCount must not be negative");
-        }
         metaclassCoverages = List.copyOf(Objects.requireNonNull(metaclassCoverages, "metaclassCoverages must not be null"));
         Objects.requireNonNull(arcadiaUtilization, "arcadiaUtilization must not be null");
         concreteLibraryClasses = Set.copyOf(concreteLibraryClasses);
@@ -40,7 +36,7 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
     }
 
     /**
-     * Returns the number of non-abstract metaclasses.
+     * Returns the number of classes that are neither abstract nor interfaces.
      */
     public long concreteMetaclassCount() {
         return this.metaclassCoverages.stream()
@@ -61,42 +57,6 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
     }
 
     /**
-     * Returns the coverage metric for complete mappers.
-     */
-    public CoverageMetric completeMappersMetric() {
-        var completeMapperCount = this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.MAPPED)
-                .count();
-
-        return new CoverageMetric(completeMapperCount, this.concreteMetaclassCount());
-    }
-
-    /**
-     * Returns the coverage metric for mapped features.
-     */
-    public CoverageMetric mappedFeaturesMetric() {
-        var mappedFeatureCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.mappedFeatures().size())
-                .sum();
-
-        return new CoverageMetric(mappedFeatureCount, this.applicableFeatureCount());
-    }
-
-    /**
-     * Returns the coverage metric for mapped or explicitly ignored features.
-     */
-    public CoverageMetric addressedFeaturesMetric() {
-        var adressedFeaturesCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.mappedFeatures().size() + coverage.ignoredFeatures().size())
-                .sum();
-
-        return new CoverageMetric(adressedFeaturesCount,
-                this.applicableFeatureCount());
-    }
-
-    /**
      * Returns the coverage metric for confirmed alignments.
      */
     public CoverageMetric confirmedAlignmentMetric() {
@@ -105,15 +65,6 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
                 .count();
 
         return new CoverageMetric(confirmedCount, this.concreteMetaclassCount());
-    }
-
-    /**
-     * Returns the number of metaclasses without an assessed alignment.
-     */
-    public long unassessedAlignmentCount() {
-        return this.alignments.stream()
-                .filter(alignment -> alignment.status() == AlignmentStatus.UNASSESSED)
-                .count();
     }
 
     public long mappedMetaclassCount() {
@@ -132,13 +83,6 @@ public record TransformationCoverageReport(int packageCount, List<MetaclassCover
         return this.metaclassCoverages.stream()
                 .filter(coverage -> coverage.status() == MappingStatus.UNMAPPED)
                 .count();
-    }
-
-    private long applicableFeatureCount() {
-        return this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.metaclass().getEAllStructuralFeatures().size())
-                .sum();
     }
 
     /**

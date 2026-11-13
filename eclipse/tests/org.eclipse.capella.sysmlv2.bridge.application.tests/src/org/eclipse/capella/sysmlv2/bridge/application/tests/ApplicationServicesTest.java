@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2026 Obeo.
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
@@ -6,7 +6,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- */
+ *
+ * Contributors:
+ *     Obeo - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.application.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,14 +21,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService;
 import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
@@ -36,6 +42,7 @@ import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransf
 import org.eclipse.syson.sysml.LibraryPackage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.obeonetwork.capella.sysmlv2.cli.ExitCodes;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
@@ -43,10 +50,10 @@ import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
+import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.core.data.fa.FaFactory;
 
 class ApplicationServicesTest {
 
@@ -62,16 +69,18 @@ class ApplicationServicesTest {
         var records = new ArrayList<LogRecord>();
         var handler = new Handler() {
             @Override
-            public void publish(LogRecord record) {
-                records.add(record);
+            public void publish(LogRecord logRecord) {
+                records.add(logRecord);
             }
 
             @Override
             public void flush() {
+                // nothing to do
             }
 
             @Override
             public void close() {
+                // nothing to do
             }
         };
         var logger = Logger.getLogger(ModelTransformationUtils.class.getName());
@@ -80,17 +89,15 @@ class ApplicationServicesTest {
             var transformation = ModelTransformationUtils.transform(architecture, "Warnings");
             assertEquals(0, transformation.errorCount());
             assertTrue(transformation.result().traceability().isSkipped(chain));
-            assertEquals(1, records.stream().filter(record -> record.getLevel() == Level.WARNING
-                    && record.getMessage().contains("no involved functional exchanges")).count());
+            assertEquals(1, records.stream().filter(logRecord -> logRecord.getLevel() == Level.WARNING
+                    && logRecord.getMessage().contains("no involved functional exchanges")).count());
         } finally {
             logger.removeHandler(handler);
         }
     }
 
     @Test
-    void loadingServiceRejectsMissingArchive() throws IOException {
-        var outputDirectory = Files.createTempDirectory("capella-sysmlv2-application-test");
-
+    void loadingServiceRejectsMissingArchive(@TempDir Path outputDirectory) {
         var request = new TransformationRequest(
                 outputDirectory.resolve("missing.zip"),
                 outputDirectory);
@@ -103,8 +110,7 @@ class ApplicationServicesTest {
     }
 
     @Test
-    void resourceLoaderRejectsMissingModel() throws IOException {
-        var projectDirectory = Files.createTempDirectory("capella-sysmlv2-application-test");
+    void resourceLoaderRejectsMissingModel(@TempDir Path projectDirectory) {
         var request = new ModelLoadRequest(projectDirectory,
                 Path.of("missing.capella"));
         var loader = new CapellaResourceLoader();
@@ -130,8 +136,7 @@ class ApplicationServicesTest {
     }
 
     @Test
-    void reportingServicePersistsTransformation() throws IOException {
-        var outputDirectory = Files.createTempDirectory("capella-sysmlv2-application-test");
+    void reportingServicePersistsTransformation(@TempDir Path outputDirectory) throws IOException {
         var source = LaFactory.eINSTANCE.createLogicalComponent();
         var architecture = logicalArchitectureContaining(source);
         source.setName("Cabin Server");
@@ -148,14 +153,35 @@ class ApplicationServicesTest {
         membership.getOwnedRelatedElement().add(newConcept);
         arcadia.getOwnedRelationship().add(membership);
 
+        var input = Files.writeString(outputDirectory.resolve("input.zip"), "input archive");
+        var startedAt = Instant.parse("2026-11-12T10:00:00Z");
         var summary = TransformationReportingUtils.generate(
-                transformation, outputDirectory);
+                transformation, new TransformationRequest(input, outputDirectory), startedAt);
 
         assertTrue(Files.isRegularFile(summary.outputModel()));
-        assertTrue(Files.isRegularFile(outputDirectory.resolve(
-                ".capella2sysmlv2/mapping-coverage.json")));
-        var coverageReport = Files.readString(outputDirectory.resolve(
-                ".capella2sysmlv2/mapping-coverage.md"));
+        assertFalse(Files.exists(outputDirectory.resolve(".capella2sysmlv2/mapping-coverage.json")));
+        assertFalse(Files.exists(outputDirectory.resolve(".capella2sysmlv2/mapping-coverage.md")));
+        var instanceReport = Files.readString(outputDirectory.resolve(".capella2sysmlv2/transformation-instance-report.md"));
+        var coverageReport = Files.readString(outputDirectory.resolve(".capella2sysmlv2/transformation-meta-report.md"));
+        assertTrue(instanceReport.contains(startedAt.toString()));
+        try {
+            assertTrue(instanceReport.contains(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(input)))));
+            assertTrue(instanceReport.contains(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(summary.outputModel())))));
+        } catch (java.security.NoSuchAlgorithmException exception) {
+            throw new AssertionError(exception);
+        }
+        assertTrue(instanceReport.contains("### Logical\n"));
+        assertTrue(instanceReport.contains("| Structure | LogicalComponent | 1 | 1 (100.00%) |"));
+        assertTrue(instanceReport.contains("### Library Usage"));
+        assertTrue(instanceReport.contains("Distinct mapper-covered Arcadia definitions used: **2/8 (25.00%)**"));
+        assertTrue(instanceReport.contains("#### Mapper-covered Arcadia definitions not used"));
+        assertTrue(coverageReport.contains("Assessed Arcadia definitions: **14/15 (93.33%)**"));
+        assertTrue(coverageReport.contains("Implemented: 8, candidates: 1, explicit non-mappings: 5, unassessed: 1"));
+        assertTrue(coverageReport.contains("#### Implemented"));
+        assertTrue(coverageReport.contains("#### Candidates"));
+        assertTrue(coverageReport.contains("#### Explicit non-mappings"));
+        assertTrue(coverageReport.contains("#### Unassessed\n\n- Arcadia::NewConcept\n"));
+        assertTrue(coverageReport.contains("Arcadia::NewConcept"));
         var concepts = summary.arcadiaConcepts();
         assertTrue(concepts.implemented().contains("Arcadia::Component"));
         assertTrue(concepts.candidates().contains("Arcadia::Mission"));
@@ -172,12 +198,11 @@ class ApplicationServicesTest {
         reportedConcepts.addAll(concepts.unassessed());
         assertEquals(declaredConcepts, reportedConcepts);
         assertEquals(declaredConcepts.size(), concepts.assessment().denominator());
-        assertEquals(declaredConcepts.size() - 1, concepts.assessment().numerator());
+        assertEquals((long) declaredConcepts.size() - 1, concepts.assessment().numerator());
     }
 
     @Test
-    void facadeConvertsPreparationErrors() throws IOException {
-        var outputDirectory = Files.createTempDirectory("capella-sysmlv2-application-test");
+    void facadeConvertsPreparationErrors(@TempDir Path outputDirectory) {
         var request = new TransformationRequest(
                 outputDirectory.resolve("missing.zip"), outputDirectory);
         var service = new EquinoxTransformationService();
