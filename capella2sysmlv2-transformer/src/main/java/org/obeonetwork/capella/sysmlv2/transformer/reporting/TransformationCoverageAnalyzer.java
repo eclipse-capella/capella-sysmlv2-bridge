@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
@@ -72,8 +73,25 @@ public final class TransformationCoverageAnalyzer {
         }
 
         var alignments = expandAlignments(metaclassCoverages, alignmentCatalog);
+
+        analyzeContradictoryStatus(metaclassCoverages, alignments);
+
         return new TransformationCoverageReport(packages.size(), metaclassCoverages, utilization,
+                new ArcadiaLibraryInventory().concreteDefinitionNames(arcadiaLibraryRoots),
                 alignments);
+    }
+
+    private static void analyzeContradictoryStatus(List<MetaclassCoverage> metaclassCoverages, List<MetaclassAlignment> alignments) {
+        // A class with an implemented mapper can't be counted as both implemented
+        // and unsupported through NO_EQUIVALENT
+        metaclassCoverages.stream()
+                .filter(coverage -> coverage.mapperClass() != null)
+                .filter(coverage -> alignments.stream().anyMatch(alignment -> alignment.sourceType() == coverage.metaclass()
+                        && alignment.status() == AlignmentStatus.NO_EQUIVALENT))
+                .findFirst()
+                .ifPresent(coverage -> {
+                    throw new IllegalArgumentException("Implemented mapper cannot have NO_EQUIVALENT alignment: " + coverage.metaclass());
+                });
     }
 
     private static ArcadiaUtilizationCoverage emptyArcadiaUtilization() {
@@ -85,11 +103,9 @@ public final class TransformationCoverageAnalyzer {
         var metaclasses = inspect(packages);
         var mappersByType = indexMappers(packages, mappers);
 
-        var coverage = metaclasses.stream()
+        return metaclasses.stream()
                 .map(metaclass -> analyzeMetaclass(metaclass, mappersByType.get(metaclass)))
                 .toList();
-
-        return coverage;
     }
 
     private static List<EClass> inspect(Collection<? extends EPackage> packages) {
@@ -124,12 +140,18 @@ public final class TransformationCoverageAnalyzer {
     }
 
     private static MetaclassCoverage analyzeMetaclass(EClass metaclass, ElementMapper<?, ?> mapper) {
-        if (metaclass.isAbstract()) {
-            var mapperClassName = mapper == null ? null : mapper.getClass().getName();
-            return new MetaclassCoverage(metaclass, MappingStatus.ABSTRACT, mapperClassName, List.of(), List.of(), featureNames(metaclass), Map.of());
+        if (metaclass.isAbstract() || metaclass.isInterface()) {
+            var mapperClassName = Optional.ofNullable(mapper)
+                    .map(value -> value.getClass().getName())
+                    .orElse(null);
+
+            return new MetaclassCoverage(metaclass, MappingStatus.ABSTRACT, mapperClassName,
+                    Optional.ofNullable(mapper).map(ElementMapper::getTargetQualifiedName).orElse(null),
+                    List.of(), List.of(), featureNames(metaclass), Map.of());
         }
+
         if (mapper == null) {
-            return new MetaclassCoverage(metaclass, MappingStatus.UNMAPPED, null, List.of(), List.of(), featureNames(metaclass), Map.of());
+            return new MetaclassCoverage(metaclass, MappingStatus.UNMAPPED, null, null, List.of(), List.of(), featureNames(metaclass), Map.of());
         }
 
         var declaredFeatureNames = new LinkedHashSet<>(featureNames(metaclass));
@@ -164,7 +186,7 @@ public final class TransformationCoverageAnalyzer {
             status = MappingStatus.PARTIAL;
         }
 
-        return new MetaclassCoverage(metaclass, status, mapper.getClass().getName(), mapped, ignored, remaining, featureTargets);
+        return new MetaclassCoverage(metaclass, status, mapper.getClass().getName(), mapper.getTargetQualifiedName(), mapped, ignored, remaining, featureTargets);
     }
 
     private static ArcadiaUtilizationCoverage analyzeArcadiaUtilization(List<ArcadiaElementDescriptor> inventory, Collection<? extends ElementMapper<?, ?>> mappers) {
@@ -201,7 +223,6 @@ public final class TransformationCoverageAnalyzer {
                 .toList();
 
         var references = usedConcepts.size() + usedFeatures.size();
-
         return new ArcadiaUtilizationCoverage(concepts, features, references, references);
     }
 
