@@ -169,8 +169,8 @@ The output directory also contains:
 [source,text]
 ----
 OUTPUT_DIRECTORY/.capella2sysmlv2/
-  mapping-coverage.json
-  mapping-coverage.md
+  transformation-instance-report.md
+  transformation-meta-report.md
   input/
 ----
 

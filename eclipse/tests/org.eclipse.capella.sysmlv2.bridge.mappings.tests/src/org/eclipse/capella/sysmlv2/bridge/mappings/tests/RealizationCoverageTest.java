@@ -1,8 +1,14 @@
 /*******************************************************************************
  * Copyright (c) 2026 Obeo.
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v2.0.
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
  * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *     Obeo - initial API and implementation
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
@@ -10,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,11 +35,13 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter.RunMetadata;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.common.data.modellingcore.TraceableElement;
-import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
 import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory;
+import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
 import org.polarsys.capella.core.data.cs.CsFactory;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.fa.FaFactory;
@@ -46,10 +55,11 @@ import org.polarsys.capella.core.data.pa.PaPackage;
 
 class RealizationCoverageTest {
     private static final String REALIZES = "Arcadia::ArcadiaElement::realizes";
+
     private static final String IS_REALIZED_BY = "Arcadia::ArcadiaElement::isRealizedBy";
 
     @Test
-    void catalogAndReportsIncludeDeclaredRealizationFeatures() throws Exception {
+    void catalogAndReportsIncludeDeclaredRealizationFeatures() throws IOException {
         var output = Path.of("target", "realization-coverage-reports");
         var report = TransformationCoverageAnalyzer.analyze(List.of(CtxPackage.eINSTANCE, FaPackage.eINSTANCE,
                 InformationPackage.eINSTANCE, LaPackage.eINSTANCE, OaPackage.eINSTANCE, PaPackage.eINSTANCE),
@@ -73,23 +83,27 @@ class RealizationCoverageTest {
                 Map.entry("Capability", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")),
                 Map.entry("OperationalCapability", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")),
                 Map.entry("CapabilityRealization", List.of("outgoingCapabilityAllocation", "incomingCapabilityAllocation")));
-        new TransformationCoverageWriter().write(report, output);
-        var json = Files.readString(output.resolve(TransformationCoverageWriter.JSON_FILE_NAME));
-        var markdown = Files.readString(output.resolve(TransformationCoverageWriter.MARKDOWN_FILE_NAME));
+        new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), java.util.Set.of()), report,
+                Map.of(), new RunMetadata("Realizations", java.time.Instant.EPOCH, "unused", java.util.Optional.empty()), output);
+        var markdown = Files.readString(output.resolve(TransformationCoverageWriter.META_FILE_NAME));
         for (var coverage : report.metaclassCoverages()) {
             if (coverage.mapperClass() == null) {
                 continue;
             }
             var features = expected.getOrDefault(coverage.metaclass().getName(), List.of());
             for (var feature : features) {
-                var target = feature.startsWith("in") || feature.startsWith("realizing") ? IS_REALIZED_BY : REALIZES;
+                var target = REALIZES;
+                if (feature.startsWith("in") || feature.startsWith("realizing")) {
+                    target = IS_REALIZED_BY;
+                }
                 assertEquals(target, coverage.featureTargets().get(feature), coverage.metaclass().getName() + "." + feature);
                 assertFalse(coverage.remainingFeatures().contains(feature));
-                assertTrue(json.contains("\"" + feature + "\": \"" + target + "\""));
-                assertTrue(markdown.contains(feature + " -> " + target));
+                assertEquals(!coverage.metaclass().getEStructuralFeature(feature).isDerived(),
+                        markdown.contains("| " + feature + " | " + target + " | mapped |"));
+                var expectedTarget = target;
                 assertTrue(report.alignments().stream().filter(alignment -> alignment.sourceType() == coverage.metaclass())
                         .flatMap(alignment -> alignment.featureAlignments().stream())
-                        .anyMatch(alignment -> alignment.sourceFeature().equals(feature) && alignment.target().equals(target)));
+                        .anyMatch(alignment -> alignment.sourceFeature().equals(feature) && alignment.target().equals(expectedTarget)));
             }
             for (var unrelated : List.of("involvingCapabilityRealizations", "logicalInterfaceRealizations")) {
                 if (coverage.metaclass().getEStructuralFeature(unrelated) != null) {

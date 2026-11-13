@@ -45,8 +45,6 @@ public final class ModelTransformationUtils {
      * @return the transformation result and its reporting metadata
      * @throws TransformationCommandException
      *             if the Arcadia library cannot be loaded
-     * @throws IllegalStateException
-     *             if the transformation reports errors
      */
     public static ModelTransformation transform(EObject root, String modelName) {
         var sources = EObjectUtils.allContents(root);
@@ -61,11 +59,7 @@ public final class ModelTransformationUtils {
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)
                 .toList();
         var errorCount = errors.size();
-        if (errorCount > 0) {
-            errors.forEach(diagnostic -> LOGGER.severe(diagnostic.message()));
-            throw new IllegalStateException("Transformation produced "
-                    + errorCount + " error diagnostic(s)");
-        }
+        errors.forEach(diagnostic -> LOGGER.severe(diagnostic.message()));
         return new ModelTransformation(modelName, sources, targetModel, mappers, result, errorCount);
     }
 

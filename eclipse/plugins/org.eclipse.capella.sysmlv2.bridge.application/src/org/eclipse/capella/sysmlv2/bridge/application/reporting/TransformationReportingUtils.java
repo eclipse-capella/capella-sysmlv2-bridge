@@ -13,8 +13,15 @@
 package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +39,10 @@ import org.obeonetwork.capella.sysmlv2.cli.ArcadiaConceptSummary;
 import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
 import org.obeonetwork.capella.sysmlv2.cli.ElementCount;
 import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
+import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
+import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.CoverageMetric;
@@ -40,6 +50,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter.RunMetadata;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
@@ -62,21 +74,46 @@ public final class TransformationReportingUtils {
      *
      * @param transformation
      *            transformation to report
-     * @param outputDirectory
-     *            destination directory for the model and reports
+     * @param request
+     *            input archive and destination directory
+     * @param startedAt
+     *            transformation start time
      * @return the generated transformation summary
      */
-    public static TransformationSummary generate(ModelTransformation transformation, Path outputDirectory) {
+    public static TransformationSummary generate(ModelTransformation transformation, TransformationRequest request, Instant startedAt) {
+        var outputDirectory = request.outputDirectory().toAbsolutePath().normalize();
         var outputModel = outputDirectory
                 .resolve(transformation.modelName() + ".sysml.xmi");
-        persistAndValidate(transformation.result(), transformation.targetModel(), outputModel);
-
         var report = TransformationCoverageAnalyzer.analyze(
                 CapellaSemanticPackageDiscoveryUtils.discover(),
                 transformation.mappers(), transformation.targetModel().getArcadiaLibrary(),
                 CapellaMapperCatalog.getAlignmentCatalog());
 
-        writeCoverageReport(report, outputDirectory.resolve(".capella2sysmlv2"));
+        var instance = TransformationInstanceAnalyzer.analyze(transformation, report);
+        var inputChecksum = checksum(request.inputZip());
+        Optional<String> outputChecksum = Optional.empty();
+        Optional<RuntimeException> exportFailure = Optional.empty();
+        if (instance.diagnostics().stream().noneMatch(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)) {
+            try {
+                persistAndValidate(transformation.result(), transformation.targetModel(), outputModel);
+                outputChecksum = Optional.of(checksum(outputModel));
+            } catch (RuntimeException exception) {
+                exportFailure = Optional.of(exception);
+                var diagnostics = new ArrayList<>(instance.diagnostics());
+                diagnostics.add(TransformationDiagnostic.error(null, "Output export failed: " + exception.getMessage()));
+                instance = new TransformationInstanceReport(instance.elements(), diagnostics, instance.usedLibraryClasses());
+            }
+        }
+        var concepts = arcadiaConceptSummary(report);
+        var metadata = new RunMetadata(transformation.modelName(), startedAt, inputChecksum, outputChecksum);
+        writeReports(instance, report, concepts, metadata, outputDirectory.resolve(".capella2sysmlv2"));
+        exportFailure.ifPresent(exception -> {
+            throw exception;
+        });
+        var errorCount = instance.diagnostics().stream().filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR).count();
+        if (errorCount > 0) {
+            throw new IllegalStateException("Transformation produced " + errorCount + " error diagnostic(s)");
+        }
 
         var coverageSummary = new MappingCoverageSummary(
                 coverageValue(report.metaclassesWithMapperMetric()),
@@ -91,7 +128,7 @@ public final class TransformationReportingUtils {
                 transformation.errorCount(),
                 outputModel,
                 coverageSummary,
-                arcadiaConceptSummary(report));
+                concepts);
     }
 
     private static ArcadiaConceptSummary arcadiaConceptSummary(TransformationCoverageReport report) {
@@ -134,14 +171,28 @@ public final class TransformationReportingUtils {
         TemporarySysMLXmiExporterUtils.rewriteArcadiaLibraryReferences(outputModel);
     }
 
-    private static void writeCoverageReport(
-            TransformationCoverageReport report, Path reportDirectory) {
+    private static void writeReports(TransformationInstanceReport instance,
+            TransformationCoverageReport report, ArcadiaConceptSummary concepts, RunMetadata metadata, Path reportDirectory) {
+        var conceptAssessment = new LinkedHashMap<String, AlignmentStatus>();
+        concepts.implemented().forEach(name -> conceptAssessment.put(name, AlignmentStatus.CONFIRMED));
+        concepts.candidates().forEach(name -> conceptAssessment.put(name, AlignmentStatus.CANDIDATE));
+        concepts.nonMappingDecisions().keySet().forEach(name -> conceptAssessment.put(name, AlignmentStatus.NO_EQUIVALENT));
+        concepts.unassessed().forEach(name -> conceptAssessment.put(name, AlignmentStatus.UNASSESSED));
         try {
-            new TransformationCoverageWriter().write(report, reportDirectory);
+            new TransformationCoverageWriter().write(instance, report, conceptAssessment, metadata, reportDirectory);
         } catch (IOException exception) {
             throw new IllegalStateException(
-                    "Cannot write semantic mapping coverage reports",
+                    "Cannot write transformation reports",
                     exception);
+        }
+    }
+
+    private static String checksum(Path file) {
+        try (var input = new DigestInputStream(Files.newInputStream(file), MessageDigest.getInstance("SHA-256"))) {
+            input.transferTo(OutputStream.nullOutputStream());
+            return HexFormat.of().formatHex(input.getMessageDigest().digest());
+        } catch (IOException | NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Cannot compute SHA-256 for " + file, exception);
         }
     }
 
