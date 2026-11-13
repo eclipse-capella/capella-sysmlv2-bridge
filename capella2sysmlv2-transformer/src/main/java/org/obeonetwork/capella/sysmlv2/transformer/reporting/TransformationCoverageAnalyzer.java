@@ -76,7 +76,7 @@ public final class TransformationCoverageAnalyzer {
 
         analyzeContradictoryStatus(metaclassCoverages, alignments);
 
-        return new TransformationCoverageReport(packages.size(), metaclassCoverages, utilization,
+        return new TransformationCoverageReport(metaclassCoverages, utilization,
                 new ArcadiaLibraryInventory().concreteDefinitionNames(arcadiaLibraryRoots),
                 alignments);
     }
@@ -95,7 +95,7 @@ public final class TransformationCoverageAnalyzer {
     }
 
     private static ArcadiaUtilizationCoverage emptyArcadiaUtilization() {
-        return new ArcadiaUtilizationCoverage(List.of(), List.of(), 0, 0);
+        return new ArcadiaUtilizationCoverage(List.of(), List.of());
     }
 
     private static List<MetaclassCoverage> analyzeCapella(Collection<? extends EPackage> packages,
@@ -222,8 +222,7 @@ public final class TransformationCoverageAnalyzer {
                 .map(element -> new ArcadiaElementCoverage(element, usedFeatures.contains(element.qualifiedName())))
                 .toList();
 
-        var references = usedConcepts.size() + usedFeatures.size();
-        return new ArcadiaUtilizationCoverage(concepts, features, references, references);
+        return new ArcadiaUtilizationCoverage(concepts, features);
     }
 
     private static Map<String, String> featureTargets(ElementMapper<?, ?> mapper) {

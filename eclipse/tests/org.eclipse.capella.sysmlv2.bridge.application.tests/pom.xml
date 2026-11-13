@@ -64,7 +64,7 @@
                 <artifactId>tycho-surefire-plugin</artifactId>
                 <version>${tycho.version}</version>
                 <configuration>
-                    <providerHint>junit5</providerHint>
+                    <providerHint>junit59</providerHint>
                     <useUIHarness>false</useUIHarness>
                     <useUIThread>false</useUIThread>
                 </configuration>
