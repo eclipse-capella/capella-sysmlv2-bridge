@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
@@ -91,7 +92,7 @@ class MapperUtilsTest {
 
         assertTrue(result.traceability().isExcluded(child));
         assertTrue(result.traceability().lookupTarget(child).isEmpty());
-        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains(parent.toString())));
+        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains(EObjectUtils.describe(parent))));
     }
 
     @Test

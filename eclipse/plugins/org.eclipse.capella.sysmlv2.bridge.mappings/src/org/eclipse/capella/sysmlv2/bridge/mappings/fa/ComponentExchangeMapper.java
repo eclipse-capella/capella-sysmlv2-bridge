@@ -49,6 +49,7 @@ import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.fa.ComponentExchange;
 import org.polarsys.capella.core.data.oa.CommunicationMean;
@@ -126,7 +127,7 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
             if (target.isPresent()) {
                 targets.add((Feature) target.get());
             } else {
-                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + value);
+                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + EObjectUtils.describe(value));
             }
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(context.traceability(), source, InterfaceUsage.class),

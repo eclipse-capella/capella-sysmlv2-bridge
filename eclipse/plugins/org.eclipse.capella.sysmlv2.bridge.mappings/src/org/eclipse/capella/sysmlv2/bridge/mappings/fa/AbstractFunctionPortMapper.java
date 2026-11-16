@@ -28,6 +28,7 @@ import org.eclipse.syson.sysml.FeatureDirectionKind;
 import org.eclipse.syson.sysml.ItemUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
 import org.polarsys.capella.core.data.fa.FunctionInputPort;
@@ -113,7 +114,7 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
                         .filter(ItemUsage.class::isInstance)
                         .map(ItemUsage.class::cast)
                         .orElseGet(() -> {
-                            context.diagnostics().addError(source, "Unable to map exchange item " + item.getName());
+                            context.diagnostics().addError(source, "Unable to map exchange item " + EObjectUtils.describe(item));
                             return null;
                         }))
                 .filter(java.util.Objects::nonNull)

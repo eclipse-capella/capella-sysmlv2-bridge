@@ -145,21 +145,21 @@ public final class TransformationEngine {
                 return false;
             }
             if (context.traceability().isExcluded(source)) {
-                return fail(source, "Creation prerequisite is excluded: " + source);
+                return fail(source, "Creation prerequisite is excluded");
             }
             if (state == State.READY) {
                 return true;
             }
             if (state == State.CONSTRUCTING) {
                 var cycle = buildCyclePath(source);
-                return fail(source, "Creation dependency cycle: " + cycle + " -> " + source);
+                return fail(source, "Creation dependency cycle: " + cycle + " -> " + EObjectUtils.describe(source));
             }
             states.put(source, State.CONSTRUCTING);
             path.add(source);
             try {
                 for (var dependency : mapper.getCreationDependencies()) {
                     if (!resolve(dependency)) {
-                        return fail(source, "Unable to construct source; unavailable creation prerequisite: " + dependency);
+                        return fail(source, "Unable to construct source; unavailable creation prerequisite: " + EObjectUtils.describe(dependency));
                     }
                 }
                 mapper.createAndRegister(context);
@@ -183,7 +183,7 @@ public final class TransformationEngine {
         private String buildCyclePath(EObject source) {
             return path.stream()
                     .dropWhile(element -> element != source)
-                    .map(Object::toString)
+                    .map(EObjectUtils::describe)
                     .collect(Collectors.joining(" -> "));
         }
 

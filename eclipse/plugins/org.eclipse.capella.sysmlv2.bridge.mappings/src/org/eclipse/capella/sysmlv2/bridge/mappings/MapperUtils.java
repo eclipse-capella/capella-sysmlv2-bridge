@@ -21,6 +21,7 @@ import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Usage;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
@@ -95,13 +96,13 @@ public class MapperUtils {
     public static <T extends EObject> T require(Traceability traceability, EObject source, Class<T> expectedType) {
         var target = traceability.lookupTarget(source)
                 .orElseThrow(() -> new IllegalStateException(
-                        "No mapped target for " + source.eClass().getName()));
+                        "No mapped target for " + source.eClass().getName() + " " + EObjectUtils.describe(source)));
 
         if (!expectedType.isInstance(target)) {
             throw new IllegalStateException(
                     "Expected target " + expectedType.getSimpleName() + " for "
                             + source.eClass().getName() + " but was "
-                            + target.eClass().getName());
+                            + target.eClass().getName() + " (source: " + EObjectUtils.describe(source) + ")");
         }
         return expectedType.cast(target);
     }

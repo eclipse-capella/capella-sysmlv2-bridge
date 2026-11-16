@@ -38,6 +38,7 @@ import org.eclipse.syson.sysml.OccurrenceUsage;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.ctx.SystemAnalysis;
@@ -112,11 +113,10 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
                 targets.add((Feature) target.get());
             } else if (ARCADIA_INVOLVED_FUNCTIONAL_CHAINS.equals(name) && context.traceability().isSkipped(value)) {
                 var functionalChain = (FunctionalChain) value;
-                context.diagnostics().addWarning(source, "Omitting reference from capability '" + source.getName()
-                        + "' (id: " + source.getId() + ")"
-                        + " to intentionally skipped functional chain '" + functionalChain.getName() + "' (id: " + functionalChain.getId() + ")");
+                context.diagnostics().addWarning(source, "Omitting reference from capability to intentionally skipped functional chain "
+                        + EObjectUtils.describe(functionalChain));
             } else {
-                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + value);
+                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + EObjectUtils.describe(value));
             }
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(context.traceability(), source, OccurrenceUsage.class),
