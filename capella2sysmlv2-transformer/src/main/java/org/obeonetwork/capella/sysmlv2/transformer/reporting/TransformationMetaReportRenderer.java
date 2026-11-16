@@ -18,6 +18,7 @@ import static org.obeonetwork.capella.sysmlv2.transformer.reporting.Transformati
 import static org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationReportMarkdownUtils.group;
 import static org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationReportMarkdownUtils.libraryList;
 import static org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationReportMarkdownUtils.qualifiedName;
+import static org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationReportMarkdownUtils.tableOfContents;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -45,7 +46,14 @@ public final class TransformationMetaReportRenderer {
                 .sorted(Comparator.comparing(coverage -> qualifiedName(coverage.metaclass()), PERSPECTIVE_ORDER))
                 .toList();
 
-        var result = new StringBuilder("# Transformation meta report\n\n## Overview\n\n");
+        var result = new StringBuilder("# Transformation meta report\n\n");
+        result.append(tableOfContents(
+                "[Overview](#meta-overview)",
+                "[Arcadia Library Concept Assessment](#meta-library-assessment)",
+                "[Details](#meta-details)",
+                "[Unsupported concrete Capella classes](#meta-unsupported-classes)",
+                "[Concrete Capella classes not yet implemented](#meta-not-implemented-classes)"));
+        result.append("\n<a id=\"meta-overview\"></a>\n\n## Overview\n\n");
         if (concrete.isEmpty()) {
             result.append("No concrete Capella classes were discovered.\n");
         } else {
@@ -58,7 +66,7 @@ public final class TransformationMetaReportRenderer {
 
         result.append(libraryAssessment(meta, conceptAssessment));
 
-        result.append("\n## Details\n");
+        result.append("\n<a id=\"meta-details\"></a>\n\n## Details\n");
         var implementedClasses = concrete.stream()
                 .filter(coverage -> coverage.mapperClass() != null)
                 .toList();
@@ -72,12 +80,14 @@ public final class TransformationMetaReportRenderer {
                 .filter(coverage -> meta.isUnsupported(coverage.metaclass()))
                 .map(MetaclassCoverage::metaclass)
                 .toList();
+        result.append("\n<a id=\"meta-unsupported-classes\"></a>\n");
         result.append(typeInventory("Unsupported concrete Capella classes", unsuportedClasses));
 
         var notImplementedClasses = concrete.stream()
                 .filter(coverage -> coverage.mapperClass() == null && !meta.isUnsupported(coverage.metaclass()))
                 .map(MetaclassCoverage::metaclass)
                 .toList();
+        result.append("\n<a id=\"meta-not-implemented-classes\"></a>\n");
         result.append(typeInventory("Concrete Capella classes not yet implemented", notImplementedClasses));
 
         return result.toString();
@@ -164,7 +174,7 @@ public final class TransformationMetaReportRenderer {
         var nonMappings = definitionsByStatus.getOrDefault(AlignmentStatus.NO_EQUIVALENT, Set.of());
         var unassessed = definitionsByStatus.getOrDefault(AlignmentStatus.UNASSESSED, Set.of());
         var assessment = new CoverageMetric((long) implemented.size() + candidates.size() + nonMappings.size(), meta.arcadiaUtilization().concepts().size());
-        result.append("\n### Arcadia Library Concept Assessment\n\n")
+        result.append("\n<a id=\"meta-library-assessment\"></a>\n\n### Arcadia Library Concept Assessment\n\n")
                 .append("Assessed Arcadia definitions: **")
                 .append(assessment.numerator()).append('/')
                 .append(assessment.denominator()).append(" (").append(assessment.formattedPercentage()).append(")**.\n\n")
