@@ -41,6 +41,13 @@ public final class TransformationReportMarkdownUtils {
     }
 
     /**
+     * Renders a table of contents from Markdown links.
+     */
+    public static String tableOfContents(String... links) {
+        return "## Contents\n\n- " + String.join("\n- ", links) + "\n";
+    }
+
+    /**
      * Renders a sorted Arcadia definition list or its empty-section message.
      */
     public static String libraryList(String title, Set<String> classes) {

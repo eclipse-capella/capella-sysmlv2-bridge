@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -94,6 +95,7 @@ class TransformationCoverageWriterTest {
         new TransformationCoverageWriter().write(instance, report, conceptAssessment, metadata, this.temporaryDirectory);
 
         var instanceMarkdown = Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.INSTANCE_FILE_NAME));
+        assertInternalLinks(instanceMarkdown);
         assertThat(instanceMarkdown)
                 .doesNotContain("## Transformation details", "### Unsupported source types", "### Source types not yet implemented",
                         "| Source feature |", "Successfully mapped source elements:")
@@ -102,20 +104,23 @@ class TransformationCoverageWriterTest {
                 .contains("| Architecture perspective | Total elements | Successfully mapped | Skipped | Unsupported mapping | Mapping not yet implemented | Error mapping |\n"
                         + "| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
                 .contains("| All | 4 | 1 (25.00%) | 0 (0.00%) | 1 (25.00%) | 2 (50.00%) | 0 (0.00%) |")
-                .contains("| Logical | 4 | 1 (25.00%) | 0 (0.00%) | 1 (25.00%) | 2 (50.00%) | 0 (0.00%) |")
+                .contains("| [Logical](#instance-architecture-0) | 4 | 1 (25.00%) | 0 (0.00%) | 1 (25.00%) | 2 (50.00%) | 0 (0.00%) |")
                 .contains("### Logical\n", "| Model package | Class name | Total elements |")
                 .contains("| Functions | LogicalFunction | 2 | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) | 2 (100.00%) | 0 (0.00%) |")
                 .contains("| Other | UnsupportedType | 1 | 0 (0.00%) | 0 (0.00%) | 1 (100.00%) | 0 (0.00%) | 0 (0.00%) |")
                 .contains("| Structure | LogicalComponent | 1 | 1 (100.00%) | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) |")
                 .contains("### Library Usage", "Distinct mapper-covered Arcadia definitions used: **0/1 (0.00%)**")
                 .contains("#### Mapper-covered Arcadia definitions not used\n\n- Arcadia::Component\n")
-                .contains("| Structure | All | 1 |", "Outcome: **Succeeded**");
+                .contains("| Structure | All | 1 |", "Outcome: **Succeeded**")
+                .contains("[Back to global coverage](#instance-global-coverage)")
+                .contains("## Transformation status\n\nTransformed 1 of 3 transformable elements (33.33%). Total source elements: 4.\n\nOutcome:");
         assertThat(instanceMarkdown.substring(0, instanceMarkdown.indexOf("### Logical\n")))
                 .contains("### Library Usage", "#### Mapper-covered Arcadia definitions not used")
                 .contains("## Transformation status", "Outcome: **Succeeded**", "No diagnostics were reported.")
                 .doesNotContain("| Severity | Source | Message |")
                 .doesNotContain("Class name", "| Functions |", "| Structure |", "| Other |");
         var metaMarkdown = Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME));
+        assertInternalLinks(metaMarkdown);
         assertThat(metaMarkdown)
                 .contains("| All | 3 | 1 (33.33%) | 1 (33.33%) | 1 (33.33%) |")
                 .contains("| name | name | mapped |")
@@ -147,6 +152,8 @@ class TransformationCoverageWriterTest {
         var emptyReport = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of());
         new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of()),
                 emptyReport, Map.of(), metadata, this.temporaryDirectory);
+        assertInternalLinks(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.INSTANCE_FILE_NAME)));
+        assertInternalLinks(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)));
         assertThat(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.INSTANCE_FILE_NAME)))
                 .contains("No source elements to report.", "No diagnostics were reported.",
                         "No architecture perspectives to report.",
@@ -157,5 +164,14 @@ class TransformationCoverageWriterTest {
                 .contains("No concrete Capella classes were discovered.", "No concrete Capella classes have an implemented mapper.",
                         "No types to report in this section.", "No Arcadia definitions to report in this section.")
                 .doesNotContain("\n|");
+    }
+
+    private static void assertInternalLinks(String markdown) {
+        var anchors = Pattern.compile("<a id=\"([^\"]+)\"></a>").matcher(markdown).results()
+                .map(match -> match.group(1)).toList();
+        var targets = Pattern.compile("\\]\\(#([^)]+)\\)").matcher(markdown).results()
+                .map(match -> match.group(1)).toList();
+        assertThat(targets).isNotEmpty();
+        assertThat(anchors).doesNotHaveDuplicates().containsAll(targets);
     }
 }
