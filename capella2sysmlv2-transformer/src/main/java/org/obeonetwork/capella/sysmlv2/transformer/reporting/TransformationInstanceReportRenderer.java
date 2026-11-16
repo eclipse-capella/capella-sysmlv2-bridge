@@ -104,7 +104,7 @@ public final class TransformationInstanceReportRenderer {
             result.append("\n\n| Severity | Source | Message |\n| --- | --- | --- |\n");
             instance.diagnostics().forEach(diagnostic -> result.append("| ").append(diagnostic.severity()).append(" | ")
                     .append(escape(Optional.ofNullable(diagnostic.source()).map(EcoreUtil::getURI).map(Object::toString).orElse("Transformation")))
-                    .append(" | ").append(escape(diagnostic.message())).append(" |\n"));
+                    .append(" | ").append(escape(diagnostic.formattedMessage())).append(" |\n"));
         }
         return result.toString();
     }

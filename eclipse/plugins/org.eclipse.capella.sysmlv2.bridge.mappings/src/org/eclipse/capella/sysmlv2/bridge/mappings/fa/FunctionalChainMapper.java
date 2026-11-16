@@ -65,7 +65,7 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
                 .toList();
         if (exchanges.isEmpty()) {
             context.traceability().skip(source);
-            context.diagnostics().addWarning(source, "Skipping functional chain " + source.getName() + " (id " + source.getId() + ") with no involved functional exchanges");
+            context.diagnostics().addWarning(source, "Skipping functional chain with no involved functional exchanges");
             return null;
         }
         // The service derives containment from the exchanges and ignores its container argument.

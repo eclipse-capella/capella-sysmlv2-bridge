@@ -15,6 +15,7 @@ package org.obeonetwork.capella.sysmlv2.transformer.diagnostic;
 import java.util.Objects;
 
 import org.eclipse.emf.ecore.EObject;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 
 /**
  * A diagnostic emitted while transforming a model element.
@@ -32,6 +33,16 @@ public record TransformationDiagnostic(DiagnosticSeverity severity, EObject sour
 
     public static TransformationDiagnostic warning(EObject source, String message) {
         return new TransformationDiagnostic(DiagnosticSeverity.WARNING, source, message);
+    }
+
+    /**
+     * Returns the message with source identity and model path for display and reports.
+     */
+    public String formattedMessage() {
+        if (source == null || severity == DiagnosticSeverity.INFO) {
+            return message;
+        }
+        return message + " [Source: " + EObjectUtils.describe(source) + "]";
     }
 
     public static TransformationDiagnostic error(EObject source, String message) {
