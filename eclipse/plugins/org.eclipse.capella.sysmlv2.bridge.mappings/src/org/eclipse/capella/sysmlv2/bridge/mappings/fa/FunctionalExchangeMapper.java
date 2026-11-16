@@ -30,6 +30,7 @@ import org.eclipse.syson.sysml.ItemUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.fa.FunctionInputPort;
 import org.polarsys.capella.core.data.fa.FunctionOutputPort;
@@ -118,7 +119,7 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
                         .map(ItemUsage.class::cast)
                         .orElseGet(() -> {
                             context.diagnostics().addError(source,
-                                    "Unable to map exchanged item " + item.getName());
+                                    "Unable to map exchanged item " + EObjectUtils.describe(item));
                             return null;
                         }))
                 .filter(java.util.Objects::nonNull)

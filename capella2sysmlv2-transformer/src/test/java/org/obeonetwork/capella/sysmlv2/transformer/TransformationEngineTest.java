@@ -25,6 +25,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class TransformationEngineTest {
@@ -223,7 +224,7 @@ class TransformationEngineTest {
             assertThat(result.traceability().contains(unrelated)).isTrue();
             assertThat(result.traceability().isExcluded(dependent)).isTrue();
             assertThat(result.traceability().isSkipped(prerequisite)).isFalse();
-            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("prerequisite: " + prerequisite));
+            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("prerequisite: " + EObjectUtils.describe(prerequisite)));
         }
     }
 
@@ -314,9 +315,9 @@ class TransformationEngineTest {
             assertThat(result.traceability().isExcluded(first)).isTrue();
             assertThat(result.traceability().isExcluded(second)).isTrue();
             assertThat(result.traceability().isExcluded(dependent)).isTrue();
-            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", first.toString()));
+            assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", EObjectUtils.describe(first)));
             if (!selfCycle) {
-                assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", second.toString()));
+                assertThat(result.diagnostics()).anySatisfy(diagnostic -> assertThat(diagnostic.message()).contains("cycle", EObjectUtils.describe(second)));
             }
         }
     }

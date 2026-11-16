@@ -54,12 +54,12 @@ public final class ModelTransformationUtils {
         var result = engine.transform(root, modelName);
         result.diagnostics().stream()
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.WARNING)
-                .forEach(diagnostic -> LOGGER.warning(diagnostic.message()));
+                .forEach(diagnostic -> LOGGER.warning(diagnostic.formattedMessage()));
         var errors = result.diagnostics().stream()
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)
                 .toList();
         var errorCount = errors.size();
-        errors.forEach(diagnostic -> LOGGER.severe(diagnostic.message()));
+        errors.forEach(diagnostic -> LOGGER.severe(diagnostic.formattedMessage()));
         return new ModelTransformation(modelName, sources, targetModel, mappers, result, errorCount);
     }
 

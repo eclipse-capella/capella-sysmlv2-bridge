@@ -140,15 +140,19 @@ class FunctionalChainMapperTest {
     @Test
     void createsCapabilityOwnedChainsAndMapsTheirReferences() {
         var fixture = fixture("System");
+        fixture.architecture().setName("System Analysis");
         var pkg = CtxFactory.eINSTANCE.createCapabilityPkg();
+        pkg.setName("Capabilities");
         fixture.architecture().setOwnedAbstractCapabilityPkg(pkg);
         var capability = CtxFactory.eINSTANCE.createCapability();
+        capability.setName("Control engine");
         pkg.getOwnedCapabilities().add(capability);
         capability.getOwnedFunctionalChains().add(fixture.chain());
         var involvement = InteractionFactory.eINSTANCE.createFunctionalChainAbstractCapabilityInvolvement();
         involvement.setInvolved(fixture.chain());
         capability.getOwnedFunctionalChainAbstractCapabilityInvolvements().add(involvement);
         var empty = FaFactory.eINSTANCE.createFunctionalChain();
+        empty.setName("Empty chain");
         capability.getOwnedFunctionalChains().add(empty);
         for (int index = 0; index < 2; index++) {
             var emptyInvolvement = InteractionFactory.eINSTANCE.createFunctionalChainAbstractCapabilityInvolvement();
@@ -166,6 +170,11 @@ class FunctionalChainMapperTest {
         assertTrue(result.diagnostics().stream().allMatch(value -> value.severity().name().equals("WARNING")));
         assertEquals(1, result.diagnostics().stream().filter(value -> value.source() == capability
                 && value.message().contains("Omitting reference from capability ")).count());
+        var warning = result.diagnostics().stream().filter(value -> value.source() == capability).findFirst().orElseThrow();
+        assertTrue(warning.formattedMessage().contains("System Analysis › Capabilities › Control engine"));
+        assertTrue(warning.formattedMessage().contains("System Analysis › Capabilities › Control engine › Empty chain"));
+        assertTrue(warning.formattedMessage().contains("id: " + empty.getId()));
+        assertTrue(warning.formattedMessage().contains("id: " + capability.getId()));
     }
 
     @Test
@@ -202,6 +211,9 @@ class FunctionalChainMapperTest {
             var fixture = fixture(perspective);
             var result = transform(EObjectUtils.allContents(fixture.architecture()));
             assertTrue(result.traceability().lookupTarget(fixture.chain()).isEmpty());
+            var warning = result.diagnostics().stream().filter(value -> value.source() == fixture.chain()).findFirst().orElseThrow();
+            assertEquals("Skipping functional chain with no involved functional exchanges", warning.message());
+            assertEquals(warning.message() + " [Source: " + EObjectUtils.describe(fixture.chain()) + "]", warning.formattedMessage());
             assertTrue(result.diagnostics().stream().anyMatch(value -> value.message().contains("no involved functional exchanges")
                     && value.severity().name().equals("WARNING")));
             assertTrue(result.traceability().isSkipped(fixture.chain()));

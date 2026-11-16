@@ -51,6 +51,7 @@ import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.Feature;
 import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
@@ -105,7 +106,7 @@ public final class FeatureMappingCatalog {
             case null, default -> null;
         };
         if (status == null) {
-            context.diagnostics().addWarning(source, "Unable to map custom progress status: " + source.getStatus().getName());
+            context.diagnostics().addWarning(source, "Unable to map custom progress status: " + EObjectUtils.describe(source.getStatus()));
         } else {
             COMMON_UPDATE_SERVICE.setStatusKind(MapperUtils.require(context.traceability(), source, Feature.class), status);
         }
