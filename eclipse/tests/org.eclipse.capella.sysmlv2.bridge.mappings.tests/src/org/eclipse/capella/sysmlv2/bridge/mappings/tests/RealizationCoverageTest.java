@@ -40,10 +40,13 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInsta
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.common.data.modellingcore.TraceableElement;
+import org.polarsys.capella.common.libraries.LibrariesPackage;
 import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory;
 import org.polarsys.capella.common.platform.sirius.ted.SemanticEditingDomainFactory.SemanticEditingDomain;
+import org.polarsys.capella.core.data.capellamodeller.CapellamodellerPackage;
 import org.polarsys.capella.core.data.cs.CsFactory;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
+import org.polarsys.capella.core.data.epbs.EpbsPackage;
 import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.information.InformationFactory;
@@ -61,7 +64,8 @@ class RealizationCoverageTest {
     @Test
     void catalogAndReportsIncludeDeclaredRealizationFeatures() throws IOException {
         var output = Path.of("target", "realization-coverage-reports");
-        var report = TransformationCoverageAnalyzer.analyze(List.of(CtxPackage.eINSTANCE, FaPackage.eINSTANCE,
+        var report = TransformationCoverageAnalyzer.analyze(List.of(CapellamodellerPackage.eINSTANCE, LibrariesPackage.eINSTANCE,
+                CtxPackage.eINSTANCE, EpbsPackage.eINSTANCE, FaPackage.eINSTANCE,
                 InformationPackage.eINSTANCE, LaPackage.eINSTANCE, OaPackage.eINSTANCE, PaPackage.eINSTANCE),
                 CapellaMapperCatalog.createMappers(), List.of(), CapellaMapperCatalog.getAlignmentCatalog());
         var expected = Map.ofEntries(
