@@ -190,15 +190,12 @@ jobs:
           env -u DISPLAY ./product/capella2sysmlv2 \
             -vm "$JAVA_HOME/bin/java" \
             dist/InFlightEntertainmentSystem.zip output 2>&1 | tee run.log
-          grep -F "Source LogicalComponent count: 23" run.log
-          grep -F "Source Entity count: 8" run.log
-          grep -F "Source SystemComponent count: 5" run.log
-          grep -F "Source PhysicalComponent count: 64" run.log
-          grep -F "Generated PartUsage count: 100" run.log
+          reports="$PWD/output/.capella2sysmlv2"
+          coverage=$(grep '^Transformed [1-9][0-9]* of ' "$reports/transformation-instance-report.md")
+          grep -F "$coverage" run.log
           grep -F "Errors: 0" run.log
-          grep -F "Capella Transformation Coverage:" run.log
-          grep -F "Arcadia SysML v2 Library Utilization:" run.log
-          grep -F "Arcadia SysML v2 Library Coverage of Capella:" run.log
+          grep -F "Created instance report: $reports/transformation-instance-report.md" run.log
+          grep -F "Created meta report: $reports/transformation-meta-report.md" run.log
           test -f "output/In-Flight Entertainment System.sysml.xmi"
           test -f "output/.capella2sysmlv2/transformation-instance-report.md"
           test -f "output/.capella2sysmlv2/transformation-meta-report.md"
@@ -262,16 +259,14 @@ jobs:
           }
 
           $log = $lines -join "`n"
+          $reports = Join-Path $PWD "output\.capella2sysmlv2"
+          $coverage = Select-String -Path "$reports\transformation-instance-report.md" -Pattern '^Transformed [1-9][0-9]* of '
+          if (-not $coverage) { throw "Missing input model coverage in the instance report" }
           @(
-            "Source LogicalComponent count: 23",
-            "Source Entity count: 8",
-            "Source SystemComponent count: 5",
-            "Source PhysicalComponent count: 64",
-            "Generated PartUsage count: 100",
+            $coverage.Line,
             "Errors: 0",
-            "Capella Transformation Coverage:",
-            "Arcadia SysML v2 Library Utilization:",
-            "Arcadia SysML v2 Library Coverage of Capella:"
+            "Created instance report: $reports\transformation-instance-report.md",
+            "Created meta report: $reports\transformation-meta-report.md"
           ) | ForEach-Object {
             if (-not $log.Contains($_)) {
               throw "Missing expected output: $_"

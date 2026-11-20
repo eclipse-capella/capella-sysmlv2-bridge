@@ -98,6 +98,17 @@ final class ProductTestSupport {
         assertTrue(Files.isRegularFile(instanceReport), "Missing instance report: " + instanceReport);
         assertTrue(Files.isRegularFile(metaReport), "Missing meta report: " + metaReport);
         var instance = Files.readString(instanceReport, StandardCharsets.UTF_8);
+        var coverage = instance.lines().filter(line -> line.startsWith("Transformed ")).findFirst().orElseThrow();
+        assertTrue(execution.output().contains(coverage), execution.output());
+        var reportingMessages = execution.output().lines()
+                .map(String::stripTrailing)
+                .filter(line -> line.startsWith("[INFO]") && (line.contains("reporting workflow")
+                        || line.contains("Reporting workflow") || line.contains("instance report") || line.contains("meta report")))
+                .toList();
+        assertEquals(List.of("[INFO] Starting reporting workflow",
+                "[INFO] Created instance report: " + instanceReport.toAbsolutePath(),
+                "[INFO] Created meta report: " + metaReport.toAbsolutePath(),
+                "[INFO] Reporting workflow completed"), reportingMessages);
         var meta = Files.readString(metaReport, StandardCharsets.UTF_8);
         assertFalse(instance.isBlank(), "Empty instance report: " + instanceReport);
         assertFalse(meta.isBlank(), "Empty meta report: " + metaReport);

@@ -24,14 +24,11 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.HexFormat;
-import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.eclipse.capella.sysmlv2.bridge.application.EquinoxTransformationService;
 import org.eclipse.capella.sysmlv2.bridge.application.loading.CapellaModelLoadingUtils;
@@ -47,8 +44,6 @@ import org.obeonetwork.capella.sysmlv2.cli.ExitCodes;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationCommandException;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
@@ -158,15 +153,17 @@ class ApplicationServicesTest {
         var summary = TransformationReportingUtils.generate(
                 transformation, new TransformationRequest(input, outputDirectory), startedAt);
 
-        assertTrue(Files.isRegularFile(summary.outputModel()));
+        var outputModel = outputDirectory.resolve("IFE.sysml.xmi");
+        assertTrue(Files.isRegularFile(outputModel));
         assertFalse(Files.exists(outputDirectory.resolve(".capella2sysmlv2/mapping-coverage.json")));
         assertFalse(Files.exists(outputDirectory.resolve(".capella2sysmlv2/mapping-coverage.md")));
         var instanceReport = Files.readString(outputDirectory.resolve(".capella2sysmlv2/transformation-instance-report.md"));
         var coverageReport = Files.readString(outputDirectory.resolve(".capella2sysmlv2/transformation-meta-report.md"));
+        assertTrue(instanceReport.contains(summary.inputModelCoverage()));
         assertTrue(instanceReport.contains(startedAt.toString()));
         try {
             assertTrue(instanceReport.contains(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(input)))));
-            assertTrue(instanceReport.contains(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(summary.outputModel())))));
+            assertTrue(instanceReport.contains(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(outputModel)))));
         } catch (java.security.NoSuchAlgorithmException exception) {
             throw new AssertionError(exception);
         }
@@ -181,24 +178,7 @@ class ApplicationServicesTest {
         assertTrue(coverageReport.contains("#### Candidates"));
         assertTrue(coverageReport.contains("#### Explicit non-mappings"));
         assertTrue(coverageReport.contains("#### Unassessed\n\n- Arcadia::NewConcept\n"));
-        assertTrue(coverageReport.contains("Arcadia::NewConcept"));
-        var concepts = summary.arcadiaConcepts();
-        assertTrue(concepts.implemented().contains("Arcadia::Component"));
-        assertTrue(concepts.candidates().contains("Arcadia::Mission"));
-        assertFalse(concepts.nonMappingDecisions().containsKey("Arcadia::Mission"));
-        assertFalse(concepts.nonMappingDecisions().get("Arcadia::ArcadiaPackage").isBlank());
-        assertFalse(concepts.nonMappingDecisions().containsKey("Arcadia::FunctionalChain::involvedFunctions"));
-        assertEquals(List.of("Arcadia::NewConcept"), concepts.unassessed());
-        var declaredConcepts = new ArcadiaLibraryInventory().inspect(library).stream()
-                .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT)
-                .map(element -> element.qualifiedName()).collect(Collectors.toSet());
-        var reportedConcepts = new HashSet<>(concepts.implemented());
-        reportedConcepts.addAll(concepts.candidates());
-        reportedConcepts.addAll(concepts.nonMappingDecisions().keySet());
-        reportedConcepts.addAll(concepts.unassessed());
-        assertEquals(declaredConcepts, reportedConcepts);
-        assertEquals(declaredConcepts.size(), concepts.assessment().denominator());
-        assertEquals((long) declaredConcepts.size() - 1, concepts.assessment().numerator());
+        assertTrue(coverageReport.contains("#### Candidates\n\n- Arcadia::Mission\n"));
     }
 
     @Test

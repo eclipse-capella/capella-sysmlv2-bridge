@@ -26,45 +26,13 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  * @author Raphaël Pagé
  */
 public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCoverages,
-        ArcadiaUtilizationCoverage arcadiaUtilization, Set<String> concreteLibraryClasses, List<MetaclassAlignment> alignments) {
+        List<ArcadiaElementCoverage> arcadiaConcepts, Set<String> concreteLibraryClasses, List<MetaclassAlignment> alignments) {
 
     public TransformationCoverageReport {
         metaclassCoverages = List.copyOf(Objects.requireNonNull(metaclassCoverages, "metaclassCoverages must not be null"));
-        Objects.requireNonNull(arcadiaUtilization, "arcadiaUtilization must not be null");
+        arcadiaConcepts = List.copyOf(arcadiaConcepts);
         concreteLibraryClasses = Set.copyOf(concreteLibraryClasses);
         alignments = List.copyOf(Objects.requireNonNull(alignments, "alignments must not be null"));
-    }
-
-    /**
-     * Returns the number of classes that are neither abstract nor interfaces.
-     */
-    public long concreteMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .count();
-    }
-
-    /**
-     * Returns the coverage metric for metaclasses having a mapper.
-     */
-    public CoverageMetric metaclassesWithMapperMetric() {
-        var concreteMapperClassCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .filter(coverage -> coverage.mapperClass() != null)
-                .count();
-
-        return new CoverageMetric(concreteMapperClassCount, this.concreteMetaclassCount());
-    }
-
-    /**
-     * Returns the coverage metric for confirmed alignments.
-     */
-    public CoverageMetric confirmedAlignmentMetric() {
-        var confirmedCount = this.alignments.stream()
-                .filter(alignment -> alignment.status() == AlignmentStatus.CONFIRMED)
-                .count();
-
-        return new CoverageMetric(confirmedCount, this.concreteMetaclassCount());
     }
 
     public long mappedMetaclassCount() {
@@ -101,9 +69,5 @@ public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCove
                 .filter(coverage -> coverage.mapperClass() != null)
                 .map(MetaclassCoverage::target).filter(this.concreteLibraryClasses::contains)
                 .collect(Collectors.toUnmodifiableSet());
-    }
-
-    private static boolean isConcrete(MetaclassCoverage coverage) {
-        return coverage.status() != MappingStatus.ABSTRACT;
     }
 }

@@ -89,12 +89,8 @@ public final class TransformationInstanceReportRenderer {
             outcome = "Succeeded with warnings";
         }
 
-        var coverage = computeCoverage(instance, meta);
-
         result.append("\n<a id=\"instance-transformation-status\"></a>\n\n## Transformation status\n\n")
-                .append("Transformed ").append(coverage.numerator()).append(" of ").append(coverage.denominator())
-                .append(" transformable elements (").append(coverage.formattedPercentage()).append("). ")
-                .append("Total source elements: ").append(instance.elements().size()).append(".\n\n")
+                .append(instance.coverageSummary(meta)).append("\n\n")
                 .append("Outcome: **").append(outcome)
                 .append("**\n\nWarnings: ").append(warnings).append("\n\nErrors: ").append(errors);
 
@@ -107,16 +103,6 @@ public final class TransformationInstanceReportRenderer {
                     .append(" | ").append(escape(diagnostic.formattedMessage())).append(" |\n"));
         }
         return result.toString();
-    }
-
-    private static CoverageMetric computeCoverage(TransformationInstanceReport instance, TransformationCoverageReport meta) {
-        var transformableElements = instance.elements().stream()
-                .filter(element -> !meta.isUnsupported(element.sourceType()))
-                .toList();
-        var mappedCount = transformableElements.stream()
-                .filter(element -> element.status() == ElementMappingOutcome.MAPPED)
-                .count();
-        return new CoverageMetric(mappedCount, transformableElements.size());
     }
 
     private static String libraryUsage(TransformationInstanceReport instance, TransformationCoverageReport meta) {
