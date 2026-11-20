@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Writes separate instance and metamodel reports in Markdown.
@@ -27,6 +28,8 @@ import java.util.Optional;
  * @author Raphaël Pagé
  */
 public final class TransformationCoverageWriter {
+    private static final Logger LOGGER = Logger.getLogger(TransformationCoverageWriter.class.getName());
+
     public static final String INSTANCE_FILE_NAME = "transformation-instance-report.md";
 
     public static final String META_FILE_NAME = "transformation-meta-report.md";
@@ -49,9 +52,14 @@ public final class TransformationCoverageWriter {
     public void write(TransformationInstanceReport instance, TransformationCoverageReport meta,
             Map<String, AlignmentStatus> conceptAssessment, RunMetadata metadata, Path outputDirectory) throws IOException {
         Files.createDirectories(outputDirectory);
-        Files.writeString(outputDirectory.resolve(INSTANCE_FILE_NAME),
+        var instanceFile = outputDirectory.resolve(INSTANCE_FILE_NAME).toAbsolutePath();
+        Files.writeString(instanceFile,
                 new TransformationInstanceReportRenderer().render(instance, meta, metadata), StandardCharsets.UTF_8);
-        Files.writeString(outputDirectory.resolve(META_FILE_NAME),
+        LOGGER.info(() -> "Created instance report: " + instanceFile);
+
+        var metaFile = outputDirectory.resolve(META_FILE_NAME).toAbsolutePath();
+        Files.writeString(metaFile,
                 new TransformationMetaReportRenderer().render(meta, conceptAssessment), StandardCharsets.UTF_8);
+        LOGGER.info(() -> "Created meta report: " + metaFile);
     }
 }

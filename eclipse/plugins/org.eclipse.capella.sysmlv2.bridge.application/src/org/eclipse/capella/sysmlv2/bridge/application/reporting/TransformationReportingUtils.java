@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
@@ -35,17 +36,11 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.FeatureTyping;
-import org.obeonetwork.capella.sysmlv2.cli.ArcadiaConceptSummary;
-import org.obeonetwork.capella.sysmlv2.cli.CoverageValue;
-import org.obeonetwork.capella.sysmlv2.cli.ElementCount;
-import org.obeonetwork.capella.sysmlv2.cli.MappingCoverageSummary;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.cli.TransformationSummary;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
-import org.obeonetwork.capella.sysmlv2.transformer.reporting.CoverageMetric;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
@@ -56,6 +51,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 
 public final class TransformationReportingUtils {
+
+    private static final Logger LOGGER = Logger.getLogger(TransformationReportingUtils.class.getName());
 
     private record ModelSnapshot(Map<EClass, Integer> elementCounts,
             long arcadiaTypeReferenceCount) {
@@ -81,6 +78,7 @@ public final class TransformationReportingUtils {
      * @return the generated transformation summary
      */
     public static TransformationSummary generate(ModelTransformation transformation, TransformationRequest request, Instant startedAt) {
+        LOGGER.info("Starting reporting workflow");
         var outputDirectory = request.outputDirectory().toAbsolutePath().normalize();
         var outputModel = outputDirectory
                 .resolve(transformation.modelName() + ".sysml.xmi");
@@ -104,9 +102,8 @@ public final class TransformationReportingUtils {
                 instance = new TransformationInstanceReport(instance.elements(), diagnostics, instance.usedLibraryClasses());
             }
         }
-        var concepts = arcadiaConceptSummary(report);
         var metadata = new RunMetadata(transformation.modelName(), startedAt, inputChecksum, outputChecksum);
-        writeReports(instance, report, concepts, metadata, outputDirectory.resolve(".capella2sysmlv2"));
+        writeReports(instance, report, metadata, outputDirectory.resolve(".capella2sysmlv2"));
         exportFailure.ifPresent(exception -> {
             throw exception;
         });
@@ -115,23 +112,12 @@ public final class TransformationReportingUtils {
             throw new IllegalStateException("Transformation produced " + errorCount + " error diagnostic(s)");
         }
 
-        var coverageSummary = new MappingCoverageSummary(
-                coverageValue(report.metaclassesWithMapperMetric()),
-                coverageValue(report.arcadiaUtilization().overallMetric()),
-                coverageValue(report.confirmedAlignmentMetric()));
-
-        var sourceEltsCount = sourceElementCounts(transformation.sources(), transformation.mappers());
-        var generatedEltscount = generatedElementCounts(transformation.sources(), transformation.result());
-
-        return new TransformationSummary(sourceEltsCount,
-                generatedEltscount,
-                transformation.errorCount(),
-                outputModel,
-                coverageSummary,
-                concepts);
+        var summary = new TransformationSummary(instance.coverageSummary(report), transformation.errorCount());
+        LOGGER.info("Reporting workflow completed");
+        return summary;
     }
 
-    private static ArcadiaConceptSummary arcadiaConceptSummary(TransformationCoverageReport report) {
+    private static Map<String, AlignmentStatus> assessArcadiaConcepts(TransformationCoverageReport report) {
         var backlogTypes = CapellaMapperCatalog.backlogByPackage().values().stream()
                 .flatMap(List::stream)
                 .map(entry -> entry.sourceType())
@@ -143,23 +129,20 @@ public final class TransformationReportingUtils {
                 .collect(Collectors.toSet());
 
         var decisions = CapellaMapperCatalog.getNonMappingDecisions();
-        var implemented = new ArrayList<String>();
-        var candidates = new ArrayList<String>();
-        var nonMappingDecisions = new LinkedHashMap<String, String>();
-        var unassessed = new ArrayList<String>();
-        for (var concept : report.arcadiaUtilization().concepts()) {
+        var assessment = new LinkedHashMap<String, AlignmentStatus>();
+        for (var concept : report.arcadiaConcepts()) {
             var name = concept.element().qualifiedName();
             if (concept.used()) {
-                implemented.add(name);
+                assessment.put(name, AlignmentStatus.CONFIRMED);
             } else if (candidateTargets.contains(name)) {
-                candidates.add(name);
+                assessment.put(name, AlignmentStatus.CANDIDATE);
             } else if (decisions.containsKey(name)) {
-                nonMappingDecisions.put(name, decisions.get(name));
+                assessment.put(name, AlignmentStatus.NO_EQUIVALENT);
             } else {
-                unassessed.add(name);
+                assessment.put(name, AlignmentStatus.UNASSESSED);
             }
         }
-        return new ArcadiaConceptSummary(implemented, candidates, nonMappingDecisions, unassessed);
+        return assessment;
     }
 
     private static void persistAndValidate(TransformationResult result,
@@ -172,14 +155,9 @@ public final class TransformationReportingUtils {
     }
 
     private static void writeReports(TransformationInstanceReport instance,
-            TransformationCoverageReport report, ArcadiaConceptSummary concepts, RunMetadata metadata, Path reportDirectory) {
-        var conceptAssessment = new LinkedHashMap<String, AlignmentStatus>();
-        concepts.implemented().forEach(name -> conceptAssessment.put(name, AlignmentStatus.CONFIRMED));
-        concepts.candidates().forEach(name -> conceptAssessment.put(name, AlignmentStatus.CANDIDATE));
-        concepts.nonMappingDecisions().keySet().forEach(name -> conceptAssessment.put(name, AlignmentStatus.NO_EQUIVALENT));
-        concepts.unassessed().forEach(name -> conceptAssessment.put(name, AlignmentStatus.UNASSESSED));
+            TransformationCoverageReport report, RunMetadata metadata, Path reportDirectory) {
         try {
-            new TransformationCoverageWriter().write(instance, report, conceptAssessment, metadata, reportDirectory);
+            new TransformationCoverageWriter().write(instance, report, assessArcadiaConcepts(report), metadata, reportDirectory);
         } catch (IOException exception) {
             throw new IllegalStateException(
                     "Cannot write transformation reports",
@@ -194,10 +172,6 @@ public final class TransformationReportingUtils {
         } catch (IOException | NoSuchAlgorithmException exception) {
             throw new IllegalStateException("Cannot compute SHA-256 for " + file, exception);
         }
-    }
-
-    private static CoverageValue coverageValue(CoverageMetric metric) {
-        return new CoverageValue(metric.numerator(), metric.denominator());
     }
 
     private static void validateReloadedModel(ModelSnapshot expectedModel, EObject reloadedRoot) {
@@ -226,30 +200,5 @@ public final class TransformationReportingUtils {
                 .filter(type -> type.eResource() != null
                         && "arcadialibrary".equals(type.eResource().getURI().scheme()))
                 .count();
-    }
-
-    private static List<ElementCount> sourceElementCounts(List<EObject> sources, List<? extends ElementMapper<?, ?>> mappers) {
-        return mappers.stream()
-                .map(mapper -> {
-                    var mapperClassName = mapper.getSourceClass().getSimpleName();
-                    var sourceCount = sources.stream().filter(mapper.getSourceClass()::isInstance).count();
-                    return new ElementCount(mapperClassName, Math.toIntExact(sourceCount));
-                })
-                .toList();
-    }
-
-    private static List<ElementCount> generatedElementCounts(List<EObject> sources, TransformationResult result) {
-        var countsByMetaclass = new LinkedHashMap<String, Integer>();
-
-        sources.stream()
-                .map(result.traceability()::lookupTarget)
-                .flatMap(Optional::stream)
-                .forEach(target -> countsByMetaclass.merge(target.eClass().getName(),
-                        1,
-                        Integer::sum));
-
-        return countsByMetaclass.entrySet().stream()
-                .map(entry -> new ElementCount(entry.getKey(), entry.getValue()))
-                .toList();
     }
 }

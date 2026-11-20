@@ -165,7 +165,7 @@ public final class TransformationMetaReportRenderer {
     private static String libraryAssessment(TransformationCoverageReport meta, Map<String, AlignmentStatus> conceptAssessment) {
         var result = new StringBuilder();
 
-        var definitionsByStatus = meta.arcadiaUtilization().concepts().stream()
+        var definitionsByStatus = meta.arcadiaConcepts().stream()
                 .map(concept -> concept.element().qualifiedName())
                 .collect(Collectors.groupingBy(name -> conceptAssessment.getOrDefault(name, AlignmentStatus.UNASSESSED), Collectors.toSet()));
 
@@ -173,7 +173,7 @@ public final class TransformationMetaReportRenderer {
         var candidates = definitionsByStatus.getOrDefault(AlignmentStatus.CANDIDATE, Set.of());
         var nonMappings = definitionsByStatus.getOrDefault(AlignmentStatus.NO_EQUIVALENT, Set.of());
         var unassessed = definitionsByStatus.getOrDefault(AlignmentStatus.UNASSESSED, Set.of());
-        var assessment = new CoverageMetric((long) implemented.size() + candidates.size() + nonMappings.size(), meta.arcadiaUtilization().concepts().size());
+        var assessment = new CoverageMetric((long) implemented.size() + candidates.size() + nonMappings.size(), meta.arcadiaConcepts().size());
         result.append("\n<a id=\"meta-library-assessment\"></a>\n\n### Arcadia Library Concept Assessment\n\n")
                 .append("Assessed Arcadia definitions: **")
                 .append(assessment.numerator()).append('/')

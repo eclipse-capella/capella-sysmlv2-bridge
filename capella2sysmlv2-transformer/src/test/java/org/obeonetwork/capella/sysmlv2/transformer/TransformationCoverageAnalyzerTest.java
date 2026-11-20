@@ -44,7 +44,6 @@ class TransformationCoverageAnalyzerTest {
                 .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(new MetaclassAlignment(
                         (EClass) ePackage.getEClassifier("LogicalFunction"), null, AlignmentStatus.NO_EQUIVALENT, List.of())));
 
-        assertThat(report.concreteMetaclassCount()).isEqualTo(2);
         assertThat(report.partialMetaclassCount()).isEqualTo(1);
         assertThat(report.unmappedMetaclassCount()).isEqualTo(1);
         assertThat(report.mappedMetaclassCount()).isZero();

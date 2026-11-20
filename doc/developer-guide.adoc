@@ -263,42 +263,12 @@ The curated 17-entry WIP-derived backlog and the complete generated candidate in
 
 === Semantic Mapping Coverage Reports
 
-Every successful product transformation writes deterministic reports to:
+Every successful transformation writes two Markdown reports under `OUTPUT_DIRECTORY/.capella2sysmlv2/`.
 
-[source,text]
-----
-OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.json
-OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.md
-----
+* `transformation-instance-report.md` records the input model coverage, diagnostics and Arcadia library usage for the run. The CLI prints the same input model coverage and the error count.
+* `transformation-meta-report.md` describes Capella metaclass and feature mappings, alignments and the Arcadia library concept assessment. Each library concept is classified as implemented, a backlog candidate, explicitly not mapped, or unassessed.
 
-Both reports contain these sections:
-
-`Capella Transformation Coverage`::
-Inventories semantic Capella packages contributed through `org.eclipse.emf.ecore.generated_package` whose namespace URI starts with `http://www.polarsys.org/capella/core/` or `http://www.polarsys.org/capella/common/`.
-The application resolves each URI through `EPackage.Registry.INSTANCE` and inventories every `EClass` and its `EAllStructuralFeatures`.
-The current Capella 7.0.1 baseline is 22 packages and 396 EClasses.
-Metaclass metrics use concrete metaclasses as their denominator.
-The report distinguishes metaclasses with any registered mapper from complete mappers, for which every applicable structural feature is explicitly mapped or ignored.
-Mapped-feature coverage counts mapped declarations; addressed-feature coverage counts mapped plus explicitly ignored declarations; both use all applicable structural feature slots on concrete metaclasses as their denominator.
-
-`Arcadia SysML v2 Library Utilization`::
-Inventories named reusable elements reachable from the `Arcadia` `LibraryPackage` only through public `OwningMembership` paths.
-Definitions are eligible concepts and Features are eligible features, deduplicated by model identity and qualified name.
-Arcadia 0.0.3 currently contributes 14 concepts and 28 features.
-Utilization counts the eligible elements explicitly declared by implemented mapper metadata.
-Standard SysML targets such as `SysML::Element::declaredName` are not Arcadia features.
-Every declared Arcadia reference must resolve in the inventory or report generation fails the transformation.
-
-`Arcadia SysML v2 Library Coverage of Capella`::
-Uses an alignment catalog independent from the mapper registry.
-Entries have `CONFIRMED`, `CANDIDATE`, `SYSML_STANDARD`, `NO_EQUIVALENT`, or `UNASSESSED` status.
-The main metric counts only confirmed metaclass alignments over all concrete Capella metaclasses; candidate backlog entries do not count as mappers or confirmed coverage.
-Feature alignments and the unassessed metaclass count are reported separately.
-
-Coverage values are observations only. The build defines no threshold or regression gate.
-`TransformationSummary.arcadiaConcepts()` also partitions the loaded library definitions into implemented concepts, backlog candidates, explicit non-mapping decisions (with reasons), and unassessed concepts.
-The command prints assessed coverage and the four counts, followed by any unassessed concept names.
-Linux and Windows smoke jobs append the Markdown report to the GitHub step summary and upload both formats as qualification evidence.
+Mapper declarations that reference an unknown Arcadia concept or feature cause report generation to fail.
 
 == Release Automation
 
@@ -327,7 +297,7 @@ The workflow performs the following operations:
 . renames the archives to stable public asset names;
 . runs the IFE scenario from the Linux archive without `DISPLAY`;
 . runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary, Arcadia references, and Java 21 runtime;
+. verifies input model coverage and the error count, Arcadia references, and Java 21 runtime;
 . uploads diagnostic logs after failures;
 . creates the GitHub Release for tags only and only after every preceding job succeeds.
 
