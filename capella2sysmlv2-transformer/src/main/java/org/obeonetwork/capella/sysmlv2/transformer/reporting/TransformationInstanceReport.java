@@ -32,6 +32,25 @@ public record TransformationInstanceReport(List<ElementOutcome> elements,
     }
 
     /**
+     * Returns the input model coverage sentence shared by the CLI and the instance report.
+     */
+    public String coverageSummary(TransformationCoverageReport meta) {
+        long transformable = 0;
+        long mapped = 0;
+        for (var element : this.elements) {
+            if (!meta.isUnsupported(element.sourceType())) {
+                transformable++;
+                if (element.status() == ElementMappingOutcome.MAPPED) {
+                    mapped++;
+                }
+            }
+        }
+        var coverage = new CoverageMetric(mapped, transformable);
+        return "Transformed " + mapped + " of " + transformable + " transformable elements ("
+                + coverage.formattedPercentage() + "). Total source elements: " + this.elements.size() + ".";
+    }
+
+    /**
      * Mutually exclusive outcomes for a source element.
      */
     public enum ElementMappingOutcome {

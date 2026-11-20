@@ -139,19 +139,15 @@ For the IFE sample, a successful execution reports:
 
 [source,text]
 ----
-Transformation completed
-Source LogicalComponent count: 23
-Generated PartUsage count: 23
+Starting reporting workflow
+Created instance report: /path/to/output/.capella2sysmlv2/transformation-instance-report.md
+Created meta report: /path/to/output/.capella2sysmlv2/transformation-meta-report.md
+Reporting workflow completed
+Transformed <mapped> of <transformable> transformable elements (<percentage>%). Total source elements: <total>.
 Errors: 0
-Capella Transformation Coverage: <mapped>/<concrete> (<percentage>%)
-Arcadia SysML v2 Library Utilization: <used>/<eligible> (<percentage>%)
-Arcadia SysML v2 Library Coverage of Capella: <confirmed>/<concrete> (<percentage>%)
-Arcadia Library Concept Assessment: <assessed>/<declared> (<percentage>%)
-  Implemented: <count>, candidates: <count>, explicit non-mappings: <count>, unassessed: <count>
-XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
 ----
 
-Concepts are discovered from the bundled Arcadia library. Assessed concepts include implemented mappings, backlog candidates and explicit non-mapping decisions; this percentage does not measure implementation completeness. Any unassessed concept names are also printed.
+The meta report contains the Arcadia library concept assessment and lists unassessed concepts.
 
 == Output
 

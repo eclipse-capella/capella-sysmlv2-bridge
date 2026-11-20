@@ -65,18 +65,18 @@ public final class TransformationCoverageAnalyzer {
 
         var metaclassCoverages = analyzeCapella(packages, mappers);
 
-        ArcadiaUtilizationCoverage utilization;
+        List<ArcadiaElementCoverage> concepts;
         if (arcadiaLibraryRoots.isEmpty()) {
-            utilization = emptyArcadiaUtilization();
+            concepts = List.of();
         } else {
-            utilization = analyzeArcadiaUtilization(new ArcadiaLibraryInventory().inspect(arcadiaLibraryRoots), mappers);
+            concepts = analyzeArcadiaConcepts(new ArcadiaLibraryInventory().inspect(arcadiaLibraryRoots), mappers);
         }
 
         var alignments = expandAlignments(metaclassCoverages, alignmentCatalog);
 
         analyzeContradictoryStatus(metaclassCoverages, alignments);
 
-        return new TransformationCoverageReport(metaclassCoverages, utilization,
+        return new TransformationCoverageReport(metaclassCoverages, concepts,
                 new ArcadiaLibraryInventory().concreteDefinitionNames(arcadiaLibraryRoots),
                 alignments);
     }
@@ -92,10 +92,6 @@ public final class TransformationCoverageAnalyzer {
                 .ifPresent(coverage -> {
                     throw new IllegalArgumentException("Implemented mapper cannot have NO_EQUIVALENT alignment: " + coverage.metaclass());
                 });
-    }
-
-    private static ArcadiaUtilizationCoverage emptyArcadiaUtilization() {
-        return new ArcadiaUtilizationCoverage(List.of(), List.of());
     }
 
     private static List<MetaclassCoverage> analyzeCapella(Collection<? extends EPackage> packages,
@@ -189,7 +185,7 @@ public final class TransformationCoverageAnalyzer {
         return new MetaclassCoverage(metaclass, status, mapper.getClass().getName(), mapper.getTargetQualifiedName(), mapped, ignored, remaining, featureTargets);
     }
 
-    private static ArcadiaUtilizationCoverage analyzeArcadiaUtilization(List<ArcadiaElementDescriptor> inventory, Collection<? extends ElementMapper<?, ?>> mappers) {
+    private static List<ArcadiaElementCoverage> analyzeArcadiaConcepts(List<ArcadiaElementDescriptor> inventory, Collection<? extends ElementMapper<?, ?>> mappers) {
         var usedConcepts = mappers.stream()
                 .map(ElementMapper::getTargetQualifiedName)
                 .filter(target -> target.startsWith("Arcadia::"))
@@ -212,17 +208,10 @@ public final class TransformationCoverageAnalyzer {
         validateArcadiaReferences("concept", usedConcepts, conceptsByName.keySet());
         validateArcadiaReferences("feature", usedFeatures, featuresByName.keySet());
 
-        var concepts = conceptsByName.values().stream()
+        return conceptsByName.values().stream()
                 .sorted(Comparator.comparing(ArcadiaElementDescriptor::qualifiedName))
                 .map(element -> new ArcadiaElementCoverage(element, usedConcepts.contains(element.qualifiedName())))
                 .toList();
-
-        var features = featuresByName.values().stream()
-                .sorted(Comparator.comparing(ArcadiaElementDescriptor::qualifiedName))
-                .map(element -> new ArcadiaElementCoverage(element, usedFeatures.contains(element.qualifiedName())))
-                .toList();
-
-        return new ArcadiaUtilizationCoverage(concepts, features);
     }
 
     private static Map<String, String> featureTargets(ElementMapper<?, ?> mapper) {
