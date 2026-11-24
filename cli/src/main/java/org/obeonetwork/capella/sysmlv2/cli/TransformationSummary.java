@@ -14,7 +14,8 @@ package org.obeonetwork.capella.sysmlv2.cli;
 
 import java.util.Objects;
 
-public record TransformationSummary(String inputModelCoverage, int errorCount) {
+public record TransformationSummary(String inputModelCoverage, int errorCount,
+        long generatedElementCount, long generatedElementCountExcludingDefaultStructure) {
 
     public TransformationSummary {
         Objects.requireNonNull(inputModelCoverage, "inputModelCoverage must not be null");
