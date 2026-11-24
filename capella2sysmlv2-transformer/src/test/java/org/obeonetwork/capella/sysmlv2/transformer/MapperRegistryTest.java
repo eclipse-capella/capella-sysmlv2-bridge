@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
@@ -59,7 +60,7 @@ class MapperRegistryTest {
 
             @Override
             public List<FeatureMapping<EPackage>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("name", "name", (source, actualContext) -> {
+                return List.of(new FeatureMapping<>(EcorePackage.Literals.ENAMED_ELEMENT__NAME, "name", (source, actualContext) -> {
                     assertThat(actualContext).isSameAs(context);
                     calls.add("features " + source.getName());
                 }));

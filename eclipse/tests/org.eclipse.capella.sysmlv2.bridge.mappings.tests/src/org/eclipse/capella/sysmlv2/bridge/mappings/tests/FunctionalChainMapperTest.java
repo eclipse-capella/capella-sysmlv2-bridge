@@ -14,14 +14,6 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_REALIZED_BY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_DESCRIPTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_NAME;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OWNED_SEQUENCE_LINKS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OWNED_SEQUENCE_NODES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_POST_CONDITION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_PRE_CONDITION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -49,6 +41,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCover
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
+import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
+import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.ctx.CtxFactory;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
@@ -319,16 +313,25 @@ class FunctionalChainMapperTest {
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
         assertEquals(ARCADIA_FUNCTIONAL_CHAIN, alignments.getFirst().target());
         assertTrue(alignments.getFirst().featureAlignments().stream()
-                .anyMatch(value -> value.sourceFeature().equals(CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES)));
+                .anyMatch(value -> value.sourceFeature().equals(
+                        FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONAL_EXCHANGES.getName())));
         var report = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, OaPackage.eINSTANCE),
                 List.of(new FunctionalChainMapper()), List.of(), CapellaMapperCatalog.getAlignmentCatalog().stream()
                         .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_CHAIN
                                 || value.sourceType() == OaPackage.Literals.OPERATIONAL_PROCESS)
                         .toList());
         var coverage = report.metaclassCoverages().stream().filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_CHAIN).findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(List.of(CAPELLA_NAME, CAPELLA_DESCRIPTION, CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES)));
-        assertTrue(coverage.remainingFeatures().containsAll(List.of(CAPELLA_INVOLVED_FUNCTIONS, CAPELLA_OWNED_SEQUENCE_NODES, CAPELLA_OWNED_SEQUENCE_LINKS)));
-        assertTrue(coverage.ignoredFeatures().containsAll(List.of(CAPELLA_PRE_CONDITION, CAPELLA_POST_CONDITION)));
+        assertTrue(coverage.mappedFeatures().containsAll(List.of(
+                ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME.getName(),
+                CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION.getName(),
+                FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONAL_EXCHANGES.getName())));
+        assertTrue(coverage.remainingFeatures().containsAll(List.of(
+                FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONS.getName(),
+                FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_SEQUENCE_NODES.getName(),
+                FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_SEQUENCE_LINKS.getName())));
+        assertTrue(coverage.ignoredFeatures().containsAll(List.of(
+                FaPackage.Literals.FUNCTIONAL_CHAIN__PRE_CONDITION.getName(),
+                FaPackage.Literals.FUNCTIONAL_CHAIN__POST_CONDITION.getName())));
     }
 
     private static org.polarsys.capella.core.data.fa.FunctionalChainInvolvementFunction involveFunction(FunctionalChain chain, AbstractFunction function) {

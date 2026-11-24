@@ -137,7 +137,7 @@ public final class CapellaMapperCatalog {
 
     private static MetaclassAlignment alignment(ElementMapper<?, ?> mapper) {
         var features = mapper.getFeatureMappings().stream()
-                .sorted(java.util.Comparator.comparing(FeatureMapping::getCapellaFeature))
+                .sorted(java.util.Comparator.comparing(feature -> feature.getCapellaFeature().getName()))
                 .map(feature -> {
                     AlignmentStatus alignment;
                     if (feature.getSysmlFeature().startsWith(ARCADIA_PREFIX)) {
@@ -145,7 +145,7 @@ public final class CapellaMapperCatalog {
                     } else {
                         alignment = AlignmentStatus.SYSML_STANDARD;
                     }
-                    return new FeatureAlignment(feature.getCapellaFeature(), feature.getSysmlFeature(), alignment);
+                    return new FeatureAlignment(feature.getCapellaFeature().getName(), feature.getSysmlFeature(), alignment);
                 })
                 .toList();
         return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTargetQualifiedName(), AlignmentStatus.CONFIRMED, features);

@@ -13,7 +13,6 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.pa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_KIND;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +29,7 @@ import org.eclipse.syson.sysml.PartUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 /**
@@ -97,9 +97,8 @@ public final class PhysicalComponentMapper extends ElementMapper<PhysicalCompone
         return Stream.of(
                 FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES,
                 FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE,
-                List.of(CAPELLA_KIND))
+                List.of(PaPackage.Literals.PHYSICAL_COMPONENT__KIND.getName()))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-
     }
 }

@@ -31,6 +31,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.fa.FunctionInputPort;
 import org.polarsys.capella.core.data.fa.FunctionOutputPort;
 import org.polarsys.capella.core.data.fa.FunctionPort;
@@ -56,9 +57,9 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
 
     @Override
     public List<FeatureMapping<S>> getFeatureMappings() {
-        var capellaFeature = MapperConstants.CAPELLA_OUTGOING_EXCHANGE;
+        var capellaFeature = FaPackage.Literals.FUNCTION_OUTPUT_PORT__OUTGOING_EXCHANGE_ITEMS;
         if (direction == FeatureDirectionKind.IN) {
-            capellaFeature = MapperConstants.CAPELLA_INCOMING_EXCHANGE;
+            capellaFeature = FaPackage.Literals.FUNCTION_INPUT_PORT__INCOMING_EXCHANGE_ITEMS;
         }
         var itemBindings = Stream.of(new FeatureMapping<S>(capellaFeature, MapperConstants.SYSML_FEATURE_VALUE, this::mapExchangeItems));
         return Stream.concat(itemBindings, Stream.concat(
