@@ -35,8 +35,8 @@ Build and contribution instructions are maintained in link:developer-guide.adoc[
 |SysON
 |2026.9.6
 
-|Arcadia SysML v2 library
-|`capella-for-syson` repository `arcadia/library/arcadia.json`
+|Capella for SysON services and Arcadia SysML v2 library
+|2026.9.5. The library is packaged as `arcadia/library/arcadia.json` in the `capella-application-configuration` JAR.
 
 |Maven
 |3.9 or later

@@ -56,7 +56,8 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
-The Eclipse application build downloads `arcadia.json` from the `main` branch of the Capella for SysON repository into the application bundle.
+The Eclipse application build bundles `arcadia/library/arcadia.json` from the released `org.eclipse.capella:capella-application-configuration` JAR.
+The root POM selects Capella for SysON `2026.9.5` for both the library and the Capella services through `capella-for-syson.version`, alongside SysON `2026.9.6`.
 
 == Repository Structure
 
