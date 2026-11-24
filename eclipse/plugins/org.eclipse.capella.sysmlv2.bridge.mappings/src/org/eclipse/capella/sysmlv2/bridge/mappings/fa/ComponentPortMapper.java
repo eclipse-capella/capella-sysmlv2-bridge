@@ -16,6 +16,8 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_PORT_DIRECTION;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,6 +41,9 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.fa.FunctionPort;
+import org.polarsys.capella.core.data.information.InformationPackage;
+import org.polarsys.capella.core.data.information.PortAllocation;
 
 /**
  * Maps a Capella {@link ComponentPort} to an Arcadia component port.
@@ -60,7 +65,7 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
         var componentPortMappings = Stream.of(
                 new DocumentingMapping<ComponentPort>(FaPackage.Literals.COMPONENT_PORT__ORIENTATION, ARCADIA_COMPONENT_PORT_DIRECTION),
                 new FeatureMapping<ComponentPort>(
-                        FaPackage.Literals.COMPONENT_PORT__ALLOCATED_FUNCTION_PORTS, ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS, this::mapAllocatedFunctionPorts));
+                        InformationPackage.Literals.PORT__OWNED_PORT_ALLOCATIONS, ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS, this::mapAllocatedFunctionPorts));
 
         var arcadiaElementMapping = FeatureMappingCatalog.<ComponentPort> getArcadiaElementMappings().stream();
 
@@ -107,16 +112,29 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
     }
 
     private void mapAllocatedFunctionPorts(ComponentPort source, TransformationContext context) {
-        var allocatedFunctionPorts = source.getAllocatedFunctionPorts().stream()
-                .map(context.traceability()::lookupTarget)
-                .flatMap(Optional::stream)
-                .filter(ItemUsage.class::isInstance)
-                .map(Feature.class::cast)
-                .toList();
+        var traceability = context.traceability();
+        var mappedAllocations = new LinkedHashMap<PortAllocation, Feature>();
+        // The outgoing view preserves the source endpoint and order used by allocatedFunctionPorts.
+        source.getOutgoingPortAllocations().forEach(allocation -> {
+            if (!(allocation.getTargetElement() instanceof FunctionPort functionPort)) {
+                return;
+            }
+            var resolvedPort = Optional.of(functionPort).filter(port -> !port.eIsProxy());
+            if (resolvedPort.filter(traceability::isSkipped).isPresent()) {
+                traceability.skip(allocation);
+                return;
+            }
+            resolvedPort.flatMap(traceability::lookupTarget)
+                    .filter(ItemUsage.class::isInstance)
+                    .map(Feature.class::cast)
+                    .ifPresentOrElse(target -> mappedAllocations.put(allocation, target),
+                            () -> traceability.unregister(allocation));
+        });
 
         COMMON_UPDATE_SERVICE.setFeatureReferenceValues(
-                MapperUtils.require(context.traceability(), source, PortUsage.class), ARCADIA_COMPONENT_PORT,
-                "allocatedFunctionPorts", allocatedFunctionPorts, SysmlPackage.eINSTANCE.getItemUsage());
+                MapperUtils.require(traceability, source, PortUsage.class), ARCADIA_COMPONENT_PORT,
+                "allocatedFunctionPorts", new ArrayList<>(mappedAllocations.values()), SysmlPackage.eINSTANCE.getItemUsage());
+        mappedAllocations.keySet().forEach(traceability::markMapped);
     }
 
 }

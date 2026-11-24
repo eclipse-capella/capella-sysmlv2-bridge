@@ -33,8 +33,9 @@ public final class CapabilityRealizationMapper extends AbstractCapabilityMapper<
 
     @Override
     protected FeatureMapping<CapabilityRealization> getConcreteCapabilityMapping() {
-        return new FeatureMapping<>(LaPackage.Literals.CAPABILITY_REALIZATION__INVOLVED_COMPONENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
-                (source, context) -> mapReferences(source, source.getInvolvedComponents(),
+        return FeatureMapping.forReferencedElements(LaPackage.Literals.CAPABILITY_REALIZATION__OWNED_CAPABILITY_REALIZATION_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedComponents(), source.getOwnedCapabilityRealizationInvolvements(),
                         ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }

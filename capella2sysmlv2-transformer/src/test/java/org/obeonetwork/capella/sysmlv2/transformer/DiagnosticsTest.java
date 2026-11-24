@@ -59,7 +59,7 @@ class DiagnosticsTest {
                 .isEqualTo(diagnostic.message() + " [Source: 'Logical Architecture › Structure › Engine | control' (id: component-id)]"));
         var report = new TransformationInstanceReportRenderer().render(
                 new TransformationInstanceReport(List.of(), diagnostics, Set.of()),
-                TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of()),
+                TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of(), null),
                 new RunMetadata("Model", Instant.EPOCH, "input", Optional.empty()));
         assertThat(report).contains("Warning message", "Error message", "id: component-id",
                 "\\[Source: 'Logical Architecture › Structure › Engine \\| control' (id: component-id)\\]");

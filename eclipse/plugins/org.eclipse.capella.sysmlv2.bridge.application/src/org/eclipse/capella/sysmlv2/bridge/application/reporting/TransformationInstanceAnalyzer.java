@@ -14,6 +14,8 @@ package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,11 +28,13 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Definition;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.DiagnosticSeverity;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementMappingOutcome;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementOutcome;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 
 /**
@@ -55,16 +59,21 @@ public final class TransformationInstanceAnalyzer {
      * Captures reporting data before target export can unload the generated model.
      */
     public static TransformationInstanceReport analyze(ModelTransformation transformation, TransformationCoverageReport meta) {
+        var mapperRegistry = new MapperRegistry(transformation.mappers());
+        var traceability = transformation.result().traceability();
         var diagnostics = new ArrayList<>(transformation.result().diagnostics());
+        var sourcesWithErrors = Collections.newSetFromMap(new IdentityHashMap<EObject, Boolean>());
+        diagnostics.stream()
+                .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)
+                .map(TransformationDiagnostic::source)
+                .forEach(sourcesWithErrors::add);
 
         var elements = transformation.sources().stream()
                 .distinct()
                 .map(source -> {
-                    var status = status(source, transformation, meta);
-                    if (status == ElementMappingOutcome.ERROR &&
-                            diagnostics.stream()
-                                    .noneMatch(diagnostic -> diagnostic.source() == source && diagnostic.severity() == DiagnosticSeverity.ERROR)) {
-                        diagnostics.add(TransformationDiagnostic.error(source, "Mapper produced neither a target nor an intentional skip"));
+                    var status = status(source, traceability, meta, mapperRegistry, sourcesWithErrors.contains(source));
+                    if (status == ElementMappingOutcome.ERROR && sourcesWithErrors.add(source)) {
+                        diagnostics.add(TransformationDiagnostic.error(source, "Mapping produced neither a result nor an intentional skip"));
                     }
                     return new ElementOutcome(source.eClass(), perspective(source), modelPackage(source), status);
                 }).toList();
@@ -91,22 +100,21 @@ public final class TransformationInstanceAnalyzer {
         return Stream.ofNullable(value);
     }
 
-    private static ElementMappingOutcome status(EObject source, ModelTransformation transformation, TransformationCoverageReport meta) {
-        if (transformation.result().diagnostics().stream().anyMatch(diagnostic -> diagnostic.source() == source
-                && diagnostic.severity() == DiagnosticSeverity.ERROR)) {
+    private static ElementMappingOutcome status(EObject source, Traceability traceability, TransformationCoverageReport meta,
+            MapperRegistry mapperRegistry, boolean hasError) {
+        if (hasError) {
             return ElementMappingOutcome.ERROR;
         }
-        var traceability = transformation.result().traceability();
         if (traceability.isSkipped(source)) {
             return ElementMappingOutcome.SKIPPED;
         }
-        if (traceability.contains(source)) {
+        if (traceability.isMapped(source)) {
             return ElementMappingOutcome.MAPPED;
         }
         if (meta.isUnsupported(source.eClass())) {
             return ElementMappingOutcome.UNSUPPORTED;
         }
-        if (traceability.isExcluded(source) || transformation.mappers().stream().anyMatch(mapper -> mapper.getSourceClass().isInstance(source))) {
+        if (traceability.isExcluded(source) || mapperRegistry.get(source).isPresent()) {
             return ElementMappingOutcome.ERROR;
         }
         return ElementMappingOutcome.NOT_IMPLEMENTED;

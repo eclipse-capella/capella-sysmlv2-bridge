@@ -14,6 +14,7 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE;
+import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_EXCHANGE_ITEM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
@@ -107,7 +108,7 @@ class CapellaMapperCatalogTest {
                 .anyMatch(feature -> feature.sourceFeature().equals(endpoint)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD)));
         var report = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE),
-                List.of(new FunctionalExchangeMapper()), List.of(), List.of(alignment));
+                List.of(new FunctionalExchangeMapper()), List.of(), List.of(alignment), ModellingcorePackage.Literals.ABSTRACT_TRACE);
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
@@ -121,20 +122,22 @@ class CapellaMapperCatalogTest {
 
     @Test
     void componentExchangesHaveConfirmedAlignment() {
+        var ownedAllocations = FaPackage.Literals.COMPONENT_EXCHANGE__OWNED_COMPONENT_EXCHANGE_FUNCTIONAL_EXCHANGE_ALLOCATIONS.getName();
         var alignments = CapellaMapperCatalog.getAlignmentCatalog().stream()
                 .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList();
         assertEquals(1, alignments.size());
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
         assertEquals(ARCADIA_COMPONENT_EXCHANGE, alignments.getFirst().target());
         assertTrue(alignments.getFirst().featureAlignments().stream()
-                .anyMatch(feature -> feature.sourceFeature().equals(
-                        FaPackage.Literals.COMPONENT_EXCHANGE__ALLOCATED_FUNCTIONAL_EXCHANGES.getName())));
+                .anyMatch(feature -> feature.sourceFeature().equals(ownedAllocations)
+                        && feature.target().equals(ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES)));
         assertTrue(CapellaMapperCatalog.backlogByPackage().values().stream().flatMap(List::stream)
                 .noneMatch(entry -> entry.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE));
 
         var report = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE),
                 List.of(new ComponentExchangeMapper()), List.of(), CapellaMapperCatalog.getAlignmentCatalog().stream()
-                        .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList());
+                        .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList(),
+                ModellingcorePackage.Literals.ABSTRACT_TRACE);
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.COMPONENT_EXCHANGE).findFirst().orElseThrow();
         assertTrue(coverage.featureTargets().keySet().containsAll(List.of(
@@ -142,8 +145,9 @@ class CapellaMapperCatalogTest {
                 ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__TARGET.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT.getName(),
-                ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS.getName(),
-                FaPackage.Literals.COMPONENT_EXCHANGE__ALLOCATED_FUNCTIONAL_EXCHANGES.getName())));
+                ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS.getName())));
+        assertEquals(ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES, coverage.featureTargets().get(ownedAllocations));
+        assertTrue(report.implementedTypes().contains(FaPackage.Literals.COMPONENT_EXCHANGE_FUNCTIONAL_EXCHANGE_ALLOCATION));
         for (var feature : List.of(
                 FaPackage.Literals.COMPONENT_EXCHANGE__KIND.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__CATEGORIES.getName())) {
@@ -165,18 +169,18 @@ class CapellaMapperCatalogTest {
     }
 
     @Test
-    void newCapabilityAlignmentsIncludeTheirComponentAccessors() {
+    void capabilityAlignmentsIncludeTheirOwnedInvolvements() {
         var expected = java.util.Map.of(
-                org.polarsys.capella.core.data.oa.OaPackage.Literals.OPERATIONAL_CAPABILITY, "involvedEntities",
-                org.polarsys.capella.core.data.la.LaPackage.Literals.CAPABILITY_REALIZATION, "involvedComponents");
+                CtxPackage.Literals.CAPABILITY, "ownedCapabilityInvolvements",
+                org.polarsys.capella.core.data.oa.OaPackage.Literals.OPERATIONAL_CAPABILITY, "ownedEntityOperationalCapabilityInvolvements",
+                org.polarsys.capella.core.data.la.LaPackage.Literals.CAPABILITY_REALIZATION, "ownedCapabilityRealizationInvolvements");
         expected.forEach((sourceType, componentFeature) -> {
             var alignment = CapellaMapperCatalog.getAlignmentCatalog().stream()
                     .filter(value -> value.sourceType() == sourceType).findFirst().orElseThrow();
             assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
             assertEquals("Arcadia::Capability", alignment.target());
-            for (var feature : List.of(componentFeature, "involvedAbstractFunctions", "involvedFunctionalChains")) {
-                assertTrue(alignment.featureAlignments().stream().anyMatch(value -> value.sourceFeature().equals(feature)));
-            }
+            List.of(componentFeature, "ownedAbstractFunctionAbstractCapabilityInvolvements", "ownedFunctionalChainAbstractCapabilityInvolvements")
+                    .forEach(feature -> assertTrue(alignment.featureAlignments().stream().anyMatch(value -> value.sourceFeature().equals(feature))));
         });
     }
 

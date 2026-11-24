@@ -46,6 +46,7 @@ import org.obeonetwork.capella.sysmlv2.cli.TransformationRequest;
 import org.obeonetwork.capella.sysmlv2.loader.ModelLoadRequest;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.polarsys.capella.core.data.fa.FaFactory;
+import org.polarsys.capella.core.data.information.InformationFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
@@ -61,6 +62,10 @@ class ApplicationServicesTest {
         functions.getOwnedLogicalFunctions().add(function);
         var chain = FaFactory.eINSTANCE.createFunctionalChain();
         function.getOwnedFunctionalChains().add(chain);
+        var realization = FaFactory.eINSTANCE.createFunctionalChainRealization();
+        realization.setSourceElement(chain);
+        realization.setTargetElement(FaFactory.eINSTANCE.createFunctionalChain());
+        chain.getOwnedFunctionalChainRealizations().add(realization);
         var records = new ArrayList<LogRecord>();
         var handler = new Handler() {
             @Override
@@ -84,6 +89,7 @@ class ApplicationServicesTest {
             var transformation = ModelTransformationUtils.transform(architecture, "Warnings");
             assertEquals(0, transformation.errorCount());
             assertTrue(transformation.result().traceability().isSkipped(chain));
+            assertTrue(transformation.result().traceability().isSkipped(realization));
             assertEquals(1, records.stream().filter(logRecord -> logRecord.getLevel() == Level.WARNING
                     && logRecord.getMessage().contains("no involved functional exchanges")).count());
         } finally {
@@ -179,6 +185,28 @@ class ApplicationServicesTest {
         assertTrue(coverageReport.contains("#### Explicit non-mappings"));
         assertTrue(coverageReport.contains("#### Unassessed\n\n- Arcadia::NewConcept\n"));
         assertTrue(coverageReport.contains("#### Candidates\n\n- Arcadia::Mission\n"));
+    }
+
+    @Test
+    void reportingServiceBlocksExportForMalformedMappedRealization(@TempDir Path outputDirectory) throws IOException {
+        var architecture = logicalArchitectureContaining(LaFactory.eINSTANCE.createLogicalComponent());
+        var data = InformationFactory.eINSTANCE.createDataPkg();
+        architecture.setOwnedDataPkg(data);
+        var item = InformationFactory.eINSTANCE.createExchangeItem();
+        data.getOwnedExchangeItems().add(item);
+        var realization = InformationFactory.eINSTANCE.createInformationRealization();
+        realization.setSourceElement(item);
+        item.getOwnedInformationRealizations().add(realization);
+        var transformation = ModelTransformationUtils.transform(architecture, "InvalidRealization");
+        var input = Files.writeString(outputDirectory.resolve("input.zip"), "input archive");
+
+        var exception = assertThrows(IllegalStateException.class, () -> TransformationReportingUtils.generate(
+                transformation, new TransformationRequest(input, outputDirectory), Instant.now()));
+
+        assertEquals("Transformation produced 1 error diagnostic(s)", exception.getMessage());
+        assertFalse(Files.exists(outputDirectory.resolve("InvalidRealization.sysml.xmi")));
+        var report = Files.readString(outputDirectory.resolve(".capella2sysmlv2/transformation-instance-report.md"));
+        assertTrue(report.contains("Mapping produced neither a result nor an intentional skip"));
     }
 
     @Test

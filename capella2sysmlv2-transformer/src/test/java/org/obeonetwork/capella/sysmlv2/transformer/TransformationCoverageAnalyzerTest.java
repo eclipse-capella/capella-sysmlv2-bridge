@@ -47,11 +47,15 @@ class TransformationCoverageAnalyzerTest {
         interfaceType.setName("Contract");
         interfaceType.setInterface(true);
         ePackage.getEClassifiers().add(interfaceType);
-        var mapper = mapper(TestMetamodels.LogicalComponent.class, componentName(ePackage));
+        var allocatedFunctions = EcoreFactory.eINSTANCE.createEReference();
+        allocatedFunctions.setName("allocatedFunctions");
+        allocatedFunctions.setEType(logicalFunction);
+        logicalComponent.getEStructuralFeatures().add(allocatedFunctions);
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, componentName(ePackage), allocatedFunctions);
 
         var report = TransformationCoverageAnalyzer
                 .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(new MetaclassAlignment(
-                        logicalFunction, null, AlignmentStatus.NO_EQUIVALENT, List.of())));
+                        logicalFunction, null, AlignmentStatus.NO_EQUIVALENT, List.of())), logicalComponent);
 
         assertThat(report.implementedTypes()).containsExactly(logicalComponent);
         assertThat(coverageFor(report, "AbstractLogicalComponent").isConcreteMetaclass()).isFalse();
@@ -61,7 +65,7 @@ class TransformationCoverageAnalyzerTest {
         assertThat(coverageFor(report, "LogicalComponent"))
                 .satisfies(coverage -> {
                     assertThat(coverage.implemented()).isTrue();
-                    assertThat(coverage.featureTargets()).containsOnlyKeys("name");
+                    assertThat(coverage.featureTargets()).containsOnlyKeys("allocatedFunctions", "name");
                     assertThat(coverage.ignoredFeatures()).isEmpty();
                 });
         assertThat(coverageFor(report, "LogicalFunction").implemented()).isFalse();
@@ -77,7 +81,7 @@ class TransformationCoverageAnalyzerTest {
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer
-                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
+                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(), null))
                 .withMessageContaining("Mapped feature name does not belong to LogicalComponent");
     }
 
@@ -90,7 +94,7 @@ class TransformationCoverageAnalyzerTest {
         var mapper = mapper(TestMetamodels.LogicalComponent.class, componentName(firstPackage));
 
         var report = TransformationCoverageAnalyzer.analyze(List.of(firstPackage, secondPackage),
-                List.of(mapper), List.of(), List.of());
+                List.of(mapper), List.of(), List.of(), null);
 
         assertThat(report.implementedTypes()).containsExactly(TestMetamodels.eClass(firstPackage, "LogicalComponent"));
         assertThat(report.metaclassCoverages().getFirst().metaclass().getEPackage()).isSameAs(secondPackage);
@@ -104,9 +108,9 @@ class TransformationCoverageAnalyzerTest {
         var directMapper = mapper(TestMetamodels.LogicalComponent.class, component.getEStructuralFeature("ownedLogicalComponents"));
 
         var inheritedFirst = TransformationCoverageAnalyzer.analyze(List.of(ePackage), List.of(inheritedMapper, directMapper),
-                List.of(), List.of());
+                List.of(), List.of(), null);
         var directFirst = TransformationCoverageAnalyzer.analyze(List.of(ePackage), List.of(directMapper, inheritedMapper),
-                List.of(), List.of());
+                List.of(), List.of(), null);
 
         assertThat(inheritedFirst.implementedTypes()).containsExactly(component);
         assertThat(coverageFor(inheritedFirst, "LogicalComponent").featureTargets()).containsOnlyKeys("name");
@@ -120,7 +124,7 @@ class TransformationCoverageAnalyzerTest {
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer.analyze(
-                        List.of(ePackage), List.of(mapper, mapper), List.of(), List.of()))
+                        List.of(ePackage), List.of(mapper, mapper), List.of(), List.of(), null))
                 .withMessageContaining("Duplicate mapper");
     }
 
@@ -131,7 +135,7 @@ class TransformationCoverageAnalyzerTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer.analyze(
                         List.of(TestMetamodels.logicalArchitecture()),
-                        List.of(mapper), List.of(), List.of()))
+                        List.of(mapper), List.of(), List.of(), null))
                 .withMessageContaining("absent from the metamodel");
     }
 
@@ -143,7 +147,7 @@ class TransformationCoverageAnalyzerTest {
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer
-                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
+                        .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(), null))
                 .withMessageContaining("both mapped and ignored");
     }
 

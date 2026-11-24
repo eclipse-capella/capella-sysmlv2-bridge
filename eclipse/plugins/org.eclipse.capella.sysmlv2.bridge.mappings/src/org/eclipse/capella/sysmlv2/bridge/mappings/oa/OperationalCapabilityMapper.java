@@ -33,8 +33,9 @@ public final class OperationalCapabilityMapper extends AbstractCapabilityMapper<
 
     @Override
     protected FeatureMapping<OperationalCapability> getConcreteCapabilityMapping() {
-        return new FeatureMapping<>(OaPackage.Literals.OPERATIONAL_CAPABILITY__INVOLVED_ENTITIES, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
-                (source, context) -> mapReferences(source, source.getInvolvedEntities(),
+        return FeatureMapping.forReferencedElements(OaPackage.Literals.OPERATIONAL_CAPABILITY__OWNED_ENTITY_OPERATIONAL_CAPABILITY_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedEntities(), source.getOwnedEntityOperationalCapabilityInvolvements(),
                         ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }
