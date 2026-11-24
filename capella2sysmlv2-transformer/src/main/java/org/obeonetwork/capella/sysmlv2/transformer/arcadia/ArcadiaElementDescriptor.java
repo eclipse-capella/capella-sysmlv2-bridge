@@ -19,13 +19,12 @@ import java.util.Objects;
  *
  * @author Raphaël Pagé
  */
-public record ArcadiaElementDescriptor(String qualifiedName, String elementId, String sysmlType,
-        ArcadiaElementKind kind) {
+public record ArcadiaElementDescriptor(String qualifiedName, String elementId,
+        ArcadiaElementKind kind, boolean concreteDefinition) {
 
     public ArcadiaElementDescriptor {
         Objects.requireNonNull(qualifiedName, "qualifiedName must not be null");
         Objects.requireNonNull(elementId, "elementId must not be null");
-        Objects.requireNonNull(sysmlType, "sysmlType must not be null");
         Objects.requireNonNull(kind, "kind must not be null");
     }
 }
