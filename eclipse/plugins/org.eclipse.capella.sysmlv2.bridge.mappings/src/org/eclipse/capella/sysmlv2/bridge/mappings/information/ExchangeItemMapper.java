@@ -28,6 +28,7 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ItemUsage;
 import org.eclipse.syson.sysml.Package;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
@@ -70,10 +71,10 @@ public final class ExchangeItemMapper extends ElementMapper<ExchangeItem, ItemUs
     @Override
     public List<FeatureMapping<ExchangeItem>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<ExchangeItem>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new FeatureMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZED_EXCHANGE_ITEMS, ARCADIA_ELEMENT_REALIZES,
+        mappings.add(new FeatureMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__OWNED_INFORMATION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedInformationRealizations(), context.traceability())));
-        mappings.add(new FeatureMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZING_EXCHANGE_ITEMS, ARCADIA_ELEMENT_IS_REALIZED_BY,
-                (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedInformationRealizations(), context.traceability())));
+        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZED_EXCHANGE_ITEMS, ARCADIA_ELEMENT_REALIZES));
+        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZING_EXCHANGE_ITEMS, ARCADIA_ELEMENT_IS_REALIZED_BY));
         return mappings;
     }
 

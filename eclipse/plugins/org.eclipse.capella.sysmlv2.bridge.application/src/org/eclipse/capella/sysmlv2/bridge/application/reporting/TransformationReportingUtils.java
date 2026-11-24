@@ -49,6 +49,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCover
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
+import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
 
 public final class TransformationReportingUtils {
 
@@ -85,7 +86,7 @@ public final class TransformationReportingUtils {
         var report = TransformationCoverageAnalyzer.analyze(
                 CapellaSemanticPackageDiscoveryUtils.discover(),
                 transformation.mappers(), transformation.targetModel().getArcadiaLibrary(),
-                CapellaMapperCatalog.getAlignmentCatalog());
+                CapellaMapperCatalog.getAlignmentCatalog(), ModellingcorePackage.Literals.ABSTRACT_TRACE);
 
         var instance = TransformationInstanceAnalyzer.analyze(transformation, report);
         var inputChecksum = checksum(request.inputZip());

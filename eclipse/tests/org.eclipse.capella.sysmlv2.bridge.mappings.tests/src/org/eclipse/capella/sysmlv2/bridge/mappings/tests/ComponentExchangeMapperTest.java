@@ -137,11 +137,24 @@ class ComponentExchangeMapperTest {
             var result = transform(fixture);
             assertEquals(List.of(result.traceability().lookupTarget(flow).orElseThrow()),
                     QUERY.getFeatureReferenceValue(mapped(fixture.exchange(), result), "allocatedFunctionalExchanges"));
+            assertTrue(result.traceability().isMapped(allocation));
+            assertTrue(result.traceability().isMapped(duplicate));
             assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
 
-            functions.source().getOwnedFunctionalExchanges().clear();
-            var missing = transform(fixture);
-            assertTrue(missing.diagnostics().stream().anyMatch(d -> d.message().contains("allocatedFunctionalExchanges")));
+            var missing = FaFactory.eINSTANCE.createComponentExchangeFunctionalExchangeAllocation();
+            missing.setSourceElement(fixture.exchange());
+            missing.setTargetElement(FaFactory.eINSTANCE.createFunctionalExchange());
+            fixture.exchange().getOwnedComponentExchangeFunctionalExchangeAllocations().add(1, missing);
+
+            var partial = transform(fixture);
+            assertEquals(List.of(partial.traceability().lookupTarget(flow).orElseThrow()),
+                    QUERY.getFeatureReferenceValue(mapped(fixture.exchange(), partial), "allocatedFunctionalExchanges"));
+            assertTrue(partial.traceability().isMapped(allocation));
+            assertTrue(partial.traceability().isMapped(duplicate));
+            assertTrue(partial.traceability().isExcluded(missing));
+            assertEquals(1, partial.diagnostics().size());
+            assertSame(missing, partial.diagnostics().getFirst().source());
+            assertTrue(partial.diagnostics().getFirst().message().contains("allocatedFunctionalExchanges"));
         });
     }
 

@@ -77,8 +77,7 @@ class TransformationCoverageWriterTest {
         };
         var report = TransformationCoverageAnalyzer
                 .analyze(List.of(ePackage), List.of(mapper), List.of(library), List.of(
-                        new MetaclassAlignment(unsupported, null, AlignmentStatus.NO_EQUIVALENT, List.of())));
-
+                        new MetaclassAlignment(unsupported, null, AlignmentStatus.NO_EQUIVALENT, List.of())), null);
         assertThat(report.arcadiaConcepts()).extracting(coverage -> coverage.element().qualifiedName())
                 .containsExactly("Arcadia::Candidate", "Arcadia::Component", "Arcadia::ExplicitNonMapping", "Arcadia::Function", "Arcadia::Unassessed");
 
@@ -152,7 +151,7 @@ class TransformationCoverageWriterTest {
         assertThat(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)))
                 .contains("No non-derived structural features to report.")
                 .doesNotContain("| name |", "| ownedLogicalComponents |", "| Source feature |");
-        var emptyReport = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of());
+        var emptyReport = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of(), null);
         new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of()),
                 emptyReport, Map.of(), metadata, this.temporaryDirectory);
         assertInternalLinks(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.INSTANCE_FILE_NAME)));

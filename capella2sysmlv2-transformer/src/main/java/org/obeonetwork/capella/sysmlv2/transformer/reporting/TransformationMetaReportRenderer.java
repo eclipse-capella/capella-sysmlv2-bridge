@@ -103,6 +103,10 @@ public final class TransformationMetaReportRenderer {
                 .append(escape(coverage.target()))
                 .append("\n");
 
+        if (coverage.featureTargets().isEmpty() && coverage.ignoredFeatures().isEmpty()) {
+            return result.toString();
+        }
+
         var features = type.getEAllStructuralFeatures().stream()
                 .filter(feature -> !feature.isDerived())
                 .sorted(Comparator.comparing(EStructuralFeature::getName))

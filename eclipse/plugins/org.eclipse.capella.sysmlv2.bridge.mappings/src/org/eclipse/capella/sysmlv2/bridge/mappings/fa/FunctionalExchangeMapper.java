@@ -100,10 +100,10 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
                 new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__SOURCE_FUNCTION_OUTPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
                 new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__TARGET, MapperConstants.SYSML_FLOW_USAGE_TARGET),
                 new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__TARGET_FUNCTION_INPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_TARGET),
-                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OUTGOING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OWNED_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
-                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__INCOMING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OUTGOING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__INCOMING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY),
                 new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS, MapperConstants.SYSML_FLOWUSAGE_PAYLOAD, this::mapExchangedItems));
         List<FeatureMapping<FunctionalExchange>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
         return Stream.concat(arcadiaElementMappings.stream(), endpoints.stream()).toList();
