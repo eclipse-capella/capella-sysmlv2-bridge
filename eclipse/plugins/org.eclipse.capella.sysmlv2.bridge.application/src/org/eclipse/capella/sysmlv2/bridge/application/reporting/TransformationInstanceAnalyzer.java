@@ -60,8 +60,9 @@ public final class TransformationInstanceAnalyzer {
      */
     public static TransformationInstanceReport analyze(ModelTransformation transformation, TransformationCoverageReport meta) {
         var mapperRegistry = new MapperRegistry(transformation.mappers());
-        var traceability = transformation.result().traceability();
-        var diagnostics = new ArrayList<>(transformation.result().diagnostics());
+        var result = transformation.result();
+        var traceability = result.traceability();
+        var diagnostics = new ArrayList<>(result.diagnostics());
         var sourcesWithErrors = Collections.newSetFromMap(new IdentityHashMap<EObject, Boolean>());
         diagnostics.stream()
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)
@@ -80,7 +81,7 @@ public final class TransformationInstanceAnalyzer {
 
         var mapperTargets = meta.declaredLibraryClasses();
         // Derived SysML views trigger expensive semantic calculations rather than expose stored usages.
-        var used = EObjectUtils.allContents(transformation.result().root()).stream()
+        var used = EObjectUtils.allContents(result.root()).stream()
                 .flatMap(element -> element.eClass().getEAllReferences().stream()
                         .filter(reference -> !reference.isContainment() && !reference.isContainer() && !reference.isDerived())
                         .flatMap(reference -> referenceValues(element.eGet(reference, false))))
@@ -90,7 +91,8 @@ public final class TransformationInstanceAnalyzer {
                 .map(Definition::getQualifiedName)
                 .filter(mapperTargets::contains)
                 .collect(Collectors.toSet());
-        return new TransformationInstanceReport(elements, diagnostics, used);
+        return new TransformationInstanceReport(elements, diagnostics, used,
+                result.generatedElementCount(), result.generatedElementCountExcludingDefaultStructure());
     }
 
     private static Stream<?> referenceValues(Object value) {

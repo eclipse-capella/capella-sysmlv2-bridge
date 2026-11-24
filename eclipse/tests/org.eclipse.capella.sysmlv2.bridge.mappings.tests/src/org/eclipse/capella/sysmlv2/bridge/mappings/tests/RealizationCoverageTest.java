@@ -93,7 +93,7 @@ class RealizationCoverageTest {
                 Map.entry("Capability", capabilityRealizationFeatures),
                 Map.entry("OperationalCapability", capabilityRealizationFeatures),
                 Map.entry("CapabilityRealization", capabilityRealizationFeatures));
-        new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of()), report,
+        new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of(), 0, 0), report,
                 Map.of(), new RunMetadata("Realizations", java.time.Instant.EPOCH, "unused", java.util.Optional.empty()), output);
         var markdown = Files.readString(output.resolve(TransformationCoverageWriter.META_FILE_NAME));
         var featureMappedTypes = Set.of(FaPackage.Literals.COMPONENT_FUNCTIONAL_ALLOCATION,

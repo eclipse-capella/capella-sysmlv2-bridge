@@ -90,9 +90,11 @@ public final class TransformationInstanceReportRenderer {
         }
 
         result.append("\n<a id=\"instance-transformation-status\"></a>\n\n## Transformation status\n\n")
+                .append("Outcome: **").append(outcome).append("**\n\n")
                 .append(instance.coverageSummary(meta)).append("\n\n")
-                .append("Outcome: **").append(outcome)
-                .append("**\n\nWarnings: ").append(warnings).append("\n\nErrors: ").append(errors);
+                .append("Total generated elements: ").append(instance.generatedElementCount())
+                .append("\n\nGenerated elements excluding default structure: ").append(instance.generatedElementCountExcludingDefaultStructure())
+                .append("\n\nWarnings: ").append(warnings).append("\n\nErrors: ").append(errors);
 
         if (instance.diagnostics().isEmpty()) {
             result.append("\n\nNo diagnostics were reported.\n");
