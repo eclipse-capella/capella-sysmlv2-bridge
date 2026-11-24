@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementDescriptor;
@@ -32,7 +31,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 
 /**
  * Computes transformation and library coverage from mapper declarations.
@@ -57,14 +56,23 @@ public final class TransformationCoverageAnalyzer {
      *            declared source-to-target metaclass alignments
      * @return the complete coverage report
      */
-    public static TransformationCoverageReport analyze(Collection<? extends EPackage> packages, Collection<? extends ElementMapper<?, ?>> mappers, Collection<? extends EObject> arcadiaLibraryRoots,
-            Collection<MetaclassAlignment> alignmentCatalog) {
+    public static TransformationCoverageReport analyze(Collection<? extends EPackage> packages, Collection<? extends ElementMapper<?, ?>> mappers,
+            Collection<? extends EObject> arcadiaLibraryRoots, Collection<MetaclassAlignment> alignmentCatalog) {
         Objects.requireNonNull(arcadiaLibraryRoots, "arcadiaLibraryRoots must not be null");
         Objects.requireNonNull(alignmentCatalog, "alignmentCatalog must not be null");
         Objects.requireNonNull(mappers, "mappers must not be null");
         Objects.requireNonNull(packages, "packages must not be null");
 
-        var metaclassCoverages = analyzeCapella(packages, mappers);
+        var metaclasses = inspect(packages);
+        var declaredSourceTypes = indexMapperSourceTypes(metaclasses, mappers);
+        var mapperRegistry = new MapperRegistry(mappers);
+        mappers.forEach(mapper -> mapper.getFeatureMappings().forEach(mapping ->
+                validateMappedFeature(declaredSourceTypes.get(mapper.getSourceClass()), mapping)));
+        var metaclassCoverages = metaclasses.stream()
+                .sorted(Comparator.comparing((EClass eClass) -> eClass.getEPackage().getNsURI())
+                        .thenComparing(EClass::getName))
+                .map(metaclass -> analyzeMetaclass(metaclass, findMapper(metaclass, mapperRegistry, declaredSourceTypes)))
+                .toList();
 
         List<ArcadiaElementCoverage> concepts;
         if (arcadiaLibraryRoots.isEmpty()) {
@@ -81,26 +89,14 @@ public final class TransformationCoverageAnalyzer {
     }
 
     private static void analyzeContradictoryStatus(List<MetaclassCoverage> metaclassCoverages, List<MetaclassAlignment> alignments) {
-        // A class with an implemented mapper can't be counted as both implemented
-        // and unsupported through NO_EQUIVALENT
         metaclassCoverages.stream()
-                .filter(coverage -> coverage.mapperClass() != null)
+                .filter(MetaclassCoverage::implemented)
                 .filter(coverage -> alignments.stream().anyMatch(alignment -> alignment.sourceType() == coverage.metaclass()
                         && alignment.status() == AlignmentStatus.NO_EQUIVALENT))
                 .findFirst()
                 .ifPresent(coverage -> {
-                    throw new IllegalArgumentException("Implemented mapper cannot have NO_EQUIVALENT alignment: " + coverage.metaclass());
+                    throw new IllegalArgumentException("Implemented mapping cannot have NO_EQUIVALENT alignment: " + coverage.metaclass());
                 });
-    }
-
-    private static List<MetaclassCoverage> analyzeCapella(Collection<? extends EPackage> packages,
-            Collection<? extends ElementMapper<?, ?>> mappers) {
-        var metaclasses = inspect(packages);
-        var mappersByType = indexMappers(packages, mappers);
-
-        return metaclasses.stream()
-                .map(metaclass -> analyzeMetaclass(metaclass, mappersByType.get(metaclass)))
-                .toList();
     }
 
     private static List<EClass> inspect(Collection<? extends EPackage> packages) {
@@ -108,25 +104,19 @@ public final class TransformationCoverageAnalyzer {
                 .flatMap(ePackage -> ePackage.getEClassifiers().stream())
                 .filter(EClass.class::isInstance)
                 .map(EClass.class::cast)
-                .sorted(Comparator.comparing((EClass eClass) -> eClass.getEPackage().getNsURI())
-                        .thenComparing(EClass::getName))
                 .toList();
-
     }
 
-    private static Map<EClass, ElementMapper<?, ?>> indexMappers(Collection<? extends EPackage> packages, Collection<? extends ElementMapper<?, ?>> mappers) {
-        var result = new LinkedHashMap<EClass, ElementMapper<?, ?>>();
+    private static Map<Class<?>, EClass> indexMapperSourceTypes(List<EClass> metaclasses, Collection<? extends ElementMapper<?, ?>> mappers) {
+        var result = new LinkedHashMap<Class<?>, EClass>();
         for (var mapper : mappers) {
-            var sourceType = packages.stream()
-                    .flatMap(ePackage -> ePackage.getEClassifiers().stream())
-                    .filter(EClass.class::isInstance)
-                    .map(EClass.class::cast)
+            var sourceType = metaclasses.stream()
                     .filter(eClass -> mapper.getSourceClass().equals(eClass.getInstanceClass()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Mapper source class is absent from the metamodel: " + mapper.getSourceClass().getName()));
 
-            if (result.putIfAbsent(sourceType, mapper) != null) {
+            if (result.putIfAbsent(mapper.getSourceClass(), sourceType) != null) {
                 throw new IllegalArgumentException(
                         "Duplicate mapper for " + sourceType);
             }
@@ -134,28 +124,33 @@ public final class TransformationCoverageAnalyzer {
         return result;
     }
 
+    private static ElementMapper<?, ?> findMapper(EClass metaclass, MapperRegistry mapperRegistry, Map<Class<?>, EClass> declaredSourceTypes) {
+        var instanceClass = metaclass.getInstanceClass();
+        if (instanceClass == null) {
+            return null;
+        }
+        if (metaclass.isAbstract() || metaclass.isInterface()) {
+            return mapperRegistry.findMapper(instanceClass, mapperSource -> declaredSourceTypes.get(mapperSource) == metaclass).orElse(null);
+        }
+        return mapperRegistry.findMapper(instanceClass, mapperSource -> declaredSourceTypes.get(mapperSource).isSuperTypeOf(metaclass)).orElse(null);
+    }
+
     private static MetaclassCoverage analyzeMetaclass(EClass metaclass, ElementMapper<?, ?> mapper) {
         if (metaclass.isAbstract() || metaclass.isInterface()) {
-            var mapperClassName = Optional.ofNullable(mapper)
-                    .map(value -> value.getClass().getName())
-                    .orElse(null);
-
-            return new MetaclassCoverage(metaclass, MappingStatus.ABSTRACT, mapperClassName,
+            return new MetaclassCoverage(metaclass, false,
                     Optional.ofNullable(mapper).map(ElementMapper::getTargetQualifiedName).orElse(null),
-                    List.of(), List.of(), featureNames(metaclass), Map.of());
+                    List.of(), Map.of());
         }
 
         if (mapper == null) {
-            return new MetaclassCoverage(metaclass, MappingStatus.UNMAPPED, null, null, List.of(), List.of(), featureNames(metaclass), Map.of());
+            return new MetaclassCoverage(metaclass, false, null, List.of(), Map.of());
         }
 
-        var declaredFeatureNames = new LinkedHashSet<>(featureNames(metaclass));
         var featureTargets = featureTargets(mapper);
         var mappedFeatures = featureTargets.keySet();
         var ignoredFeatures = Objects.requireNonNull(mapper.getIgnoredFeatures(), "ignored features must not be null");
 
-        mapper.getFeatureMappings().forEach(mapping -> validateMappedFeature(metaclass, mapping));
-        validateFeatures(metaclass, "ignored", ignoredFeatures, declaredFeatureNames);
+        validateIgnoredFeatures(metaclass, ignoredFeatures);
 
         var overlap = mappedFeatures.stream()
                 .filter(ignoredFeatures::contains)
@@ -165,23 +160,9 @@ public final class TransformationCoverageAnalyzer {
             throw new IllegalArgumentException("Features cannot be both mapped and ignored: " + overlap);
         }
 
-        var mapped = mappedFeatures.stream().sorted().toList();
         var ignored = ignoredFeatures.stream().sorted().toList();
 
-        var remaining = declaredFeatureNames.stream()
-                .filter(feature -> !mappedFeatures.contains(feature))
-                .filter(feature -> !ignoredFeatures.contains(feature))
-                .sorted()
-                .toList();
-
-        MappingStatus status;
-        if (remaining.isEmpty()) {
-            status = MappingStatus.MAPPED;
-        } else {
-            status = MappingStatus.PARTIAL;
-        }
-
-        return new MetaclassCoverage(metaclass, status, mapper.getClass().getName(), mapper.getTargetQualifiedName(), mapped, ignored, remaining, featureTargets);
+        return new MetaclassCoverage(metaclass, true, mapper.getTargetQualifiedName(), ignored, featureTargets);
     }
 
     private static List<ArcadiaElementCoverage> analyzeArcadiaConcepts(List<ArcadiaElementDescriptor> inventory, Collection<? extends ElementMapper<?, ?>> mappers) {
@@ -246,13 +227,13 @@ public final class TransformationCoverageAnalyzer {
                 throw new IllegalArgumentException("Duplicate alignment for " + alignment.sourceType());
             }
         }
-        var concreteIds = metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() != MappingStatus.ABSTRACT)
+        var concreteTypes = metaclassCoverages.stream()
+                .filter(MetaclassCoverage::isConcreteMetaclass)
                 .map(MetaclassCoverage::metaclass)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         var unknown = byType.keySet().stream()
-                .filter(type -> !concreteIds.contains(type))
+                .filter(type -> !concreteTypes.contains(type))
                 .sorted(Comparator.comparing((EClass type) -> type.getEPackage().getNsURI())
                         .thenComparing(EClass::getName))
                 .toList();
@@ -263,19 +244,9 @@ public final class TransformationCoverageAnalyzer {
                             + unknown);
         }
 
-        return metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() != MappingStatus.ABSTRACT)
-                .map(coverage -> byType.getOrDefault(coverage.metaclass(), new MetaclassAlignment(coverage.metaclass(), null, AlignmentStatus.UNASSESSED, List.of())))
+        return concreteTypes.stream()
+                .map(type -> byType.getOrDefault(type, new MetaclassAlignment(type, null, AlignmentStatus.UNASSESSED, List.of())))
                 .toList();
-    }
-
-    private static void validateFeatures(EClass sourceType, String kind, Collection<String> declaredFeatures, Collection<String> availableFeatures) {
-        var unknown = declaredFeatures.stream()
-                .filter(feature -> !availableFeatures.contains(feature))
-                .sorted().toList();
-        if (!unknown.isEmpty()) {
-            throw new IllegalArgumentException("Unknown " + kind + " features for " + sourceType.getName() + ": " + unknown);
-        }
     }
 
     private static void validateMappedFeature(EClass sourceType, FeatureMapping<?> mapping) {
@@ -285,11 +256,12 @@ public final class TransformationCoverageAnalyzer {
         }
     }
 
-    private static List<String> featureNames(EClass metaclass) {
-        return metaclass.getEAllStructuralFeatures().stream()
-                .map(ENamedElement::getName)
-                .distinct()
-                .sorted()
-                .toList();
+    private static void validateIgnoredFeatures(EClass sourceType, Collection<String> ignoredFeatures) {
+        var unknown = ignoredFeatures.stream()
+                .filter(feature -> sourceType.getEStructuralFeature(feature) == null)
+                .sorted().toList();
+        if (!unknown.isEmpty()) {
+            throw new IllegalArgumentException("Unknown ignored features for " + sourceType.getName() + ": " + unknown);
+        }
     }
 }

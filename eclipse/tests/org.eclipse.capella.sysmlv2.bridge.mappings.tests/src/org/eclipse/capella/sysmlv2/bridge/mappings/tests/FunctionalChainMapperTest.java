@@ -15,7 +15,9 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_REALIZED_BY;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -321,14 +323,18 @@ class FunctionalChainMapperTest {
                                 || value.sourceType() == OaPackage.Literals.OPERATIONAL_PROCESS)
                         .toList());
         var coverage = report.metaclassCoverages().stream().filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_CHAIN).findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(List.of(
+        assertTrue(coverage.featureTargets().keySet().containsAll(List.of(
                 ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME.getName(),
                 CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION.getName(),
                 FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONAL_EXCHANGES.getName())));
-        assertTrue(coverage.remainingFeatures().containsAll(List.of(
+        for (var feature : List.of(
                 FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONS.getName(),
                 FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_SEQUENCE_NODES.getName(),
-                FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_SEQUENCE_LINKS.getName())));
+                FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_SEQUENCE_LINKS.getName())) {
+            assertNotNull(coverage.metaclass().getEStructuralFeature(feature), feature);
+            assertFalse(coverage.featureTargets().containsKey(feature), feature);
+            assertFalse(coverage.ignoredFeatures().contains(feature), feature);
+        }
         assertTrue(coverage.ignoredFeatures().containsAll(List.of(
                 FaPackage.Literals.FUNCTIONAL_CHAIN__PRE_CONDITION.getName(),
                 FaPackage.Literals.FUNCTIONAL_CHAIN__POST_CONDITION.getName())));

@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
 
 /**
  * Immutable report containing all transformation coverage dimensions.
@@ -34,22 +33,11 @@ public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCove
         alignments = List.copyOf(Objects.requireNonNull(alignments, "alignments must not be null"));
     }
 
-    public long mappedMetaclassCount() {
+    public Set<EClass> implementedTypes() {
         return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.MAPPED)
-                .count();
-    }
-
-    public long partialMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.PARTIAL)
-                .count();
-    }
-
-    public long unmappedMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.UNMAPPED)
-                .count();
+                .filter(MetaclassCoverage::implemented)
+                .map(MetaclassCoverage::metaclass)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
