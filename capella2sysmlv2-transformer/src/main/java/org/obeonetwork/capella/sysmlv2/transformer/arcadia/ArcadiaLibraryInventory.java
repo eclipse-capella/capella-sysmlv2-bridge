@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Definition;
@@ -40,20 +39,6 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
  * @author Raphaël Pagé
  */
 public final class ArcadiaLibraryInventory {
-
-    /**
-     * Returns every concrete definition in the library.
-     */
-    public Set<String> concreteDefinitionNames(Collection<? extends EObject> roots) {
-        return roots.stream()
-                .flatMap(root -> EObjectUtils.allContents(root).stream())
-                .filter(Definition.class::isInstance)
-                .map(Definition.class::cast)
-                .filter(definition -> !definition.isIsAbstract())
-                .map(Definition::getQualifiedName)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
-    }
 
     public List<ArcadiaElementDescriptor> inspect(Collection<? extends EObject> roots) {
         Objects.requireNonNull(roots, "roots must not be null");
@@ -95,7 +80,7 @@ public final class ArcadiaLibraryInventory {
             var qualifiedName = owner.getQualifiedName() + "::" + membership.getMemberName();
             byQualifiedName.putIfAbsent(qualifiedName,
                     new ArcadiaElementDescriptor(qualifiedName, nullToEmpty(membership.getElementId()),
-                            membership.eClass().getName(), ArcadiaElementKind.FEATURE));
+                            ArcadiaElementKind.FEATURE, false));
         }
     }
 
@@ -114,7 +99,7 @@ public final class ArcadiaLibraryInventory {
                 && qualifiedName != null && !qualifiedName.isBlank()) {
             getKind(member).ifPresent(kind -> {
                 var descriptor = new ArcadiaElementDescriptor(qualifiedName, nullToEmpty(member.getElementId()),
-                        member.eClass().getName(), kind);
+                        kind, member instanceof Definition definition && !definition.isIsAbstract());
                 var previous = byQualifiedName.putIfAbsent(qualifiedName, descriptor);
                 if (previous != null && !previous.elementId().equals(descriptor.elementId())) {
                     throw new IllegalStateException("Duplicate public Arcadia qualified name: " + qualifiedName);

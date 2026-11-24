@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
@@ -76,9 +77,7 @@ public final class TransformationCoverageAnalyzer {
 
         analyzeContradictoryStatus(metaclassCoverages, alignments);
 
-        return new TransformationCoverageReport(metaclassCoverages, concepts,
-                new ArcadiaLibraryInventory().concreteDefinitionNames(arcadiaLibraryRoots),
-                alignments);
+        return new TransformationCoverageReport(metaclassCoverages, concepts, alignments);
     }
 
     private static void analyzeContradictoryStatus(List<MetaclassCoverage> metaclassCoverages, List<MetaclassAlignment> alignments) {
@@ -197,19 +196,22 @@ public final class TransformationCoverageAnalyzer {
                 .filter(feature -> feature.startsWith("Arcadia::"))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        var conceptsByName = inventory.stream()
+        var concepts = inventory.stream()
                 .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT)
-                .collect(Collectors.toMap(ArcadiaElementDescriptor::qualifiedName, element -> element));
+                .toList();
 
-        var featuresByName = inventory.stream()
+        var conceptNames = concepts.stream()
+                .map(ArcadiaElementDescriptor::qualifiedName)
+                .collect(Collectors.toSet());
+        var featureNames = inventory.stream()
                 .filter(element -> element.kind() == ArcadiaElementKind.FEATURE)
-                .collect(Collectors.toMap(ArcadiaElementDescriptor::qualifiedName, element -> element));
+                .map(ArcadiaElementDescriptor::qualifiedName)
+                .collect(Collectors.toSet());
 
-        validateArcadiaReferences("concept", usedConcepts, conceptsByName.keySet());
-        validateArcadiaReferences("feature", usedFeatures, featuresByName.keySet());
+        validateArcadiaReferences("concept", usedConcepts, conceptNames);
+        validateArcadiaReferences("feature", usedFeatures, featureNames);
 
-        return conceptsByName.values().stream()
-                .sorted(Comparator.comparing(ArcadiaElementDescriptor::qualifiedName))
+        return concepts.stream()
                 .map(element -> new ArcadiaElementCoverage(element, usedConcepts.contains(element.qualifiedName())))
                 .toList();
     }
@@ -224,7 +226,7 @@ public final class TransformationCoverageAnalyzer {
         return result;
     }
 
-    private static void validateArcadiaReferences(String kind, Collection<String> references, Collection<String> available) {
+    private static void validateArcadiaReferences(String kind, Set<String> references, Set<String> available) {
         var unresolved = references.stream()
                 .filter(reference -> !available.contains(reference))
                 .sorted()

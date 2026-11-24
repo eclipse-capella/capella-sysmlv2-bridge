@@ -24,12 +24,17 @@ import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationIn
 import org.eclipse.capella.sysmlv2.bridge.mappings.la.LogicalComponentMapper;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.OwningMembership;
 import org.eclipse.syson.sysml.SysmlFactory;
+import org.eclipse.syson.sysml.VisibilityKind;
 import org.junit.jupiter.api.Test;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.ArcadiaElementCoverage;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageReport;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementMappingOutcome;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementOutcome;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
@@ -95,7 +100,7 @@ class TransformationInstanceAnalyzerTest {
     }
 
     @Test
-    void groupsNestedSourcesAndCountsOnlyDistinctConcreteLibraryReferences() {
+    void groupsNestedSourcesAndCountsOnlyDistinctConcreteMapperTargetReferences() {
         var architecture = LaFactory.eINSTANCE.createLogicalArchitecture();
         var components = LaFactory.eINSTANCE.createLogicalComponentPkg();
         var nestedComponents = LaFactory.eINSTANCE.createLogicalComponentPkg();
@@ -118,21 +123,28 @@ class TransformationInstanceAnalyzerTest {
         library.setDeclaredName("Arcadia");
         var used = SysmlFactory.eINSTANCE.createPartDefinition();
         used.setDeclaredName("Used");
-        var unused = SysmlFactory.eINSTANCE.createPartDefinition();
-        unused.setDeclaredName("Unused");
+        var untargeted = SysmlFactory.eINSTANCE.createPartDefinition();
+        untargeted.setDeclaredName("Untargeted");
         var abstractDefinition = SysmlFactory.eINSTANCE.createPartDefinition();
         abstractDefinition.setDeclaredName("Abstract");
         abstractDefinition.setIsAbstract(true);
-        List.of(used, unused, abstractDefinition).forEach(definition -> own(library, definition));
+        List.of(used, untargeted, abstractDefinition).forEach(definition -> own(library, definition).setVisibility(VisibilityKind.PUBLIC));
+        var privateDefinition = SysmlFactory.eINSTANCE.createPartDefinition();
+        privateDefinition.setDeclaredName("Private");
+        own(library, privateDefinition).setVisibility(VisibilityKind.PRIVATE);
         var target = SysmlFactory.eINSTANCE.createPackage();
-        List.of(used, used, abstractDefinition).forEach(definition -> {
+        List.of(used, used, untargeted, abstractDefinition, privateDefinition).forEach(definition -> {
             var usage = SysmlFactory.eINSTANCE.createPartUsage();
             own(target, usage);
             var typing = SysmlFactory.eINSTANCE.createFeatureTyping();
             typing.setType(definition);
             usage.getOwnedRelationship().add(typing);
         });
-        var meta = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(library), List.of());
+        var mapperTargets = Set.of(used.getQualifiedName(), abstractDefinition.getQualifiedName());
+        var concepts = new ArcadiaLibraryInventory().inspect(List.of(library)).stream()
+                .map(concept -> new ArcadiaElementCoverage(concept, mapperTargets.contains(concept.qualifiedName())))
+                .toList();
+        var meta = new TransformationCoverageReport(List.of(), concepts, List.of());
         var transformation = new ModelTransformation("Groups", sources, new CapellaForSysonResourceSet(), List.of(),
                 new TransformationResult(target, List.of(), new Traceability()), 0);
 
@@ -142,13 +154,15 @@ class TransformationInstanceAnalyzerTest {
                 report.elements().stream().map(ElementOutcome::perspective).toList());
         assertEquals(List.of("Other", "Other", "Other", "Other", "Other", "Other", "Structure", "Data"),
                 report.elements().stream().map(ElementOutcome::modelPackage).toList());
+        assertEquals(Set.of("Arcadia::Used"), meta.declaredLibraryClasses());
         assertEquals(Set.of("Arcadia::Used"), report.usedLibraryClasses());
         assertTrue(report.diagnostics().isEmpty());
     }
 
-    private static void own(Element owner, Element element) {
+    private static OwningMembership own(Element owner, Element element) {
         var membership = SysmlFactory.eINSTANCE.createOwningMembership();
         membership.getOwnedRelatedElement().add(element);
         owner.getOwnedRelationship().add(membership);
+        return membership;
     }
 }

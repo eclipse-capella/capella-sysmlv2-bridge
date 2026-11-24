@@ -79,11 +79,14 @@ class TransformationCoverageWriterTest {
                 .analyze(List.of(ePackage), List.of(mapper), List.of(library), List.of(
                         new MetaclassAlignment(unsupported, null, AlignmentStatus.NO_EQUIVALENT, List.of())));
 
+        assertThat(report.arcadiaConcepts()).extracting(coverage -> coverage.element().qualifiedName())
+                .containsExactly("Arcadia::Candidate", "Arcadia::Component", "Arcadia::ExplicitNonMapping", "Arcadia::Function", "Arcadia::Unassessed");
+
         var instance = new TransformationInstanceReport(List.of(
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalComponent"), "Logical", "Structure", ElementMappingOutcome.MAPPED),
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalFunction"), "Logical", "Functions", ElementMappingOutcome.NOT_IMPLEMENTED),
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalFunction"), "Logical", "Functions", ElementMappingOutcome.NOT_IMPLEMENTED),
-                new ElementOutcome(unsupported, "Logical", "Other", ElementMappingOutcome.UNSUPPORTED)), List.of(), Set.of("Arcadia::Function"));
+                new ElementOutcome(unsupported, "Logical", "Other", ElementMappingOutcome.UNSUPPORTED)), List.of(), Set.of());
         var conceptAssessment = Map.of("Arcadia::Component", AlignmentStatus.CONFIRMED,
                 "Arcadia::Candidate", AlignmentStatus.CANDIDATE,
                 "Arcadia::ExplicitNonMapping", AlignmentStatus.NO_EQUIVALENT,

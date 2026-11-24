@@ -107,7 +107,7 @@ public final class TransformationInstanceReportRenderer {
 
     private static String libraryUsage(TransformationInstanceReport instance, TransformationCoverageReport meta) {
         var coveredDefinitions = meta.declaredLibraryClasses();
-        var usedDefinitions = instance.usedLibraryClasses().stream().filter(coveredDefinitions::contains).collect(Collectors.toSet());
+        var usedDefinitions = instance.usedLibraryClasses();
         var unusedDefinitions = coveredDefinitions.stream().filter(name -> !usedDefinitions.contains(name)).collect(Collectors.toSet());
         var usage = new CoverageMetric(usedDefinitions.size(), coveredDefinitions.size());
         return new StringBuilder("\n<a id=\"instance-library-usage\"></a>\n\n### Library Usage\n\n")
