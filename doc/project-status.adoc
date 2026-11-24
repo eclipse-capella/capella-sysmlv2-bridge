@@ -30,10 +30,10 @@ Build and contribution instructions are maintained in link:developer-guide.adoc[
 |21
 
 |Capella
-|7.1.0, 7.0.1, 6.1.0
+|7.1.0 and 7.0.1 release targets. Maven also defines a 6.1.0 build profile.
 
 |SysON
-|2025.2.12
+|2026.9.6
 
 |Arcadia SysML v2 library
 |`capella-for-syson` repository `arcadia/library/arcadia.json`
@@ -135,7 +135,7 @@ The concrete `TransformationContext` owns the model structure, identity-based `T
 
 === Arcadia Library
 
-`CapellaForSysonResourceSet` in the Equinox application bundle loads `arcadia/library/arcadia.json` from the official open-source Arcadia library artifact using Sirius EMF JSON.
+`CapellaForSysonResourceSet` in the Equinox application bundle loads `arcadia/library/arcadia.json` from the bundled library using Sirius EMF JSON.
 
 The transformation engine locates required definitions such as `Arcadia::Component` directly in the shared `ResourceSet`.
 The generated root is attached to that resource set before target creation, so SysON services can discover the Arcadia library through `SysONEContentAdapter`.
@@ -153,13 +153,7 @@ OUTPUT_DIRECTORY/<CAPELLA_MODEL_NAME>.sysml.xmi
 
 The write is performed through a temporary file followed by an atomic replacement when supported by the file system.
 
-After writing, the application reloads the XMI in the Arcadia library resource set and verifies:
-
-* the generated model is not empty;
-* all generated `PartUsage` elements are present;
-* every generated part typing still resolves into `arcadialibrary:/arcadia.json`.
-
-This is technical persistence of the SysON model, not textual SysML export.
+After writing, the application reloads the intermediate XMI and compares element counts by metaclass and the number of resolved Arcadia type references with the in-memory model. It then rewrites the external library references to the SysON library URI. Textual SysML export is planned.
 
 === Product Distribution
 
@@ -172,29 +166,33 @@ The Windows distribution contains both `capella2sysmlv2.exe` and the console lau
 
 A GitHub Actions workflow is defined for pull requests, `main`, manual runs, and release tags to:
 
-* build with Java 17;
+* build with Java 21;
 * run regular tests;
-* materialize both products;
-* execute the IFE acceptance scenario on Linux and Windows runners;
+* materialize Linux and Windows products for both release targets;
+* smoke-test the Capella 7.1.0 archives with IFE on Linux and Windows runners;
 * verify the transformation summary and generated model content;
-* publish both archives in a GitHub Release only for tags and after successful acceptance tests.
+* publish all four archives in a GitHub Release only for tags and after successful acceptance tests.
 
-The workflow downloads the Arcadia library JSON from the Capella for SysON repository during the Eclipse application build. Java 17 and Windows qualification remain pending until the workflow completes successfully.
-
+[[current-mapping-coverage]]
 == Current Mapping Coverage
 
-The production semantic mappings currently include:
+The production registry is defined by `CapellaMapperCatalog.createMappers()`. Its 18 mappers cover the following source types.
 
-[source,text]
-----
-LogicalComponent, SystemComponent, PhysicalComponent, Entity
-        -> SysML v2 PartUsage
-        -> typed by Arcadia::Component
+[cols="3,1",options="header"]
+|===
+|Capella source type |SysML v2 usage
 
-LogicalFunction, SystemFunction, PhysicalFunction, OperationalActivity
-        -> SysML v2 ActionUsage
-        -> typed by Arcadia::Function
-----
+|`Entity`, `SystemComponent`, `LogicalComponent`, `PhysicalComponent` |`PartUsage`
+|`OperationalActivity`, `SystemFunction`, `LogicalFunction`, `PhysicalFunction` |`ActionUsage`
+|`FunctionInputPort`, `FunctionOutputPort`, `ExchangeItem` |`ItemUsage`
+|`ComponentPort` |`PortUsage`
+|`FunctionalExchange` |`FlowUsage`
+|`ComponentExchange` |`InterfaceUsage`
+|`OperationalCapability`, `Capability`, `CapabilityRealization` |`OccurrenceUsage`
+|`FunctionalChain` |`ActionUsage`
+|===
+
+Components and entities use the Arcadia component definition. Functions and operational activities use the Arcadia function definition.
 
 Mapped usages are constructed after their declared prerequisites. Creation services receive mapped source parents where available and own the final containment; no relocation phase follows. Elements without compatible source ancestors use their existing perspective defaults:
 
@@ -208,82 +206,19 @@ Physical Architecture / Structure and Functions
 
 The target structure also creates the Arcadia perspective packages, root functions, and system parts required by the current model shape.
 
-Other Capella metaclasses remain unsupported and are reported as candidates by the mapping inventory.
-Functional scenario placeholders do not imply implemented coverage.
+The catalog also tracks proposed alignments. For example, `Mission` is a candidate for `Arcadia::Mission` and has no registered mapper.
 
-The Tycho mapping test build now generates typed, unregistered Java candidates from the installed Capella metamodel.
-The Capella 7.0.1 inventory contains 252 non-abstract metaclasses; after excluding the eight registered production mappers, the build writes 244 candidates and a deterministic index under the mapping test module's `target/generated-mapper-sources` directory.
-Generated candidates do not increase mapping or alignment coverage until their implementations, metadata, registration, and tests are completed.
-The 17 WIP-derived entries remain the curated semantic backlog and are independent from this complete structural inventory.
-
-Every successful transformation also generates deterministic JSON and Markdown semantic coverage reports under `OUTPUT_DIRECTORY/.capella2sysmlv2`.
-The reports inventory the 22 Capella semantic packages and 396 EClasses, distinguish implemented mapper coverage from the independent alignment backlog, and inventory Arcadia 0.0.3's 14 public concepts and 28 public features.
-The eight production mapper alignments currently have `CONFIRMED` status; candidate entries remain planning data and do not increase transformation coverage.
-`FunctionInputPort` and `FunctionOutputPort` are classified as `SYSML_STANDARD` rather than Arcadia alignments.
-These metrics are evidence and prioritization data, not build thresholds.
+Each successful transformation writes two Markdown reports under `OUTPUT_DIRECTORY/.capella2sysmlv2/`. The instance report gives coverage and diagnostics for the input model. The meta report describes implemented metaclass and feature mappings, candidate alignments, and the assessment of Arcadia library concepts.
 
 == IFE Reference Result
 
-The In-Flight Entertainment System is the current product-level reference model.
-
-[source,text]
-----
-Transformation completed
-Source LogicalComponent count: 23
-Generated PartUsage count: 23
-Errors: 0
-XMI model: /path/to/output/In-Flight Entertainment System.sysml.xmi
-----
-
-The persisted model contains 27 `PartUsage` elements in total:
-
-* 23 usages mapped from source logical components;
-* 4 generated system parts in the default target structure.
-
-All 27 parts retain an external reference to `Arcadia::Component` after XMI reload.
+The standalone product test transforms the In-Flight Entertainment System sample and checks for a successful exit and `Errors: 0`. It checks that the CLI coverage summary matches the instance report and that the generated `In-Flight Entertainment System.sysml.xmi` contains model elements and external Arcadia references.
 
 == Qualification Status
 
-[cols="2,1,4",options="header"]
-|===
-|Area |Status |Evidence or remaining work
+The release workflow runs Maven `clean verify` with Java 21 for each release target. Both profiles include the standalone IFE integration test. Separate Linux and Windows jobs extract and run the Capella 7.1.0 archives before a release tag can publish all four archives.
 
-|Regular Maven tests
-|Verified locally
-|Unit, functional, and integration tests pass. The IFE integration scenario excluded from the regular build remains explicitly skipped there.
-
-|Tycho product build
-|Verified locally
-|Linux and Windows products and their archives are materialized successfully.
-
-|Standalone Linux execution
-|Automated and verified locally
-|Failsafe launches the materialized product without `DISPLAY`, checks `23/23/0`, reloads the XMI, and rejects Equinox framework errors during shutdown.
-
-|Standalone Windows execution
-|Pending
-|The product is materialized, but no Windows environment was available locally. The release workflow contains a Windows acceptance job.
-
-|Java 17 qualification
-|Pending
-|The release workflow is configured for Temurin 17 but has not completed its first tagged run.
-
-|GitHub Release publication
-|Pending
-|The workflow is implemented and package secrets are configured. The first successful Java 17 Linux and Windows qualification and semantic-version tag are still required.
-
-|Textual SysML export
-|Not implemented
-|The current `.sysml.xmi` file is not the final `.sysml` representation.
-
-|Parser and linker validation
-|Not implemented
-|Validation depends on official textual export.
-
-|Extended mapping coverage
-|Not implemented
-Eight typed Capella mappers are implemented in production; the remaining metaclasses are still candidates.
-|===
+Official textual SysML export and parser and linker validation remain planned.
 
 == Headless Runtime Constraint
 
@@ -303,22 +238,16 @@ A physically UI-free distribution would require repackaging Capella semantic cla
 
 == Known Gaps
 
-=== Release Infrastructure Qualification
-
-The build downloads the Arcadia library JSON from the Capella for SysON repository.
-The repository must complete Java 17 Linux and Windows qualification and a first tagged build, then check the resulting GitHub Release links from the user documentation.
-
-
 === Official Textual Export
 
-The project must identify and integrate the official SysON 2025.2.12 textual export API behind a small service boundary.
+The project must identify and integrate the official SysON 2026.9.6 textual export API behind a small service boundary.
 
 The implementation must not introduce a local serializer or depend on the SysML v2 Reference Implementation.
 
 === Parser and Linker Validation
 
 After textual export is available, the generated `.sysml` file must be parsed and linked with official SysON services.
-Validation must include Arcadia imports and all 23 mapped IFE usages.
+Validation must include Arcadia imports and mapped IFE elements.
 
 === Mapping Coverage
 
@@ -326,19 +255,15 @@ Additional mappings must be prioritized explicitly and implemented incrementally
 
 == Roadmap
 
-=== 1. Qualify the Release Workflow
-
-Use the temporary Obeo Arcadia package to complete the first Java 17 Linux and Windows workflow run, then switch to the official `eclipse-capella` package repository when it becomes available.
-
-=== 2. Integrate Official SysON Textual Export
+=== 1. Integrate Official SysON Textual Export
 
 Replace the user-facing intermediate XMI with a textual `.sysml` file while preserving atomic output behavior and failure diagnostics.
 
-=== 3. Validate Generated SysML
+=== 2. Validate Generated SysML
 
 Parse and link generated text and verify Arcadia imports, component typing, and mapped IFE elements.
 
-=== 4. Extend Mapping Coverage
+=== 3. Extend Mapping Coverage
 
 Add Capella concepts one at a time through the established transformation engine and test strategy.
 
@@ -346,7 +271,7 @@ Add Capella concepts one at a time through the established transformation engine
 
 The standalone transformation milestone is complete when:
 
-* the complete repository builds reproducibly with Java 17;
+* the complete repository builds reproducibly with Java 21;
 * tagged GitHub Releases publish tested Linux and Windows archives;
 * both extracted products transform IFE successfully;
 * standalone transformation requires no graphical display, Eclipse workspace, or Sirius session;

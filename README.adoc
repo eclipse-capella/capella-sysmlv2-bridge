@@ -4,33 +4,37 @@
 
 `capella2sysmlv2` is a standalone command-line tool that transforms a zipped Capella project into a SysML v2 model represented by the SysON metamodel.
 
+The source code is available in the https://github.com/eclipse-capella/capella-sysmlv2-bridge[official Eclipse Capella bridge repository].
+
 The generated model reuses concepts from the open-source https://github.com/eclipse-capella/capella-for-syson/tree/main/backend/application/capella-application-configuration/src/main/resources/arcadia/library[Arcadia SysML v2 library].
 
 [NOTE]
 ====
 The project is currently a proof of concept.
-Only Capella `LogicalComponent` elements are transformed in production.
+Production mappings cover components, functions, ports, exchanges, exchange items, capabilities, and functional chains. See link:doc/project-status.adoc#current-mapping-coverage[Current Mapping Coverage] for the registered Capella types.
 ====
 
 == Download
 
-Download the product for your operating system from the https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest[latest GitHub release]:
+Download the product for your Capella version and operating system from the https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest[latest GitHub release]:
 
-* https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-linux-x86_64.tar.gz[Linux x86_64]
-* https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-windows-x86_64.zip[Windows x86_64]
+* https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.1.0-linux-x86_64.tar.gz[Capella 7.1.0 for Linux x86_64]
+* https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.1.0-windows-x86_64.zip[Capella 7.1.0 for Windows x86_64]
+* https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz[Capella 7.0.1 for Linux x86_64]
+* https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip[Capella 7.0.1 for Windows x86_64]
 
 Binary distributions are published automatically after their Linux and Windows acceptance tests succeed.
 
 [NOTE]
 ====
-If the release page does not contain these assets yet, the project has not published its first binary distribution.
+The installation examples below use the Capella 7.0.1 product and sample.
 Contributors can build the products by following the link:doc/developer-guide.adoc[Developer Guide].
 ====
 
 == Requirements
 
 * A 64-bit Linux or Windows system
-* A Java 17 JDK available from `PATH` and configured in `JAVA_HOME`
+* A Java 21 JDK available from `PATH` and configured in `JAVA_HOME`
 * A zip archive containing one Capella project
 
 No Capella installation, Eclipse workspace, or external Arcadia library checkout is required.
@@ -55,11 +59,11 @@ Download and extract the product:
 [source,bash]
 ----
 curl -L \
-  "https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-linux-x86_64.tar.gz" \
-  -o capella2sysmlv2-linux-x86_64.tar.gz
+  "https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz" \
+  -o capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz
 
 mkdir capella2sysmlv2
-tar -xzf capella2sysmlv2-linux-x86_64.tar.gz -C capella2sysmlv2
+tar -xzf capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz -C capella2sysmlv2
 ----
 
 Download the IFE sample and run the transformation:
@@ -84,11 +88,11 @@ From PowerShell, download and extract the product:
 [source,powershell]
 ----
 Invoke-WebRequest `
-  -Uri "https://github.com/Obeo/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-windows-x86_64.zip" `
-  -OutFile "capella2sysmlv2-windows-x86_64.zip"
+  -Uri "https://github.com/eclipse-capella/capella-sysmlv2-bridge/releases/latest/download/capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip" `
+  -OutFile "capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip"
 
 Expand-Archive `
-  -Path "capella2sysmlv2-windows-x86_64.zip" `
+  -Path "capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip" `
   -DestinationPath "capella2sysmlv2"
 ----
 
@@ -139,10 +143,10 @@ For the IFE sample, a successful execution reports:
 
 [source,text]
 ----
-Starting reporting workflow
-Created instance report: /path/to/output/.capella2sysmlv2/transformation-instance-report.md
-Created meta report: /path/to/output/.capella2sysmlv2/transformation-meta-report.md
-Reporting workflow completed
+[INFO] Starting reporting workflow
+[INFO] Created instance report: /path/to/output/.capella2sysmlv2/transformation-instance-report.md
+[INFO] Created meta report: /path/to/output/.capella2sysmlv2/transformation-meta-report.md
+[INFO] Reporting workflow completed
 Transformed <mapped> of <transformable> transformable elements (<percentage>%). Total source elements: <total>.
 Errors: 0
 ----
@@ -158,7 +162,7 @@ The generated model is written as:
 OUTPUT_DIRECTORY/<CAPELLA_MODEL_NAME>.sysml.xmi
 ----
 
-The application reloads the XMI file after writing it and verifies its generated `PartUsage` elements and references to `Arcadia::Component`.
+The application reloads the XMI file after writing it and checks the element counts by metaclass and the number of references to Arcadia types.
 
 The output directory also contains:
 
@@ -183,7 +187,7 @@ It is not the final textual SysML v2 `.sysml` format.
 == Troubleshooting
 
 `Java was not found` or the application does not start::
-Install a 64-bit Java 17 runtime and ensure `java -version` reports Java 17.
+Install a 64-bit Java 21 runtime and ensure `java -version` reports Java 21.
 
 `Cannot prepare Capella project`::
 Check that the archive contains exactly one `.project` file and one `.capella` file.
@@ -196,7 +200,7 @@ Do not use a location inside `OUTPUT_DIRECTORY/.capella2sysmlv2` as the input ar
 
 == Current Limitations
 
-* Only `LogicalComponent -> PartUsage : Arcadia::Component` is supported in production.
+* Mapping coverage is partial. The instance report shows how much of the input model was transformed.
 * Official textual SysML export is not connected yet.
 * Generated textual SysML cannot yet be validated by the SysON parser and linker.
 * The project remains at proof-of-concept maturity.
