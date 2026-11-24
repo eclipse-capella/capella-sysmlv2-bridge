@@ -57,30 +57,19 @@ jobs:
           echo "$RUNNER_TEMP/apache-maven-3.9.16/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/apache-maven-3.9.16/bin/mvn" --version
 
-      - name: Set maven settings
-        uses: s4u/maven-settings-action@v4.1.0
-        with:
-          servers: '[{
-            "id": "github-syson",
-            "username": "${{secrets.MAVEN_GITHUB_USERNAME}}",
-            "password": "${{secrets.MAVEN_GITHUB_TOKEN}}"
-            },
-            {
-            "id": "github-sirius-web",
-            "username": "${{secrets.MAVEN_GITHUB_USERNAME}}",
-            "password": "${{secrets.MAVEN_GITHUB_TOKEN}}"
-            },
-            {
-            "id": "github-sirius-emfjson",
-            "username": "${{secrets.MAVEN_GITHUB_USERNAME}}",
-            "password": "${{secrets.MAVEN_GITHUB_TOKEN}}"
-            },
-            {
-            "id": "github-capella-for-syson",
-            "username": "${{secrets.MAVEN_GITHUB_USERNAME}}",
-            "password": "${{secrets.MAVEN_GITHUB_TOKEN}}"
-            }
-            ]'
+      - name: Configure package registries
+        run: |
+          cat > ~/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server><id>github</id><username>${{ github.actor }}</username><password>${{ github.token }}</password></server>
+              <server><id>github-sirius-emfjson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-sirius-web</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-syson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-capella-for-syson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+            </servers>
+          </settings>
+          EOF
 
       - name: Qualify build and Linux and Windows products for Capella 7.1.0
         run: >-
