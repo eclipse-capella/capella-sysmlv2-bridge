@@ -26,12 +26,11 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
  * @author Raphaël Pagé
  */
 public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCoverages,
-        List<ArcadiaElementCoverage> arcadiaConcepts, Set<String> concreteLibraryClasses, List<MetaclassAlignment> alignments) {
+        List<ArcadiaElementCoverage> arcadiaConcepts, List<MetaclassAlignment> alignments) {
 
     public TransformationCoverageReport {
         metaclassCoverages = List.copyOf(Objects.requireNonNull(metaclassCoverages, "metaclassCoverages must not be null"));
         arcadiaConcepts = List.copyOf(arcadiaConcepts);
-        concreteLibraryClasses = Set.copyOf(concreteLibraryClasses);
         alignments = List.copyOf(Objects.requireNonNull(alignments, "alignments must not be null"));
     }
 
@@ -61,13 +60,12 @@ public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCove
                 && alignment.status() == AlignmentStatus.NO_EQUIVALENT);
     }
 
-    /**
-     * Returns distinct concrete library definitions declared as mapper targets.
-     */
+    /** Returns the concrete Arcadia concepts declared as mapper targets. */
     public Set<String> declaredLibraryClasses() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.mapperClass() != null)
-                .map(MetaclassCoverage::target).filter(this.concreteLibraryClasses::contains)
+        return this.arcadiaConcepts.stream()
+                .filter(ArcadiaElementCoverage::used)
+                .filter(coverage -> coverage.element().concreteDefinition())
+                .map(coverage -> coverage.element().qualifiedName())
                 .collect(Collectors.toUnmodifiableSet());
     }
 }

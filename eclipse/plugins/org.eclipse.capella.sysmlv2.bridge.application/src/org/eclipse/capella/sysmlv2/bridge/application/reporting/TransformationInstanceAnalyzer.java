@@ -69,7 +69,7 @@ public final class TransformationInstanceAnalyzer {
                     return new ElementOutcome(source.eClass(), perspective(source), modelPackage(source), status);
                 }).toList();
 
-        var available = meta.concreteLibraryClasses();
+        var mapperTargets = meta.declaredLibraryClasses();
         // Derived SysML views trigger expensive semantic calculations rather than expose stored usages.
         var used = EObjectUtils.allContents(transformation.result().root()).stream()
                 .flatMap(element -> element.eClass().getEAllReferences().stream()
@@ -79,7 +79,7 @@ public final class TransformationInstanceAnalyzer {
                 .map(Definition.class::cast)
                 .distinct()
                 .map(Definition::getQualifiedName)
-                .filter(available::contains)
+                .filter(mapperTargets::contains)
                 .collect(Collectors.toSet());
         return new TransformationInstanceReport(elements, diagnostics, used);
     }
