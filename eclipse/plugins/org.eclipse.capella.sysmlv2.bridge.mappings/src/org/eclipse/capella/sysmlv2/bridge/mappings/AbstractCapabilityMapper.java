@@ -19,10 +19,6 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INCOMING_CAPABILITY_ALLOCATION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUTGOING_CAPABILITY_ALLOCATION;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +40,7 @@ import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.ctx.SystemAnalysis;
 import org.polarsys.capella.core.data.fa.FunctionalChain;
 import org.polarsys.capella.core.data.interaction.AbstractCapability;
+import org.polarsys.capella.core.data.interaction.InteractionPackage;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.oa.OperationalAnalysis;
 import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
@@ -90,14 +87,14 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
     @Override
     public List<FeatureMapping<S>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<S>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INVOLVED_ABSTRACT_FUNCTIONS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
                 (source, context) -> mapReferences(source, source.getInvolvedAbstractFunctions(), ARCADIA_INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
-        mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_CHAINS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INVOLVED_FUNCTIONAL_CHAINS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
                 (source, context) -> mapReferences(source, source.getInvolvedFunctionalChains(),
                         ARCADIA_INVOLVED_FUNCTIONAL_CHAINS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
-        mappings.add(new FeatureMapping<>(CAPELLA_OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOutgoingCapabilityAllocation(), context.traceability())));
-        mappings.add(new FeatureMapping<>(CAPELLA_INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getIncomingCapabilityAllocation(), context.traceability())));
 
         mappings.add(getConcreteCapabilityMapping());

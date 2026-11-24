@@ -16,11 +16,6 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_POST_CONDITION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_PRE_CONDITION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_FUNCTIONAL_CHAINS;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,6 +32,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.fa.FunctionalChain;
 import org.polarsys.capella.core.data.fa.FunctionalChainInvolvement;
 import org.polarsys.capella.core.data.fa.FunctionalExchange;
@@ -90,10 +86,10 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
     @Override
     public List<FeatureMapping<FunctionalChain>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<FunctionalChain>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new DocumentingMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES, ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES));
-        mappings.add(new FeatureMapping<>(CAPELLA_REALIZED_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_REALIZES,
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__INVOLVED_FUNCTIONAL_EXCHANGES, ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES));
+        mappings.add(new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZED_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalChainRealizations(), context.traceability())));
-        mappings.add(new FeatureMapping<>(CAPELLA_REALIZING_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+        mappings.add(new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZING_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalChainRealizations(), context.traceability())));
         return mappings;
     }
@@ -101,7 +97,9 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
     @Override
     public Set<String> getIgnoredFeatures() {
         var ignored = new HashSet<>(FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES);
-        ignored.addAll(List.of(CAPELLA_PRE_CONDITION, CAPELLA_POST_CONDITION));
+        ignored.addAll(List.of(
+                FaPackage.Literals.FUNCTIONAL_CHAIN__PRE_CONDITION.getName(),
+                FaPackage.Literals.FUNCTIONAL_CHAIN__POST_CONDITION.getName()));
         return Set.copyOf(ignored);
     }
 }

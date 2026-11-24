@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 /**
@@ -27,19 +28,19 @@ import org.obeonetwork.capella.sysmlv2.transformer.transformation.Transformation
  * @author Raphaël Pagé
  */
 public class FeatureMapping<S extends EObject> {
-    private final String capellaFeature;
+    private final EStructuralFeature capellaFeature;
 
     private final String sysmlFeature;
 
     private final BiConsumer<S, TransformationContext> transformation;
 
-    public FeatureMapping(String capellaFeature, String sysmlFeature, BiConsumer<S, TransformationContext> transformation) {
+    public FeatureMapping(EStructuralFeature capellaFeature, String sysmlFeature, BiConsumer<S, TransformationContext> transformation) {
         this.capellaFeature = Objects.requireNonNull(capellaFeature, "capellaFeature must not be null");
         this.sysmlFeature = Objects.requireNonNull(sysmlFeature, "sysmlFeature must not be null");
         this.transformation = Objects.requireNonNull(transformation, "transformation must not be null");
     }
 
-    public String getCapellaFeature() {
+    public EStructuralFeature getCapellaFeature() {
         return capellaFeature;
     }
 

@@ -20,25 +20,6 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_ACTOR;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ABSTRACT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_DESCRIPTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_IN_FUNCTION_REALIZATIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_IN_PORT_REALIZATIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_NAME;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUT_FUNCTION_REALIZATIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUT_PORT_REALIZATIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REALIZING_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_REVIEW;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_STATUS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUB;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUMMARY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SUPER;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_DOC;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_VISIBLE_IN_LM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DECLARED_NAME;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DESCRIPTION;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_STATUS;
@@ -53,9 +34,14 @@ import org.eclipse.syson.sysml.Usage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
+import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.CsPackage;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
+import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.information.InformationPackage;
 import org.polarsys.capella.core.data.information.Port;
 
 /**
@@ -70,9 +56,16 @@ public final class FeatureMappingCatalog {
     /**
      * Features commonly ignored when mapping Arcadia elements.
      */
-    public static final Set<String> ARCADIA_ELEMENT_IGNORED_FEATURES = Set.of(CAPELLA_SUMMARY, CAPELLA_VISIBLE_IN_DOC, CAPELLA_VISIBLE_IN_LM, CAPELLA_REVIEW);
+    public static final Set<String> ARCADIA_ELEMENT_IGNORED_FEATURES = Set.of(
+            CapellacorePackage.Literals.CAPELLA_ELEMENT__SUMMARY.getName(),
+            ModellingcorePackage.Literals.PUBLISHABLE_ELEMENT__VISIBLE_IN_DOC.getName(),
+            ModellingcorePackage.Literals.PUBLISHABLE_ELEMENT__VISIBLE_IN_LM.getName(),
+            CapellacorePackage.Literals.CAPELLA_ELEMENT__REVIEW.getName());
 
-    public static final Set<String> GENERALIZABLE_ELEMENT_IGNORE_FEATURE = Set.of(CAPELLA_ABSTRACT, CAPELLA_SUPER, CAPELLA_SUB);
+    public static final Set<String> GENERALIZABLE_ELEMENT_IGNORE_FEATURE = Set.of(
+            CapellacorePackage.Literals.GENERALIZABLE_ELEMENT__ABSTRACT.getName(),
+            CapellacorePackage.Literals.GENERALIZABLE_ELEMENT__SUPER.getName(),
+            CapellacorePackage.Literals.GENERALIZABLE_ELEMENT__SUB.getName());
 
     private FeatureMappingCatalog() {
         /* This utility class should not be instantiated */
@@ -87,10 +80,10 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends NamedElement> List<FeatureMapping<S>> getArcadiaElementMappings() {
         return List.of(
-                new FeatureMapping<>(CAPELLA_NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
-                new FeatureMapping<>(CAPELLA_DESCRIPTION, SYSML_DESCRIPTION,
+                new FeatureMapping<>(ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
+                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION, SYSML_DESCRIPTION,
                         (source, context) -> COMMON_UPDATE_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())),
-                new FeatureMapping<>(CAPELLA_STATUS, SYSML_STATUS, FeatureMappingCatalog::mapStatus));
+                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__STATUS, SYSML_STATUS, FeatureMappingCatalog::mapStatus));
     }
 
     private static void mapStatus(NamedElement source, TransformationContext context) {
@@ -121,10 +114,10 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends AbstractFunction> List<FeatureMapping<S>> getFunctionMappings() {
         return List.of(
-                new FeatureMapping<>(CAPELLA_OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionRealizations(),
                                 context.traceability())),
-                new FeatureMapping<>(CAPELLA_IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionRealizations(),
                                 context.traceability())));
     }
@@ -138,10 +131,10 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends Port> List<FeatureMapping<S>> getPortRealizationMappings() {
         return List.of(
-                new FeatureMapping<>(CAPELLA_OUT_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(InformationPackage.Literals.PORT__OUTGOING_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedPortRealizations(),
                                 context.traceability())),
-                new FeatureMapping<>(CAPELLA_IN_PORT_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                new FeatureMapping<>(InformationPackage.Literals.PORT__INCOMING_PORT_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedPortRealizations(),
                                 context.traceability())));
     }
@@ -157,16 +150,16 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends Component> List<FeatureMapping<S>> getComponentMappings() {
         return List.of(
-                new FeatureMapping<>(CAPELLA_ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
+                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTIONAL_BLOCK__ALLOCATED_FUNCTIONS, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
                         (source, context) -> MapperUtils.addFunctionAllocation(source, MapperUtils.require(context.traceability(), source, Usage.class), context.traceability())),
-                new FeatureMapping<>(CAPELLA_REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentRealizations(), context.traceability())),
-                new FeatureMapping<>(CAPELLA_REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentRealizations(), context.traceability())),
-                new FeatureMapping<>(CAPELLA_ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
                         (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
                                 source.isActor())),
-                new FeatureMapping<>(CAPELLA_HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
                         (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
                                 source.isHuman())));
     }

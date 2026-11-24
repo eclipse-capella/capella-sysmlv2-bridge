@@ -154,7 +154,7 @@ public final class TransformationCoverageAnalyzer {
         var mappedFeatures = featureTargets.keySet();
         var ignoredFeatures = Objects.requireNonNull(mapper.getIgnoredFeatures(), "ignored features must not be null");
 
-        validateFeatures(metaclass, "mapped", mappedFeatures, declaredFeatureNames);
+        mapper.getFeatureMappings().forEach(mapping -> validateMappedFeature(metaclass, mapping));
         validateFeatures(metaclass, "ignored", ignoredFeatures, declaredFeatureNames);
 
         var overlap = mappedFeatures.stream()
@@ -219,8 +219,9 @@ public final class TransformationCoverageAnalyzer {
     private static Map<String, String> featureTargets(ElementMapper<?, ?> mapper) {
         var result = new LinkedHashMap<String, String>();
         for (var mapping : mapper.getFeatureMappings()) {
-            if (result.putIfAbsent(mapping.getCapellaFeature(), mapping.getSysmlFeature()) != null) {
-                throw new IllegalArgumentException("Duplicate mapping for " + mapping.getCapellaFeature());
+            var featureName = mapping.getCapellaFeature().getName();
+            if (result.putIfAbsent(featureName, mapping.getSysmlFeature()) != null) {
+                throw new IllegalArgumentException("Duplicate mapping for " + featureName);
             }
         }
         return result;
@@ -274,6 +275,13 @@ public final class TransformationCoverageAnalyzer {
                 .sorted().toList();
         if (!unknown.isEmpty()) {
             throw new IllegalArgumentException("Unknown " + kind + " features for " + sourceType.getName() + ": " + unknown);
+        }
+    }
+
+    private static void validateMappedFeature(EClass sourceType, FeatureMapping<?> mapping) {
+        var feature = mapping.getCapellaFeature();
+        if (!sourceType.getEAllStructuralFeatures().contains(feature)) {
+            throw new IllegalArgumentException("Mapped feature " + feature.getName() + " does not belong to " + sourceType.getName());
         }
     }
 

@@ -65,7 +65,7 @@ class TransformationCoverageWriterTest {
                 TestMetamodels.LogicalComponent.class, "Arcadia::Component") {
             @Override
             public List<FeatureMapping<TestMetamodels.LogicalComponent>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("name", "name", (source, context) -> {
+                return List.of(new FeatureMapping<>(component.getEStructuralFeature("name"), "name", (source, context) -> {
                 }));
             }
 

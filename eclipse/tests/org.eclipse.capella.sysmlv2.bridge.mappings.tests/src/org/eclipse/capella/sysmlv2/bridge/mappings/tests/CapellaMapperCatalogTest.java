@@ -16,17 +16,6 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_EXCHANGE_ITEM;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_CATEGORIES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_CONVOYED_INFORMATIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_EXCHANGED_ITEMS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_KIND;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_SOURCE_PORT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET_FUNCTION_INPUT_PORT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_TARGET_PORT;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -46,6 +35,8 @@ import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInvento
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.polarsys.capella.common.data.activity.ActivityPackage;
+import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
 import org.polarsys.capella.core.data.ctx.CtxFactory;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.fa.FaPackage;
@@ -103,11 +94,14 @@ class CapellaMapperCatalogTest {
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
         assertEquals(ARCADIA_FUNCTIONAL_EXCHANGE, alignment.target());
         assertTrue(alignment.featureAlignments().stream()
-                .anyMatch(feature -> feature.sourceFeature().equals(CAPELLA_EXCHANGED_ITEMS)
+                .anyMatch(feature -> feature.sourceFeature().equals(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS.getName())
                         && feature.target().equals(SYSML_FLOWUSAGE_PAYLOAD)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD));
-        var endpoints = List.of(CAPELLA_SOURCE, CAPELLA_TARGET,
-                CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT, CAPELLA_TARGET_FUNCTION_INPUT_PORT);
+        var endpoints = List.of(
+                ActivityPackage.Literals.ACTIVITY_EDGE__SOURCE.getName(),
+                ActivityPackage.Literals.ACTIVITY_EDGE__TARGET.getName(),
+                FaPackage.Literals.FUNCTIONAL_EXCHANGE__SOURCE_FUNCTION_OUTPUT_PORT.getName(),
+                FaPackage.Literals.FUNCTIONAL_EXCHANGE__TARGET_FUNCTION_INPUT_PORT.getName());
         endpoints.forEach(endpoint -> assertTrue(alignment.featureAlignments().stream()
                 .anyMatch(feature -> feature.sourceFeature().equals(endpoint)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD)));
@@ -117,8 +111,8 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertTrue(coverage.mappedFeatures().containsAll(endpoints));
-        assertTrue(coverage.mappedFeatures().contains(CAPELLA_EXCHANGED_ITEMS));
-        assertTrue(coverage.remainingFeatures().contains(CAPELLA_CATEGORIES));
+        assertTrue(coverage.mappedFeatures().contains(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS.getName()));
+        assertTrue(coverage.remainingFeatures().contains(FaPackage.Literals.FUNCTIONAL_EXCHANGE__CATEGORIES.getName()));
     }
 
     @Test
@@ -129,7 +123,8 @@ class CapellaMapperCatalogTest {
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
         assertEquals(ARCADIA_COMPONENT_EXCHANGE, alignments.getFirst().target());
         assertTrue(alignments.getFirst().featureAlignments().stream()
-                .anyMatch(feature -> feature.sourceFeature().equals(CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES)));
+                .anyMatch(feature -> feature.sourceFeature().equals(
+                        FaPackage.Literals.COMPONENT_EXCHANGE__ALLOCATED_FUNCTIONAL_EXCHANGES.getName())));
         assertTrue(CapellaMapperCatalog.backlogByPackage().values().stream().flatMap(List::stream)
                 .noneMatch(entry -> entry.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE));
 
@@ -138,10 +133,16 @@ class CapellaMapperCatalogTest {
                         .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList());
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.COMPONENT_EXCHANGE).findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(List.of(CAPELLA_SOURCE, CAPELLA_TARGET,
-                CAPELLA_SOURCE_PORT, CAPELLA_TARGET_PORT, CAPELLA_CONVOYED_INFORMATIONS,
-                CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES)));
-        assertTrue(coverage.remainingFeatures().containsAll(List.of(CAPELLA_KIND, CAPELLA_CATEGORIES)));
+        assertTrue(coverage.mappedFeatures().containsAll(List.of(
+                ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__SOURCE.getName(),
+                ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__TARGET.getName(),
+                FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT.getName(),
+                FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT.getName(),
+                ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS.getName(),
+                FaPackage.Literals.COMPONENT_EXCHANGE__ALLOCATED_FUNCTIONAL_EXCHANGES.getName())));
+        assertTrue(coverage.remainingFeatures().containsAll(List.of(
+                FaPackage.Literals.COMPONENT_EXCHANGE__KIND.getName(),
+                FaPackage.Literals.COMPONENT_EXCHANGE__CATEGORIES.getName())));
     }
 
     @Test

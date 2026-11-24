@@ -21,6 +21,9 @@ import java.util.Set;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
@@ -38,7 +41,7 @@ class TransformationCoverageAnalyzerTest {
     void calculatesCoverageFromMetamodelAndJavaMapperDeclarations() {
         var ePackage = TestMetamodels.logicalArchitecture();
 
-        var mapper = mapper(TestMetamodels.LogicalComponent.class, "name");
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, componentName(ePackage));
 
         var report = TransformationCoverageAnalyzer
                 .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of(new MetaclassAlignment(
@@ -65,16 +68,15 @@ class TransformationCoverageAnalyzerTest {
     }
 
     @Test
-    void rejectsMapperFeatureAbsentFromMetamodel() {
+    void rejectsFeatureFromAnUnrelatedClassEvenWhenTheNameMatches() {
         var ePackage = TestMetamodels.logicalArchitecture();
 
-        var mapper = mapper(TestMetamodels.LogicalComponent.class, "missingFeature");
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, EcorePackage.Literals.ENAMED_ELEMENT__NAME);
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer
                         .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
-                .withMessageContaining("Unknown mapped features")
-                .withMessageContaining("missingFeature");
+                .withMessageContaining("Mapped feature name does not belong to LogicalComponent");
     }
 
     @Test
@@ -92,12 +94,16 @@ class TransformationCoverageAnalyzerTest {
     void rejectsFeatureDeclaredAsMappedAndIgnored() {
         var ePackage = TestMetamodels.logicalArchitecture();
 
-        var mapper = mapper(TestMetamodels.LogicalComponent.class, Set.of("name"), "name");
+        var mapper = mapper(TestMetamodels.LogicalComponent.class, Set.of("name"), componentName(ePackage));
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> TransformationCoverageAnalyzer
                         .analyze(List.of(ePackage), List.of(mapper), List.of(), List.of()))
                 .withMessageContaining("both mapped and ignored");
+    }
+
+    private static EStructuralFeature componentName(EPackage ePackage) {
+        return ((EClass) ePackage.getEClassifier("LogicalComponent")).getEStructuralFeature("name");
     }
 
     private static MetaclassCoverage coverageFor(
@@ -109,12 +115,12 @@ class TransformationCoverageAnalyzerTest {
     }
 
     private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
-            String... mappedFeatures) {
+            EStructuralFeature... mappedFeatures) {
         return mapper(sourceClass, Set.of(), mappedFeatures);
     }
 
     private static <T extends EObject> ElementMapper<T, EObject> mapper(Class<T> sourceClass,
-            Set<String> ignoredFeatures, String... mappedFeatures) {
+            Set<String> ignoredFeatures, EStructuralFeature... mappedFeatures) {
         return new TestMapper<>(sourceClass, ignoredFeatures, mappedFeatures);
     }
 
@@ -124,7 +130,7 @@ class TransformationCoverageAnalyzerTest {
 
         private final Set<String> ignoredFeatures;
 
-        private TestMapper(Class<T> sourceClass, Set<String> ignoredFeatures, String... mappedFeatures) {
+        private TestMapper(Class<T> sourceClass, Set<String> ignoredFeatures, EStructuralFeature... mappedFeatures) {
             super(sourceClass, "SysML::Element");
             this.ignoredFeatures = ignoredFeatures;
             this.mappings = Arrays.stream(mappedFeatures)
@@ -132,8 +138,8 @@ class TransformationCoverageAnalyzerTest {
                     .toList();
         }
 
-        private FeatureMapping<T> mapping(String feature) {
-            return new FeatureMapping<>(feature, feature, (source, context) -> {
+        private FeatureMapping<T> mapping(EStructuralFeature feature) {
+            return new FeatureMapping<>(feature, feature.getName(), (source, context) -> {
             });
         }
 
