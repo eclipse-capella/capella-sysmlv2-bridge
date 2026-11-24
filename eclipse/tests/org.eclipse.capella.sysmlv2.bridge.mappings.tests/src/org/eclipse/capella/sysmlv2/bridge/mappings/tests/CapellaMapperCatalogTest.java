@@ -19,6 +19,7 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,9 +111,12 @@ class CapellaMapperCatalogTest {
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(endpoints));
-        assertTrue(coverage.mappedFeatures().contains(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS.getName()));
-        assertTrue(coverage.remainingFeatures().contains(FaPackage.Literals.FUNCTIONAL_EXCHANGE__CATEGORIES.getName()));
+        assertTrue(coverage.featureTargets().keySet().containsAll(endpoints));
+        assertTrue(coverage.featureTargets().containsKey(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS.getName()));
+        var categories = FaPackage.Literals.FUNCTIONAL_EXCHANGE__CATEGORIES.getName();
+        assertNotNull(coverage.metaclass().getEStructuralFeature(categories));
+        assertFalse(coverage.featureTargets().containsKey(categories));
+        assertFalse(coverage.ignoredFeatures().contains(categories));
     }
 
     @Test
@@ -133,16 +137,20 @@ class CapellaMapperCatalogTest {
                         .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList());
         var coverage = report.metaclassCoverages().stream()
                 .filter(value -> value.metaclass() == FaPackage.Literals.COMPONENT_EXCHANGE).findFirst().orElseThrow();
-        assertTrue(coverage.mappedFeatures().containsAll(List.of(
+        assertTrue(coverage.featureTargets().keySet().containsAll(List.of(
                 ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__SOURCE.getName(),
                 ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__TARGET.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT.getName(),
                 ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__ALLOCATED_FUNCTIONAL_EXCHANGES.getName())));
-        assertTrue(coverage.remainingFeatures().containsAll(List.of(
+        for (var feature : List.of(
                 FaPackage.Literals.COMPONENT_EXCHANGE__KIND.getName(),
-                FaPackage.Literals.COMPONENT_EXCHANGE__CATEGORIES.getName())));
+                FaPackage.Literals.COMPONENT_EXCHANGE__CATEGORIES.getName())) {
+            assertNotNull(coverage.metaclass().getEStructuralFeature(feature), feature);
+            assertFalse(coverage.featureTargets().containsKey(feature), feature);
+            assertFalse(coverage.ignoredFeatures().contains(feature), feature);
+        }
     }
 
     @Test

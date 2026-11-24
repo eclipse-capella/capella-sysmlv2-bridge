@@ -164,7 +164,7 @@ class TransformationCoverageWriterTest {
                 .doesNotContain("## Transformation details")
                 .doesNotContain("\n|");
         assertThat(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)))
-                .contains("No concrete Capella classes were discovered.", "No concrete Capella classes have an implemented mapper.",
+                .contains("No concrete Capella classes were discovered.", "No concrete Capella classes have an implemented mapping.",
                         "No types to report in this section.", "No Arcadia definitions to report in this section.")
                 .doesNotContain("\n|");
     }
