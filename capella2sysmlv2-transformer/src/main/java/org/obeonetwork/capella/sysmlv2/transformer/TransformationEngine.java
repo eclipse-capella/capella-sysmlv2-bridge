@@ -24,6 +24,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.BoundMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
@@ -92,6 +93,7 @@ public final class TransformationEngine {
         var targetResource = new ResourceImpl(URI.createURI("transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
         this.resourceSet.getResources().add(targetResource);
         targetResource.getContents().add(modelStructure.root());
+        var defaultStructureElementCount = EObjectUtils.toStream(EcoreUtil.getAllProperContents(targetResource, false)).count();
         var context = new TransformationContext(modelStructure);
 
         var construction = new Construction(sources, context);
@@ -101,7 +103,9 @@ public final class TransformationEngine {
         construction.completed.forEach(mapper -> mapper.mapFeatures(context));
         LOGGER.info("Done!");
 
-        return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability());
+        var generatedElementCount = EObjectUtils.toStream(EcoreUtil.getAllProperContents(targetResource, false)).count();
+        return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability(),
+                generatedElementCount, generatedElementCount - defaultStructureElementCount);
     }
 
     private enum State {

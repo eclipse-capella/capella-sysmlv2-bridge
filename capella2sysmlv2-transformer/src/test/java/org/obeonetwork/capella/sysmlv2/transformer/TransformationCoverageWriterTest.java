@@ -65,7 +65,7 @@ class TransformationCoverageWriterTest {
                 TestMetamodels.LogicalComponent.class, "Arcadia::Component") {
             @Override
             public List<FeatureMapping<TestMetamodels.LogicalComponent>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("name", "name", (source, context) -> {
+                return List.of(new FeatureMapping<>(component.getEStructuralFeature("name"), "name", (source, context) -> {
                 }));
             }
 
@@ -77,13 +77,15 @@ class TransformationCoverageWriterTest {
         };
         var report = TransformationCoverageAnalyzer
                 .analyze(List.of(ePackage), List.of(mapper), List.of(library), List.of(
-                        new MetaclassAlignment(unsupported, null, AlignmentStatus.NO_EQUIVALENT, List.of())));
+                        new MetaclassAlignment(unsupported, null, AlignmentStatus.NO_EQUIVALENT, List.of())), null);
+        assertThat(report.arcadiaConcepts()).extracting(coverage -> coverage.element().qualifiedName())
+                .containsExactly("Arcadia::Candidate", "Arcadia::Component", "Arcadia::ExplicitNonMapping", "Arcadia::Function", "Arcadia::Unassessed");
 
         var instance = new TransformationInstanceReport(List.of(
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalComponent"), "Logical", "Structure", ElementMappingOutcome.MAPPED),
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalFunction"), "Logical", "Functions", ElementMappingOutcome.NOT_IMPLEMENTED),
                 new ElementOutcome((EClass) ePackage.getEClassifier("LogicalFunction"), "Logical", "Functions", ElementMappingOutcome.NOT_IMPLEMENTED),
-                new ElementOutcome(unsupported, "Logical", "Other", ElementMappingOutcome.UNSUPPORTED)), List.of(), Set.of("Arcadia::Function"));
+                new ElementOutcome(unsupported, "Logical", "Other", ElementMappingOutcome.UNSUPPORTED)), List.of(), Set.of(), 2, 1);
         var conceptAssessment = Map.of("Arcadia::Component", AlignmentStatus.CONFIRMED,
                 "Arcadia::Candidate", AlignmentStatus.CANDIDATE,
                 "Arcadia::ExplicitNonMapping", AlignmentStatus.NO_EQUIVALENT,
@@ -105,18 +107,19 @@ class TransformationCoverageWriterTest {
                         + "| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
                 .contains("| All | 4 | 1 (25.00%) | 0 (0.00%) | 1 (25.00%) | 2 (50.00%) | 0 (0.00%) |")
                 .contains("| [Logical](#instance-architecture-0) | 4 | 1 (25.00%) | 0 (0.00%) | 1 (25.00%) | 2 (50.00%) | 0 (0.00%) |")
-                .contains("### Logical\n", "| Model package | Class name | Total elements |")
+                .contains("\n#### Logical\n", "| Model package | Class name | Total elements |")
                 .contains("| Functions | LogicalFunction | 2 | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) | 2 (100.00%) | 0 (0.00%) |")
                 .contains("| Other | UnsupportedType | 1 | 0 (0.00%) | 0 (0.00%) | 1 (100.00%) | 0 (0.00%) | 0 (0.00%) |")
                 .contains("| Structure | LogicalComponent | 1 | 1 (100.00%) | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) | 0 (0.00%) |")
                 .contains("### Library Usage", "Distinct mapper-covered Arcadia definitions used: **0/1 (0.00%)**")
                 .contains("#### Mapper-covered Arcadia definitions not used\n\n- Arcadia::Component\n")
-                .contains("| Structure | All | 1 |", "Outcome: **Succeeded**")
-                .contains("[Back to global coverage](#instance-global-coverage)")
-                .contains("## Transformation status\n\nTransformed 1 of 3 transformable elements (33.33%). Total source elements: 4.\n\nOutcome:");
-        assertThat(instanceMarkdown.substring(0, instanceMarkdown.indexOf("### Logical\n")))
+                .contains("| Structure | All | 1 |")
+                .contains("[Back to global coverage](#instance-global-coverage)");
+        assertThat(instanceMarkdown.substring(0, instanceMarkdown.indexOf("\n#### Logical\n")))
                 .contains("### Library Usage", "#### Mapper-covered Arcadia definitions not used")
-                .contains("## Transformation status", "Outcome: **Succeeded**", "No diagnostics were reported.")
+                .contains("## Transformation status\n\nOutcome: **Succeeded**\n\n"
+                        + "Transformed 1 of 3 transformable elements (33.33%). Total source elements: 4.")
+                .contains("Total generated elements: 2\n", "Generated elements excluding default structure: 1\n", "No diagnostics were reported.")
                 .doesNotContain("| Severity | Source | Message |")
                 .doesNotContain("Class name", "| Functions |", "| Structure |", "| Other |");
         var metaMarkdown = Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME));
@@ -149,8 +152,8 @@ class TransformationCoverageWriterTest {
         assertThat(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)))
                 .contains("No non-derived structural features to report.")
                 .doesNotContain("| name |", "| ownedLogicalComponents |", "| Source feature |");
-        var emptyReport = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of());
-        new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of()),
+        var emptyReport = TransformationCoverageAnalyzer.analyze(List.of(), List.of(), List.of(), List.of(), null);
+        new TransformationCoverageWriter().write(new TransformationInstanceReport(List.of(), List.of(), Set.of(), 0, 0),
                 emptyReport, Map.of(), metadata, this.temporaryDirectory);
         assertInternalLinks(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.INSTANCE_FILE_NAME)));
         assertInternalLinks(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)));
@@ -161,7 +164,7 @@ class TransformationCoverageWriterTest {
                 .doesNotContain("## Transformation details")
                 .doesNotContain("\n|");
         assertThat(Files.readString(this.temporaryDirectory.resolve(TransformationCoverageWriter.META_FILE_NAME)))
-                .contains("No concrete Capella classes were discovered.", "No concrete Capella classes have an implemented mapper.",
+                .contains("No concrete Capella classes were discovered.", "No concrete Capella classes have an implemented mapping.",
                         "No types to report in this section.", "No Arcadia definitions to report in this section.")
                 .doesNotContain("\n|");
     }

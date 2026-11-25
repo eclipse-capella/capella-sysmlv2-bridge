@@ -13,6 +13,7 @@
 package org.obeonetwork.capella.sysmlv2.transformer.mapping;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 
 /**
  * Empty feature mapping whose sole purpose is to appear in the report scan.
@@ -23,7 +24,7 @@ import org.eclipse.emf.ecore.EObject;
  */
 public final class DocumentingMapping<S extends EObject> extends FeatureMapping<S> {
 
-    public DocumentingMapping(String capellaFeature, String sysmlFeature) {
+    public DocumentingMapping(EStructuralFeature capellaFeature, String sysmlFeature) {
         super(capellaFeature, sysmlFeature, (a, b) -> {
         });
     }

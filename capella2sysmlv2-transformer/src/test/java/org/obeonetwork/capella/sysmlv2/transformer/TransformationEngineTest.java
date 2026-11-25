@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
@@ -107,7 +108,7 @@ class TransformationEngineTest {
 
             @Override
             public List<FeatureMapping<EPackage>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("name", "name",
+                return List.of(new FeatureMapping<>(EcorePackage.Literals.ENAMED_ELEMENT__NAME, "name",
                         (source, context) -> executions.add(new Execution("features", source.getName()))));
             }
         };
@@ -202,7 +203,7 @@ class TransformationEngineTest {
 
                 @Override
                 public List<FeatureMapping<EPackage>> getFeatureMappings() {
-                    return List.of(new FeatureMapping<>("name", "name", (source, context) -> features.add(source)));
+                    return List.of(new FeatureMapping<>(EcorePackage.Literals.ENAMED_ELEMENT__NAME, "name", (source, context) -> features.add(source)));
                 }
             };
             var inputs = new ArrayList<EObject>();
@@ -255,7 +256,7 @@ class TransformationEngineTest {
 
                 @Override
                 public List<FeatureMapping<EPackage>> getFeatureMappings() {
-                    return List.of(new FeatureMapping<>("name", "name", (source, context) -> features.add(source)));
+                    return List.of(new FeatureMapping<>(EcorePackage.Literals.ENAMED_ELEMENT__NAME, "name", (source, context) -> features.add(source)));
                 }
             };
             var inputs = new ArrayList<EObject>(List.of(skipped, skipped, unrelated));
@@ -340,14 +341,14 @@ class TransformationEngineTest {
 
     @Test
     void createsAllTargetsBeforeMappingFeatures() {
-        var first = TestEObjects.create("http://example.org/capella", "LogicalComponent");
+        var first = TestEObjects.logicalComponent("First");
         var second = first.eClass().getEPackage().getEFactoryInstance().create(first.eClass());
         var featureExecutions = new ArrayList<EObject>();
         var missingTargets = new ArrayList<EObject>();
         var mapper = new ElementMapper<EObject, EObject>(EObject.class, "SysML::Element") {
             @Override
             public List<FeatureMapping<EObject>> getFeatureMappings() {
-                return List.of(new FeatureMapping<>("feature", "feature", (source, context) -> {
+                return List.of(new FeatureMapping<>(first.eClass().getEStructuralFeature("name"), "feature", (source, context) -> {
                     featureExecutions.add(source);
                     if (context.traceability().lookupTarget(second).isEmpty()) {
                         missingTargets.add(source);

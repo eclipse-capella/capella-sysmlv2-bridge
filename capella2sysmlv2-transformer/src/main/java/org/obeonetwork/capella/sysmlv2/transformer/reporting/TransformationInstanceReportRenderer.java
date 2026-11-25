@@ -90,9 +90,11 @@ public final class TransformationInstanceReportRenderer {
         }
 
         result.append("\n<a id=\"instance-transformation-status\"></a>\n\n## Transformation status\n\n")
+                .append("Outcome: **").append(outcome).append("**\n\n")
                 .append(instance.coverageSummary(meta)).append("\n\n")
-                .append("Outcome: **").append(outcome)
-                .append("**\n\nWarnings: ").append(warnings).append("\n\nErrors: ").append(errors);
+                .append("Total generated elements: ").append(instance.generatedElementCount())
+                .append("\n\nGenerated elements excluding default structure: ").append(instance.generatedElementCountExcludingDefaultStructure())
+                .append("\n\nWarnings: ").append(warnings).append("\n\nErrors: ").append(errors);
 
         if (instance.diagnostics().isEmpty()) {
             result.append("\n\nNo diagnostics were reported.\n");
@@ -107,7 +109,7 @@ public final class TransformationInstanceReportRenderer {
 
     private static String libraryUsage(TransformationInstanceReport instance, TransformationCoverageReport meta) {
         var coveredDefinitions = meta.declaredLibraryClasses();
-        var usedDefinitions = instance.usedLibraryClasses().stream().filter(coveredDefinitions::contains).collect(Collectors.toSet());
+        var usedDefinitions = instance.usedLibraryClasses();
         var unusedDefinitions = coveredDefinitions.stream().filter(name -> !usedDefinitions.contains(name)).collect(Collectors.toSet());
         var usage = new CoverageMetric(usedDefinitions.size(), coveredDefinitions.size());
         return new StringBuilder("\n<a id=\"instance-library-usage\"></a>\n\n### Library Usage\n\n")

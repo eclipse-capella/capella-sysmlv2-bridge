@@ -33,7 +33,7 @@ class Capella2SysMLV2CommandTest {
         var coverage = "Transformed 2 of 3 transformable elements (66.67%). Total source elements: 5.";
         var command = new Capella2SysMLV2Command(value -> {
             request.set(value);
-            return new TransformationSummary(coverage, 0);
+            return new TransformationSummary(coverage, 0, 25, 7);
         });
         var exitCode = command.execute(new String[] { "project.zip", "output" },
                 new PrintWriter(output), new PrintWriter(new StringWriter()));
@@ -41,7 +41,8 @@ class Capella2SysMLV2CommandTest {
         assertThat(exitCode).isEqualTo(SUCCESS);
         assertThat(request.get()).isEqualTo(new TransformationRequest(
                 Path.of("project.zip"), Path.of("output")));
-        assertThat(output.toString().lines()).containsExactly(coverage, "Errors: 0");
+        assertThat(output.toString().lines()).containsExactly(coverage,
+                "Total generated elements: 25", "Generated elements excluding default structure: 7", "Errors: 0");
     }
 
     @Test

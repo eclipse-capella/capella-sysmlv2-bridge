@@ -20,10 +20,11 @@ import org.eclipse.emf.ecore.EClass;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 
 /**
- * Counts source-element outcomes and actual library usage for one transformation.
+ * Reports source-element outcomes, generated model size and actual library usage for one transformation.
  */
 public record TransformationInstanceReport(List<ElementOutcome> elements,
-        List<TransformationDiagnostic> diagnostics, Set<String> usedLibraryClasses) {
+        List<TransformationDiagnostic> diagnostics, Set<String> usedLibraryClasses,
+        long generatedElementCount, long generatedElementCountExcludingDefaultStructure) {
 
     public TransformationInstanceReport {
         elements = List.copyOf(elements);

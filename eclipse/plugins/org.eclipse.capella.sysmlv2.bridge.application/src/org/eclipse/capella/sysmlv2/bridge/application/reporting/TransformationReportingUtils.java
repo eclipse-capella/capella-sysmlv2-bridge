@@ -49,6 +49,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCover
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
+import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
 
 public final class TransformationReportingUtils {
 
@@ -85,7 +86,7 @@ public final class TransformationReportingUtils {
         var report = TransformationCoverageAnalyzer.analyze(
                 CapellaSemanticPackageDiscoveryUtils.discover(),
                 transformation.mappers(), transformation.targetModel().getArcadiaLibrary(),
-                CapellaMapperCatalog.getAlignmentCatalog());
+                CapellaMapperCatalog.getAlignmentCatalog(), ModellingcorePackage.Literals.ABSTRACT_TRACE);
 
         var instance = TransformationInstanceAnalyzer.analyze(transformation, report);
         var inputChecksum = checksum(request.inputZip());
@@ -99,7 +100,8 @@ public final class TransformationReportingUtils {
                 exportFailure = Optional.of(exception);
                 var diagnostics = new ArrayList<>(instance.diagnostics());
                 diagnostics.add(TransformationDiagnostic.error(null, "Output export failed: " + exception.getMessage()));
-                instance = new TransformationInstanceReport(instance.elements(), diagnostics, instance.usedLibraryClasses());
+                instance = new TransformationInstanceReport(instance.elements(), diagnostics, instance.usedLibraryClasses(),
+                        instance.generatedElementCount(), instance.generatedElementCountExcludingDefaultStructure());
             }
         }
         var metadata = new RunMetadata(transformation.modelName(), startedAt, inputChecksum, outputChecksum);
@@ -112,7 +114,8 @@ public final class TransformationReportingUtils {
             throw new IllegalStateException("Transformation produced " + errorCount + " error diagnostic(s)");
         }
 
-        var summary = new TransformationSummary(instance.coverageSummary(report), transformation.errorCount());
+        var summary = new TransformationSummary(instance.coverageSummary(report), transformation.errorCount(),
+                instance.generatedElementCount(), instance.generatedElementCountExcludingDefaultStructure());
         LOGGER.info("Reporting workflow completed");
         return summary;
     }

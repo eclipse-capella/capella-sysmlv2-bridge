@@ -17,23 +17,23 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.emf.ecore.EClass;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
 
 /**
  * Coverage details for one Capella metaclass.
  *
  * @author Raphaël Pagé
  */
-public record MetaclassCoverage(EClass metaclass, MappingStatus status, String mapperClass, String target,
-        List<String> mappedFeatures, List<String> ignoredFeatures, List<String> remainingFeatures,
+public record MetaclassCoverage(EClass metaclass, boolean implemented, String target,
+        List<String> ignoredFeatures,
         Map<String, String> featureTargets) {
 
     public MetaclassCoverage {
         Objects.requireNonNull(metaclass, "metaclass must not be null");
-        Objects.requireNonNull(status, "status must not be null");
-        mappedFeatures = List.copyOf(Objects.requireNonNull(mappedFeatures, "mappedFeatures must not be null"));
         ignoredFeatures = List.copyOf(Objects.requireNonNull(ignoredFeatures, "ignoredFeatures must not be null"));
-        remainingFeatures = List.copyOf(Objects.requireNonNull(remainingFeatures, "remainingFeatures must not be null"));
         featureTargets = Map.copyOf(Objects.requireNonNull(featureTargets, "featureTargets must not be null"));
+    }
+
+    public boolean isConcreteMetaclass() {
+        return !this.metaclass.isAbstract() && !this.metaclass.isInterface();
     }
 }

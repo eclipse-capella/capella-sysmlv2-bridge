@@ -14,12 +14,12 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_COMPONENTS;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.AbstractCapabilityMapper;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.polarsys.capella.core.data.la.CapabilityRealization;
+import org.polarsys.capella.core.data.la.LaPackage;
 
 /**
  * Maps logical and physical capability realizations to Arcadia capability occurrences.
@@ -33,8 +33,9 @@ public final class CapabilityRealizationMapper extends AbstractCapabilityMapper<
 
     @Override
     protected FeatureMapping<CapabilityRealization> getConcreteCapabilityMapping() {
-        return new FeatureMapping<>(CAPELLA_INVOLVED_COMPONENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
-                (source, context) -> mapReferences(source, source.getInvolvedComponents(),
+        return FeatureMapping.forReferencedElements(LaPackage.Literals.CAPABILITY_REALIZATION__OWNED_CAPABILITY_REALIZATION_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedComponents(), source.getOwnedCapabilityRealizationInvolvements(),
                         ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }

@@ -21,11 +21,11 @@ class FeatureMappingTest {
 
     @Test
     void mappingRunsWithSourceAndContext() {
-        var source = TestEObjects.create("http://example.org/capella", "Element");
+        var source = TestEObjects.logicalComponent("Source");
         var target = TestEObjects.create("http://example.org/sysml", "Element");
         var transformed = new AtomicBoolean();
         var context = TestContexts.create();
-        var mapping = new FeatureMapping<EObject>("source", "target",
+        var mapping = new FeatureMapping<EObject>(source.eClass().getEStructuralFeature("name"), "target",
                 (mappedSource, mappedContext) -> transformed.set(mappedSource == source && mappedContext == context
                         && target != null));
 
@@ -36,10 +36,10 @@ class FeatureMappingTest {
 
     @Test
     void mappingIsNotDeferred() {
-        var source = TestEObjects.create("http://example.org/capella", "Element");
+        var source = TestEObjects.logicalComponent("Source");
         var context = TestContexts.create();
         var transformed = new AtomicBoolean();
-        var mapping = new FeatureMapping<EObject>("source", "target",
+        var mapping = new FeatureMapping<EObject>(source.eClass().getEStructuralFeature("name"), "target",
                 (mappedSource, mappedContext) -> transformed.set(mappedSource == source && mappedContext == context));
 
         mapping.transform(source, context);

@@ -64,6 +64,8 @@ public final class Capella2SysMLV2Command {
             var result = this.transformationService.transform(
                     new TransformationRequest(Path.of(arguments[0]), Path.of(arguments[1])));
             out.accept(result.inputModelCoverage());
+            out.accept("Total generated elements: " + result.generatedElementCount());
+            out.accept("Generated elements excluding default structure: " + result.generatedElementCountExcludingDefaultStructure());
             out.accept("Errors: " + result.errorCount());
             return SUCCESS;
         } catch (TransformationCommandException exception) {

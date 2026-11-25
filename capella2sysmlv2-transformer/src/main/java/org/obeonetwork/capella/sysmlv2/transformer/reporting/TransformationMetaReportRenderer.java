@@ -42,7 +42,7 @@ public final class TransformationMetaReportRenderer {
      */
     public String render(TransformationCoverageReport meta, Map<String, AlignmentStatus> conceptAssessment) {
         var concrete = meta.metaclassCoverages().stream()
-                .filter(coverage -> !coverage.metaclass().isAbstract() && !coverage.metaclass().isInterface())
+                .filter(MetaclassCoverage::isConcreteMetaclass)
                 .sorted(Comparator.comparing(coverage -> qualifiedName(coverage.metaclass()), PERSPECTIVE_ORDER))
                 .toList();
 
@@ -57,7 +57,7 @@ public final class TransformationMetaReportRenderer {
         if (concrete.isEmpty()) {
             result.append("No concrete Capella classes were discovered.\n");
         } else {
-            result.append("| Metamodel package | Total concrete classes | Classes with an implemented mapper | Unsupported classes | Classes not yet implemented |\n")
+            result.append("| Metamodel package | Total concrete classes | Implemented classes | Unsupported classes | Classes not yet implemented |\n")
                     .append("| --- | ---: | ---: | ---: | ---: |\n");
             result.append(metaRow("All", concrete, meta));
             group(concrete, coverage -> coverage.metaclass().getEPackage().getNsURI())
@@ -68,11 +68,11 @@ public final class TransformationMetaReportRenderer {
 
         result.append("\n<a id=\"meta-details\"></a>\n\n## Details\n");
         var implementedClasses = concrete.stream()
-                .filter(coverage -> coverage.mapperClass() != null)
+                .filter(MetaclassCoverage::implemented)
                 .toList();
 
         if (implementedClasses.isEmpty()) {
-            result.append("\nNo concrete Capella classes have an implemented mapper.\n");
+            result.append("\nNo concrete Capella classes have an implemented mapping.\n");
         }
         implementedClasses.forEach(coverage -> result.append(typeDetails(coverage)));
 
@@ -84,7 +84,7 @@ public final class TransformationMetaReportRenderer {
         result.append(typeInventory("Unsupported concrete Capella classes", unsuportedClasses));
 
         var notImplementedClasses = concrete.stream()
-                .filter(coverage -> coverage.mapperClass() == null && !meta.isUnsupported(coverage.metaclass()))
+                .filter(coverage -> !coverage.implemented() && !meta.isUnsupported(coverage.metaclass()))
                 .map(MetaclassCoverage::metaclass)
                 .toList();
         result.append("\n<a id=\"meta-not-implemented-classes\"></a>\n");
@@ -102,6 +102,10 @@ public final class TransformationMetaReportRenderer {
                 .append("\n\nTarget: ")
                 .append(escape(coverage.target()))
                 .append("\n");
+
+        if (coverage.featureTargets().isEmpty() && coverage.ignoredFeatures().isEmpty()) {
+            return result.toString();
+        }
 
         var features = type.getEAllStructuralFeatures().stream()
                 .filter(feature -> !feature.isDerived())
@@ -190,7 +194,7 @@ public final class TransformationMetaReportRenderer {
 
     private static String metaRow(String name, List<MetaclassCoverage> classes, TransformationCoverageReport meta) {
         var implemented = classes.stream()
-                .filter(coverage -> coverage.mapperClass() != null)
+                .filter(MetaclassCoverage::implemented)
                 .count();
 
         var unsupported = classes.stream()

@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,9 +28,25 @@ import org.eclipse.emf.ecore.EObject;
 public final class Traceability {
     private final IdentityHashMap<EObject, EObject> mappings = new IdentityHashMap<>();
 
-    private final Set<EObject> excluded = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<EObject> excluded = Collections.newSetFromMap(new IdentityHashMap<>());
 
-    private final Set<EObject> skipped = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<EObject> skipped = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    private final Set<EObject> mappedWithoutTarget = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    /** Records a successful mapping without a standalone target object. */
+    public void markMapped(EObject source) {
+        Objects.requireNonNull(source);
+        mappedWithoutTarget.add(source);
+        excluded.remove(source);
+        skipped.remove(source);
+    }
+
+    /** Returns whether the source was successfully mapped. */
+    public boolean isMapped(EObject source) {
+        Objects.requireNonNull(source);
+        return mappings.containsKey(source) || mappedWithoutTarget.contains(source);
+    }
 
     /**
      * Registers a source-to-target correspondence.
@@ -61,6 +78,7 @@ public final class Traceability {
     public void unregister(EObject source) {
         Objects.requireNonNull(source);
         mappings.remove(source);
+        mappedWithoutTarget.remove(source);
         excluded.add(source);
         skipped.remove(source);
     }
