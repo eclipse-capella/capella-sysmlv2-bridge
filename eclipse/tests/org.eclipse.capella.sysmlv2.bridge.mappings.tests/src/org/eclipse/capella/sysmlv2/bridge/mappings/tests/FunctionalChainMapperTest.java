@@ -9,12 +9,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_REALIZES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -29,6 +23,7 @@ import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationInstanceAnalyzer;
 import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalChainMapper;
 import org.eclipse.emf.common.util.URI;
@@ -80,10 +75,10 @@ class FunctionalChainMapperTest {
         var result = transform(sources);
         var source = target(realizing, result);
         var target = target(realized, result);
-        assertEquals(List.of(target), QUERY.getFeatureReferenceValue(source, ARCADIA_REALIZES));
-        assertEquals(List.of(source), QUERY.getFeatureReferenceValue(target, ARCADIA_IS_REALIZED_BY));
-        assertTrue(QUERY.getFeatureReferenceValue(target, ARCADIA_REALIZES).isEmpty());
-        assertTrue(QUERY.getFeatureReferenceValue(source, ARCADIA_IS_REALIZED_BY).isEmpty());
+        assertEquals(List.of(target), QUERY.getFeatureReferenceValue(source, CommonQueryService.ARCADIA_REALIZES));
+        assertEquals(List.of(source), QUERY.getFeatureReferenceValue(target, CommonQueryService.ARCADIA_IS_REALIZED_BY));
+        assertTrue(QUERY.getFeatureReferenceValue(target, CommonQueryService.ARCADIA_REALIZES).isEmpty());
+        assertTrue(QUERY.getFeatureReferenceValue(source, CommonQueryService.ARCADIA_IS_REALIZED_BY).isEmpty());
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
     }
 
@@ -165,7 +160,7 @@ class FunctionalChainMapperTest {
         var result = transform(EObjectUtils.allContents(fixture.architecture()));
         assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(), target(fixture, result).getOwner());
         assertEquals(List.of(target(fixture, result)), QUERY.getFeatureReferenceValue(
-                (OccurrenceUsage) result.traceability().lookupTarget(capability).orElseThrow(), ARCADIA_INVOLVED_FUNCTIONAL_CHAINS));
+                (OccurrenceUsage) result.traceability().lookupTarget(capability).orElseThrow(), ArcadiaNames.INVOLVED_FUNCTIONAL_CHAINS));
         assertTrue(result.traceability().isMapped(involvement));
         assertTrue(result.traceability().isSkipped(empty));
         assertTrue(capability.getOwnedFunctionalChainAbstractCapabilityInvolvements().stream()
@@ -201,7 +196,7 @@ class FunctionalChainMapperTest {
             assertEquals("Read sensor data", QUERY.getArcadiaElementDescription(target));
             assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(), target.getOwner());
             assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
-                    QUERY.getFeatureReferenceValue(target, ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
+                    QUERY.getFeatureReferenceValue(target, CommonQueryService.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
             assertTrue(result.traceability().isMapped(involvement), perspective);
             assertTrue(result.traceability().isMapped(duplicate), perspective);
             assertSame(result.traceability().lookupTarget(fixture.root()).orElseThrow(),
@@ -247,7 +242,7 @@ class FunctionalChainMapperTest {
         involveExchange(fixture.chain(), fixture.exchange());
         var result = transform(EObjectUtils.allContents(fixture.architecture()));
         assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
-                QUERY.getFeatureReferenceValue(target(fixture, result), ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
+                QUERY.getFeatureReferenceValue(target(fixture, result), CommonQueryService.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
     }
 
@@ -279,7 +274,7 @@ class FunctionalChainMapperTest {
         mapper.mapFeatures(fixture.chain(), context);
         var target = (ActionUsage) context.traceability().lookupTarget(fixture.chain()).orElseThrow();
         assertEquals(List.of(exchangeTarget),
-                QUERY.getFeatureReferenceValue(target, ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
+                QUERY.getFeatureReferenceValue(target, CommonQueryService.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
         assertTrue(context.diagnostics().collect().isEmpty());
     }
 
@@ -306,7 +301,7 @@ class FunctionalChainMapperTest {
         var transformation = ModelTransformationUtils.transform(fixture.architecture(), "Test");
         var result = transformation.result();
         assertEquals(List.of(result.traceability().lookupTarget(fixture.exchange()).orElseThrow()),
-                QUERY.getFeatureReferenceValue(target(fixture, result), ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
+                QUERY.getFeatureReferenceValue(target(fixture, result), CommonQueryService.ARCADIA_INVOLVED_FUNCTIONAL_EXCHANGES));
         assertTrue(EcoreUtil.equals(before, fixture.architecture()));
 
         var meta = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE), List.of(new FunctionalChainMapper()),
@@ -343,7 +338,7 @@ class FunctionalChainMapperTest {
                 .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_CHAIN).toList();
         assertEquals(1, alignments.size());
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
-        assertEquals(ARCADIA_FUNCTIONAL_CHAIN, alignments.getFirst().target());
+        assertEquals(ArcadiaNames.FUNCTIONAL_CHAIN, alignments.getFirst().target());
         var ownedInvolvements = FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_FUNCTIONAL_CHAIN_INVOLVEMENTS.getName();
         assertTrue(alignments.getFirst().featureAlignments().stream()
                 .anyMatch(value -> value.sourceFeature().equals(ownedInvolvements)));
@@ -351,12 +346,13 @@ class FunctionalChainMapperTest {
                 List.of(new FunctionalChainMapper()), List.of(), CapellaMapperCatalog.getAlignmentCatalog().stream()
                         .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_CHAIN
                                 || value.sourceType() == OaPackage.Literals.OPERATIONAL_PROCESS)
-                        .toList(), ModellingcorePackage.Literals.ABSTRACT_TRACE);
+                        .toList(),
+                ModellingcorePackage.Literals.ABSTRACT_TRACE);
         var coverage = report.metaclassCoverages().stream().filter(value -> value.metaclass() == FaPackage.Literals.FUNCTIONAL_CHAIN).findFirst().orElseThrow();
         assertTrue(coverage.featureTargets().keySet().containsAll(List.of(
                 ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME.getName(),
                 CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION.getName())));
-        assertEquals(ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES, coverage.featureTargets().get(ownedInvolvements));
+        assertEquals(ArcadiaNames.FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES, coverage.featureTargets().get(ownedInvolvements));
         assertTrue(report.implementedTypes().contains(FaPackage.Literals.FUNCTIONAL_CHAIN_INVOLVEMENT_LINK));
         assertFalse(report.implementedTypes().contains(FaPackage.Literals.FUNCTIONAL_CHAIN_INVOLVEMENT_FUNCTION));
         assertFalse(report.implementedTypes().contains(FaPackage.Literals.FUNCTIONAL_CHAIN_REFERENCE));

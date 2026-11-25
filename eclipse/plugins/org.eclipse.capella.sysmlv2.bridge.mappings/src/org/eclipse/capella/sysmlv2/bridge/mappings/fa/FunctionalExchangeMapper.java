@@ -19,9 +19,10 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.capella.sysmlv2.bridge.mappings.SysmlNames;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Feature;
@@ -51,7 +52,7 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
     private static final CommonUpdateService UPDATE_SERVICE = new CommonUpdateService();
 
     public FunctionalExchangeMapper() {
-        super(FunctionalExchange.class, MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE);
+        super(FunctionalExchange.class, ArcadiaNames.FUNCTIONAL_EXCHANGE);
     }
 
     @Override
@@ -96,15 +97,15 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
     @Override
     public List<FeatureMapping<FunctionalExchange>> getFeatureMappings() {
         List<FeatureMapping<FunctionalExchange>> endpoints = List.of(
-                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__SOURCE, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
-                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__SOURCE_FUNCTION_OUTPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
-                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__TARGET, MapperConstants.SYSML_FLOW_USAGE_TARGET),
-                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__TARGET_FUNCTION_INPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_TARGET),
-                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OWNED_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
+                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__SOURCE, SysmlNames.FLOW_USAGE_SOURCE),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__SOURCE_FUNCTION_OUTPUT_PORT, SysmlNames.FLOW_USAGE_SOURCE),
+                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__TARGET, SysmlNames.FLOW_USAGE_TARGET),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__TARGET_FUNCTION_INPUT_PORT, SysmlNames.FLOW_USAGE_TARGET),
+                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OWNED_FUNCTIONAL_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
-                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OUTGOING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES),
-                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__INCOMING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY),
-                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS, MapperConstants.SYSML_FLOWUSAGE_PAYLOAD, this::mapExchangedItems));
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OUTGOING_FUNCTIONAL_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__INCOMING_FUNCTIONAL_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_IS_REALIZED_BY),
+                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS, SysmlNames.FLOW_USAGE_PAYLOAD, this::mapExchangedItems));
         List<FeatureMapping<FunctionalExchange>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
         return Stream.concat(arcadiaElementMappings.stream(), endpoints.stream()).toList();
     }

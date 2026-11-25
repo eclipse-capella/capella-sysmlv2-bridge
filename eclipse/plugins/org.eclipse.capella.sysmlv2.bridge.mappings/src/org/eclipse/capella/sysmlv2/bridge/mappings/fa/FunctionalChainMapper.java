@@ -12,11 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.fa;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -25,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
@@ -49,7 +45,7 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
     private static final CommonCreationService CREATION_SERVICE = new CommonCreationService();
 
     public FunctionalChainMapper() {
-        super(FunctionalChain.class, ARCADIA_FUNCTIONAL_CHAIN);
+        super(FunctionalChain.class, ArcadiaNames.FUNCTIONAL_CHAIN);
     }
 
     @Override
@@ -97,14 +93,14 @@ public final class FunctionalChainMapper extends ElementMapper<FunctionalChain, 
     public List<FeatureMapping<FunctionalChain>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<FunctionalChain>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(FeatureMapping.forReferencedElements(FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_FUNCTIONAL_CHAIN_INVOLVEMENTS,
-                FaPackage.Literals.FUNCTIONAL_CHAIN_INVOLVEMENT_LINK, ARCADIA_FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES,
+                FaPackage.Literals.FUNCTIONAL_CHAIN_INVOLVEMENT_LINK, ArcadiaNames.FUNCTIONAL_CHAIN_INVOLVED_FUNCTIONAL_EXCHANGES,
                 (source, context) -> {
                     // Exchange involvements are mapped during target creation.
                 }));
-        mappings.add(new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_FUNCTIONAL_CHAIN_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+        mappings.add(new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__OWNED_FUNCTIONAL_CHAIN_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalChainRealizations(), context.traceability())));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZED_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_REALIZES));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZING_FUNCTIONAL_CHAINS, ARCADIA_ELEMENT_IS_REALIZED_BY));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZED_FUNCTIONAL_CHAINS, ArcadiaNames.ELEMENT_REALIZES));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_CHAIN__REALIZING_FUNCTIONAL_CHAINS, ArcadiaNames.ELEMENT_IS_REALIZED_BY));
         return mappings;
     }
 

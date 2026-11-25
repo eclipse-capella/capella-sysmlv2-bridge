@@ -12,12 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_EXCHANGE_ITEM;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTIONAL_EXCHANGE;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_FLOWUSAGE_PAYLOAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,18 +22,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
+import org.eclipse.capella.sysmlv2.bridge.mappings.SysmlNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.ComponentExchangeMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.fa.FunctionalExchangeMapper;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaElementKind;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaLibraryInventory;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.polarsys.capella.common.data.activity.ActivityPackage;
 import org.polarsys.capella.common.data.modellingcore.ModellingcorePackage;
-import org.polarsys.capella.core.data.ctx.CtxFactory;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.information.InformationPackage;
@@ -53,12 +49,12 @@ class CapellaMapperCatalogTest {
                 .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT).toList();
         assertFalse(concepts.isEmpty(), "Bundled Arcadia library must declare concepts");
         var implemented = CapellaMapperCatalog.createMappers().stream()
-                .map(mapper -> mapper.getTargetQualifiedName()).collect(Collectors.toSet());
+                .map(ElementMapper::getTargetQualifiedName).collect(Collectors.toSet());
         var backlogTypes = CapellaMapperCatalog.backlogByPackage().values().stream()
                 .flatMap(List::stream).map(entry -> entry.sourceType()).collect(Collectors.toSet());
         var candidates = CapellaMapperCatalog.getAlignmentCatalog().stream()
                 .filter(alignment -> alignment.status() == AlignmentStatus.CANDIDATE && backlogTypes.contains(alignment.sourceType()))
-                .map(alignment -> alignment.target()).collect(Collectors.toSet());
+                .map(MetaclassAlignment::target).collect(Collectors.toSet());
         var decisions = CapellaMapperCatalog.getNonMappingDecisions();
         var declaredElements = inventory.stream().map(element -> element.qualifiedName()).collect(Collectors.toSet());
         for (var concept : concepts) {
@@ -94,10 +90,10 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == FaPackage.Literals.FUNCTIONAL_EXCHANGE)
                 .findFirst().orElseThrow();
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
-        assertEquals(ARCADIA_FUNCTIONAL_EXCHANGE, alignment.target());
+        assertEquals(ArcadiaNames.FUNCTIONAL_EXCHANGE, alignment.target());
         assertTrue(alignment.featureAlignments().stream()
                 .anyMatch(feature -> feature.sourceFeature().equals(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS.getName())
-                        && feature.target().equals(SYSML_FLOWUSAGE_PAYLOAD)
+                        && feature.target().equals(SysmlNames.FLOW_USAGE_PAYLOAD)
                         && feature.status() == AlignmentStatus.SYSML_STANDARD));
         var endpoints = List.of(
                 ActivityPackage.Literals.ACTIVITY_EDGE__SOURCE.getName(),
@@ -127,10 +123,10 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE).toList();
         assertEquals(1, alignments.size());
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
-        assertEquals(ARCADIA_COMPONENT_EXCHANGE, alignments.getFirst().target());
+        assertEquals(ArcadiaNames.COMPONENT_EXCHANGE, alignments.getFirst().target());
         assertTrue(alignments.getFirst().featureAlignments().stream()
                 .anyMatch(feature -> feature.sourceFeature().equals(ownedAllocations)
-                        && feature.target().equals(ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES)));
+                        && feature.target().equals(ArcadiaNames.COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES)));
         assertTrue(CapellaMapperCatalog.backlogByPackage().values().stream().flatMap(List::stream)
                 .noneMatch(entry -> entry.sourceType() == FaPackage.Literals.COMPONENT_EXCHANGE));
 
@@ -146,7 +142,7 @@ class CapellaMapperCatalogTest {
                 FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT.getName(),
                 FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT.getName(),
                 ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS.getName())));
-        assertEquals(ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES, coverage.featureTargets().get(ownedAllocations));
+        assertEquals(ArcadiaNames.COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES, coverage.featureTargets().get(ownedAllocations));
         assertTrue(report.implementedTypes().contains(FaPackage.Literals.COMPONENT_EXCHANGE_FUNCTIONAL_EXCHANGE_ALLOCATION));
         for (var feature : List.of(
                 FaPackage.Literals.COMPONENT_EXCHANGE__KIND.getName(),
@@ -163,7 +159,7 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == org.polarsys.capella.core.data.ctx.CtxPackage.Literals.CAPABILITY).toList();
         assertEquals(1, alignments.size());
         assertEquals(AlignmentStatus.CONFIRMED, alignments.getFirst().status());
-        assertEquals(ARCADIA_CAPABILITY, alignments.getFirst().target());
+        assertEquals(ArcadiaNames.CAPABILITY, alignments.getFirst().target());
         assertTrue(CapellaMapperCatalog.backlogByPackage().get("ctx").stream()
                 .noneMatch(entry -> entry.mapperName().equals("CapabilityMapper")));
     }
@@ -190,6 +186,6 @@ class CapellaMapperCatalogTest {
                 .filter(value -> value.sourceType() == InformationPackage.Literals.EXCHANGE_ITEM)
                 .findFirst().orElseThrow();
         assertEquals(AlignmentStatus.CONFIRMED, alignment.status());
-        assertEquals(ARCADIA_EXCHANGE_ITEM, alignment.target());
+        assertEquals(ArcadiaNames.EXCHANGE_ITEM, alignment.target());
     }
 }

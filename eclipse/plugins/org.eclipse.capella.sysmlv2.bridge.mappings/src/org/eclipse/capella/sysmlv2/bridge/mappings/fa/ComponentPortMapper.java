@@ -12,10 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.fa;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_PORT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_PORT_DIRECTION;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
@@ -57,15 +54,15 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
     private static final CommonUpdateService COMMON_UPDATE_SERVICE = new CommonUpdateService();
 
     public ComponentPortMapper() {
-        super(ComponentPort.class, ARCADIA_COMPONENT_PORT);
+        super(ComponentPort.class, ArcadiaNames.COMPONENT_PORT);
     }
 
     @Override
     public List<FeatureMapping<ComponentPort>> getFeatureMappings() {
         var componentPortMappings = Stream.of(
-                new DocumentingMapping<ComponentPort>(FaPackage.Literals.COMPONENT_PORT__ORIENTATION, ARCADIA_COMPONENT_PORT_DIRECTION),
+                new DocumentingMapping<ComponentPort>(FaPackage.Literals.COMPONENT_PORT__ORIENTATION, ArcadiaNames.COMPONENT_PORT_DIRECTION),
                 new FeatureMapping<ComponentPort>(
-                        InformationPackage.Literals.PORT__OWNED_PORT_ALLOCATIONS, ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS, this::mapAllocatedFunctionPorts));
+                        InformationPackage.Literals.PORT__OWNED_PORT_ALLOCATIONS, ArcadiaNames.COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS, this::mapAllocatedFunctionPorts));
 
         var arcadiaElementMapping = FeatureMappingCatalog.<ComponentPort> getArcadiaElementMappings().stream();
 
@@ -132,7 +129,7 @@ public final class ComponentPortMapper extends ElementMapper<ComponentPort, Port
         });
 
         COMMON_UPDATE_SERVICE.setFeatureReferenceValues(
-                MapperUtils.require(traceability, source, PortUsage.class), ARCADIA_COMPONENT_PORT,
+                MapperUtils.require(traceability, source, PortUsage.class), ArcadiaNames.COMPONENT_PORT,
                 "allocatedFunctionPorts", new ArrayList<>(mappedAllocations.values()), SysmlPackage.eINSTANCE.getItemUsage());
         mappedAllocations.keySet().forEach(traceability::markMapped);
     }

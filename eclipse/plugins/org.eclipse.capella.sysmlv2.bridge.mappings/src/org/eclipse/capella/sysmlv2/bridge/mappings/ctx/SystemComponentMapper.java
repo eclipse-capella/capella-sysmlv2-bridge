@@ -12,14 +12,13 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.ctx;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.system.analysis.SAMutationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
@@ -39,7 +38,7 @@ public final class SystemComponentMapper extends ElementMapper<SystemComponent, 
     private final SAMutationService saMutationService = new SAMutationService();
 
     public SystemComponentMapper() {
-        super(SystemComponent.class, ARCADIA_COMPONENT);
+        super(SystemComponent.class, ArcadiaNames.COMPONENT);
     }
 
     @Override

@@ -12,14 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -59,7 +51,7 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
     private static final CommonUpdateService UPDATE_SERVICE = new CommonUpdateService();
 
     protected AbstractCapabilityMapper(Class<S> sourceClass) {
-        super(sourceClass, ARCADIA_CAPABILITY);
+        super(sourceClass, ArcadiaNames.CAPABILITY);
     }
 
     @Override
@@ -91,19 +83,19 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
     public List<FeatureMapping<S>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<S>>(FeatureMappingCatalog.getArcadiaElementMappings());
         mappings.add(FeatureMapping.forReferencedElements(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_ABSTRACT_FUNCTION_ABSTRACT_CAPABILITY_INVOLVEMENTS,
-                ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
+                ArcadiaNames.CAPABILITY_INVOLVED_FUNCTIONS,
                 (source, context) -> mapInvolvements(source, source.getInvolvedAbstractFunctions(), source.getOwnedAbstractFunctionAbstractCapabilityInvolvements(),
-                        ARCADIA_INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
+                        ArcadiaNames.INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
         mappings.add(FeatureMapping.forReferencedElements(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_FUNCTIONAL_CHAIN_ABSTRACT_CAPABILITY_INVOLVEMENTS,
-                ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
+                ArcadiaNames.CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
                 (source, context) -> mapInvolvements(source, source.getInvolvedFunctionalChains(), source.getOwnedFunctionalChainAbstractCapabilityInvolvements(),
-                        ARCADIA_INVOLVED_FUNCTIONAL_CHAINS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
+                        ArcadiaNames.INVOLVED_FUNCTIONAL_CHAINS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
         // The outgoing and incoming views map the stored realization traces.
         mappings.add(new DocumentingMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_ABSTRACT_CAPABILITY_REALIZATIONS,
-                ARCADIA_ELEMENT_REALIZES));
-        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
+                ArcadiaNames.ELEMENT_REALIZES));
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OUTGOING_CAPABILITY_ALLOCATION, ArcadiaNames.ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOutgoingCapabilityAllocation(), context.traceability())));
-        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INCOMING_CAPABILITY_ALLOCATION, ArcadiaNames.ELEMENT_IS_REALIZED_BY,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getIncomingCapabilityAllocation(), context.traceability())));
 
         mappings.add(getConcreteCapabilityMapping());
@@ -134,7 +126,7 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
             var target = context.traceability().lookupTarget(value).filter(type::isInstance);
             if (target.isPresent()) {
                 mapped.put(value, (Feature) target.get());
-            } else if (ARCADIA_INVOLVED_FUNCTIONAL_CHAINS.equals(name) && context.traceability().isSkipped(value)) {
+            } else if (ArcadiaNames.INVOLVED_FUNCTIONAL_CHAINS.equals(name) && context.traceability().isSkipped(value)) {
                 var functionalChain = (FunctionalChain) value;
                 context.diagnostics().addWarning(source, "Omitting reference from capability to intentionally skipped functional chain "
                         + EObjectUtils.describe(functionalChain));
@@ -143,7 +135,7 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
             }
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(context.traceability(), source, OccurrenceUsage.class),
-                ARCADIA_CAPABILITY, name, new ArrayList<>(mapped.values()), type);
+                ArcadiaNames.CAPABILITY, name, new ArrayList<>(mapped.values()), type);
         return mapped.keySet();
     }
 

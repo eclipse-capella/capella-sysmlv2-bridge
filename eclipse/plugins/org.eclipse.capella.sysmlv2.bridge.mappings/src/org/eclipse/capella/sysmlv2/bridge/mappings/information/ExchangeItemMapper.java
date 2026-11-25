@@ -12,9 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.information;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -22,8 +19,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ItemUsage;
@@ -50,7 +47,7 @@ public final class ExchangeItemMapper extends ElementMapper<ExchangeItem, ItemUs
     private static final CommonCreationService CREATION_SERVICE = new CommonCreationService();
 
     public ExchangeItemMapper() {
-        super(ExchangeItem.class, MapperConstants.ARCADIA_EXCHANGE_ITEM);
+        super(ExchangeItem.class, ArcadiaNames.EXCHANGE_ITEM);
     }
 
     @Override
@@ -71,10 +68,10 @@ public final class ExchangeItemMapper extends ElementMapper<ExchangeItem, ItemUs
     @Override
     public List<FeatureMapping<ExchangeItem>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<ExchangeItem>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new FeatureMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__OWNED_INFORMATION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+        mappings.add(new FeatureMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__OWNED_INFORMATION_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedInformationRealizations(), context.traceability())));
-        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZED_EXCHANGE_ITEMS, ARCADIA_ELEMENT_REALIZES));
-        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZING_EXCHANGE_ITEMS, ARCADIA_ELEMENT_IS_REALIZED_BY));
+        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZED_EXCHANGE_ITEMS, ArcadiaNames.ELEMENT_REALIZES));
+        mappings.add(new DocumentingMapping<>(InformationPackage.Literals.EXCHANGE_ITEM__REALIZING_EXCHANGE_ITEMS, ArcadiaNames.ELEMENT_IS_REALIZED_BY));
         return mappings;
     }
 

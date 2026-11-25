@@ -12,10 +12,9 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.ctx;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
-
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.AbstractCapabilityMapper;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.polarsys.capella.core.data.ctx.Capability;
@@ -33,8 +32,8 @@ public final class CapabilityMapper extends AbstractCapabilityMapper<Capability>
 
     @Override
     protected FeatureMapping<Capability> getConcreteCapabilityMapping() {
-        return FeatureMapping.forReferencedElements(CtxPackage.Literals.CAPABILITY__OWNED_CAPABILITY_INVOLVEMENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+        return FeatureMapping.forReferencedElements(CtxPackage.Literals.CAPABILITY__OWNED_CAPABILITY_INVOLVEMENTS, ArcadiaNames.CAPABILITY_INVOLVED_COMPONENTS,
                 (source, context) -> mapInvolvements(source, source.getInvolvedSystemComponents(), source.getOwnedCapabilityInvolvements(),
-                        ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
+                        CommonQueryService.ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }

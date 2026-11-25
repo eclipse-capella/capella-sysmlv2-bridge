@@ -12,16 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.fa;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ALLOCATED_EXCHANGE_ITEMS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_EXCHANGE_ITEMS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_CP1;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_EXCHANGE_CP2;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -31,6 +21,7 @@ import java.util.Set;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EClass;
@@ -64,7 +55,7 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
     private static final CommonUpdateService UPDATE_SERVICE = new CommonUpdateService();
 
     public ComponentExchangeMapper() {
-        super(ComponentExchange.class, ARCADIA_COMPONENT_EXCHANGE);
+        super(ComponentExchange.class, ArcadiaNames.COMPONENT_EXCHANGE);
     }
 
     @Override
@@ -104,18 +95,18 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
     @Override
     public List<FeatureMapping<ComponentExchange>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<ComponentExchange>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new DocumentingMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__SOURCE, ARCADIA_COMPONENT_EXCHANGE_CP1));
-        mappings.add(new DocumentingMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__TARGET, ARCADIA_COMPONENT_EXCHANGE_CP2));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT, ARCADIA_COMPONENT_EXCHANGE_CP1));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT, ARCADIA_COMPONENT_EXCHANGE_CP2));
-        mappings.add(new FeatureMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS, ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_EXCHANGE_ITEMS,
-                (source, context) -> mapReferences(source, source.getConvoyedInformations(), ARCADIA_ALLOCATED_EXCHANGE_ITEMS, SysmlPackage.eINSTANCE.getItemUsage(), context)));
+        mappings.add(new DocumentingMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__SOURCE, ArcadiaNames.COMPONENT_EXCHANGE_CP1));
+        mappings.add(new DocumentingMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__TARGET, ArcadiaNames.COMPONENT_EXCHANGE_CP2));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__SOURCE_PORT, ArcadiaNames.COMPONENT_EXCHANGE_CP1));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__TARGET_PORT, ArcadiaNames.COMPONENT_EXCHANGE_CP2));
+        mappings.add(new FeatureMapping<>(ModellingcorePackage.Literals.ABSTRACT_INFORMATION_FLOW__CONVOYED_INFORMATIONS, ArcadiaNames.COMPONENT_EXCHANGE_ALLOCATED_EXCHANGE_ITEMS,
+                (source, context) -> mapReferences(source, source.getConvoyedInformations(), ArcadiaNames.ALLOCATED_EXCHANGE_ITEMS, SysmlPackage.eINSTANCE.getItemUsage(), context)));
         mappings.add(new FeatureMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__OWNED_COMPONENT_EXCHANGE_FUNCTIONAL_EXCHANGE_ALLOCATIONS,
-                ARCADIA_COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES, ComponentExchangeMapper::mapFunctionalExchangeAllocations));
-        mappings.add(new FeatureMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__OWNED_COMPONENT_EXCHANGE_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                ArcadiaNames.COMPONENT_EXCHANGE_ALLOCATED_FUNCTIONAL_EXCHANGES, ComponentExchangeMapper::mapFunctionalExchangeAllocations));
+        mappings.add(new FeatureMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__OWNED_COMPONENT_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentExchangeRealizations(), context.traceability())));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__OUTGOING_COMPONENT_EXCHANGE_REALIZATIONS, ARCADIA_ELEMENT_REALIZES));
-        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__INCOMING_COMPONENT_EXCHANGE_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__OUTGOING_COMPONENT_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES));
+        mappings.add(new DocumentingMapping<>(FaPackage.Literals.COMPONENT_EXCHANGE__INCOMING_COMPONENT_EXCHANGE_REALIZATIONS, ArcadiaNames.ELEMENT_IS_REALIZED_BY));
         return mappings;
     }
 
@@ -136,12 +127,12 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
                     .map(FlowUsage.class::cast)
                     .ifPresentOrElse(flow -> allocationsByFlow.computeIfAbsent(flow, ignored -> new ArrayList<>()).add(allocation), () -> {
                         traceability.unregister(allocation);
-                        context.diagnostics().addError(allocation, "Unable to map " + ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES + " reference: "
+                        context.diagnostics().addError(allocation, "Unable to map " + ArcadiaNames.ALLOCATED_FUNCTIONAL_EXCHANGES + " reference: "
                                 + (endpoint == null ? "missing target" : EObjectUtils.describe(endpoint)));
                     });
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(traceability, source, InterfaceUsage.class),
-                ARCADIA_COMPONENT_EXCHANGE, ARCADIA_ALLOCATED_FUNCTIONAL_EXCHANGES, new ArrayList<>(allocationsByFlow.keySet()),
+                ArcadiaNames.COMPONENT_EXCHANGE, ArcadiaNames.ALLOCATED_FUNCTIONAL_EXCHANGES, new ArrayList<>(allocationsByFlow.keySet()),
                 SysmlPackage.eINSTANCE.getFlowUsage());
         allocationsByFlow.values().stream().flatMap(Collection::stream).forEach(traceability::markMapped);
     }
@@ -157,7 +148,7 @@ public final class ComponentExchangeMapper extends ElementMapper<ComponentExchan
             }
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(context.traceability(), source, InterfaceUsage.class),
-                ARCADIA_COMPONENT_EXCHANGE, name, targets, type);
+                ArcadiaNames.COMPONENT_EXCHANGE, name, targets, type);
     }
 
     @Override

@@ -12,14 +12,12 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_MISSION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_PREFIX;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.CapabilityMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemComponentMapper;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.SystemFunctionMapper;
@@ -41,7 +39,6 @@ import org.eclipse.capella.sysmlv2.bridge.mappings.pa.PhysicalFunctionMapper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
@@ -125,7 +122,7 @@ public final class CapellaMapperCatalog {
     public static List<MetaclassAlignment> getAlignmentCatalog() {
         var result = new ArrayList<MetaclassAlignment>();
         createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
-        result.add(candidate(CtxPackage.Literals.MISSION, ARCADIA_MISSION));
+        result.add(candidate(CtxPackage.Literals.MISSION, ArcadiaNames.MISSION));
         for (var sourceType : List.of(CapellamodellerPackage.Literals.PROJECT, LibrariesPackage.Literals.MODEL_INFORMATION,
                 OaPackage.Literals.OPERATIONAL_ANALYSIS,
                 CtxPackage.Literals.SYSTEM_ANALYSIS, LaPackage.Literals.LOGICAL_ARCHITECTURE,
@@ -140,7 +137,7 @@ public final class CapellaMapperCatalog {
                 .sorted(java.util.Comparator.comparing(feature -> feature.getCapellaFeature().getName()))
                 .map(feature -> {
                     AlignmentStatus alignment;
-                    if (feature.getSysmlFeature().startsWith(ARCADIA_PREFIX)) {
+                    if (feature.getSysmlFeature().startsWith(CommonQueryService.ARCADIA_PREFIX)) {
                         alignment = AlignmentStatus.CONFIRMED;
                     } else {
                         alignment = AlignmentStatus.SYSML_STANDARD;

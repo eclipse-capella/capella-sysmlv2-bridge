@@ -9,13 +9,12 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_FUNCTION;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
@@ -35,7 +34,7 @@ public final class OperationalActivityMapper extends ElementMapper<OperationalAc
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public OperationalActivityMapper() {
-        super(OperationalActivity.class, ARCADIA_FUNCTION);
+        super(OperationalActivity.class, ArcadiaNames.FUNCTION);
     }
 
     @Override

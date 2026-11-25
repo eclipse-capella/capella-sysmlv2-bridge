@@ -12,21 +12,10 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_IS_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT_IS_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_ACTOR;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_IS_HUMAN;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DECLARED_NAME;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_DESCRIPTION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.SYSML_STATUS;
-
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.Feature;
@@ -81,10 +70,11 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends NamedElement> List<FeatureMapping<S>> getArcadiaElementMappings() {
         return List.of(
-                new FeatureMapping<>(ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME, SYSML_DECLARED_NAME, (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
-                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION, SYSML_DESCRIPTION,
+                new FeatureMapping<>(ModellingcorePackage.Literals.ABSTRACT_NAMED_ELEMENT__NAME, SysmlNames.DECLARED_NAME,
+                        (source, context) -> MapperUtils.require(context.traceability(), source, Element.class).setDeclaredName(source.getName())),
+                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__DESCRIPTION, SysmlNames.DESCRIPTION,
                         (source, context) -> COMMON_UPDATE_SERVICE.setElementDescription(MapperUtils.require(context.traceability(), source, Element.class), source.getDescription())),
-                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__STATUS, SYSML_STATUS, FeatureMappingCatalog::mapStatus));
+                new FeatureMapping<>(CapellacorePackage.Literals.CAPELLA_ELEMENT__STATUS, ArcadiaNames.STATUS, FeatureMappingCatalog::mapStatus));
     }
 
     private static void mapStatus(NamedElement source, TransformationContext context) {
@@ -115,11 +105,11 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends AbstractFunction> List<FeatureMapping<S>> getFunctionMappings() {
         return List.of(
-                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__OWNED_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__OWNED_FUNCTION_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionRealizations(),
                                 context.traceability())),
-                new DocumentingMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__OUT_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_REALIZES),
-                new DocumentingMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__IN_FUNCTION_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY));
+                new DocumentingMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__OUT_FUNCTION_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES),
+                new DocumentingMapping<>(FaPackage.Literals.ABSTRACT_FUNCTION__IN_FUNCTION_REALIZATIONS, ArcadiaNames.ELEMENT_IS_REALIZED_BY));
     }
 
     /**
@@ -131,11 +121,11 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends Port> List<FeatureMapping<S>> getPortRealizationMappings() {
         return List.of(
-                new FeatureMapping<>(InformationPackage.Literals.PORT__OWNED_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(InformationPackage.Literals.PORT__OWNED_PORT_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                         (S source, TransformationContext context) -> MapperUtils.mapRealizationLinks(source.getOwnedPortRealizations(),
                                 context.traceability())),
-                new DocumentingMapping<>(InformationPackage.Literals.PORT__OUTGOING_PORT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES),
-                new DocumentingMapping<>(InformationPackage.Literals.PORT__INCOMING_PORT_REALIZATIONS, ARCADIA_ELEMENT_IS_REALIZED_BY));
+                new DocumentingMapping<>(InformationPackage.Literals.PORT__OUTGOING_PORT_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES),
+                new DocumentingMapping<>(InformationPackage.Literals.PORT__INCOMING_PORT_REALIZATIONS, ArcadiaNames.ELEMENT_IS_REALIZED_BY));
     }
 
     /**
@@ -149,17 +139,19 @@ public final class FeatureMappingCatalog {
      */
     public static <S extends Component> List<FeatureMapping<S>> getComponentMappings() {
         return List.of(
-                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTIONAL_BLOCK__OWNED_FUNCTIONAL_ALLOCATION, ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS,
+                new FeatureMapping<>(FaPackage.Literals.ABSTRACT_FUNCTIONAL_BLOCK__OWNED_FUNCTIONAL_ALLOCATION, ArcadiaNames.COMPONENT_ALLOCATED_FUNCTIONS,
                         (source, context) -> MapperUtils.addFunctionAllocation(source, MapperUtils.require(context.traceability(), source, Usage.class), context.traceability())),
-                new FeatureMapping<>(CsPackage.Literals.COMPONENT__OWNED_COMPONENT_REALIZATIONS, ARCADIA_ELEMENT_REALIZES,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__OWNED_COMPONENT_REALIZATIONS, ArcadiaNames.ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedComponentRealizations(), context.traceability())),
-                new DocumentingMapping<>(CsPackage.Literals.COMPONENT__REALIZED_COMPONENTS, ARCADIA_ELEMENT_REALIZES),
-                new DocumentingMapping<>(CsPackage.Literals.COMPONENT__REALIZING_COMPONENTS, ARCADIA_ELEMENT_IS_REALIZED_BY),
-                new FeatureMapping<>(CsPackage.Literals.COMPONENT__ACTOR, ARCADIA_COMPONENT_IS_ACTOR,
-                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_ACTOR,
+                new DocumentingMapping<>(CsPackage.Literals.COMPONENT__REALIZED_COMPONENTS, ArcadiaNames.ELEMENT_REALIZES),
+                new DocumentingMapping<>(CsPackage.Literals.COMPONENT__REALIZING_COMPONENTS, ArcadiaNames.ELEMENT_IS_REALIZED_BY),
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__ACTOR, ArcadiaNames.COMPONENT_IS_ACTOR,
+                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ArcadiaNames.COMPONENT,
+                                CommonQueryService.ARCADIA_IS_ACTOR,
                                 source.isActor())),
-                new FeatureMapping<>(CsPackage.Literals.COMPONENT__HUMAN, ARCADIA_COMPONENT_IS_HUMAN,
-                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ARCADIA_COMPONENT, ARCADIA_IS_HUMAN,
+                new FeatureMapping<>(CsPackage.Literals.COMPONENT__HUMAN, ArcadiaNames.COMPONENT_IS_HUMAN,
+                        (source, context) -> COMMON_UPDATE_SERVICE.setBooleanAttribute(MapperUtils.require(context.traceability(), source, Usage.class), ArcadiaNames.COMPONENT,
+                                CommonQueryService.ARCADIA_IS_HUMAN,
                                 source.isHuman())));
     }
 

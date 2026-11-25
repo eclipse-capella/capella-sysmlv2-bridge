@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
-import org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
+import org.eclipse.capella.sysmlv2.bridge.mappings.SysmlNames;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
@@ -51,7 +51,7 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
     private final FeatureDirectionKind direction;
 
     AbstractFunctionPortMapper(Class<S> sourceClass, FeatureDirectionKind direction) {
-        super(sourceClass, MapperConstants.SYSML_ITEM_USAGE);
+        super(sourceClass, SysmlNames.ITEM_USAGE);
         this.direction = direction;
     }
 
@@ -61,7 +61,7 @@ abstract class AbstractFunctionPortMapper<S extends FunctionPort> extends Elemen
         if (direction == FeatureDirectionKind.IN) {
             capellaFeature = FaPackage.Literals.FUNCTION_INPUT_PORT__INCOMING_EXCHANGE_ITEMS;
         }
-        var itemBindings = Stream.of(new FeatureMapping<S>(capellaFeature, MapperConstants.SYSML_FEATURE_VALUE, this::mapExchangeItems));
+        var itemBindings = Stream.of(new FeatureMapping<S>(capellaFeature, SysmlNames.FEATURE_VALUE, this::mapExchangeItems));
         return Stream.concat(itemBindings, Stream.concat(
                 FeatureMappingCatalog.<S> getPortRealizationMappings().stream(),
                 FeatureMappingCatalog.<S> getArcadiaElementMappings().stream()))

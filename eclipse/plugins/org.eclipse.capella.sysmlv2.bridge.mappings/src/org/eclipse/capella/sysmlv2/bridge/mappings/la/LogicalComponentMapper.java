@@ -12,8 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.la;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +19,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.capella.model.services.logical.architecture.LAMutationService;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.FeatureMappingCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.MapperUtils;
 import org.eclipse.emf.ecore.EObject;
@@ -42,7 +41,7 @@ public final class LogicalComponentMapper extends ElementMapper<LogicalComponent
     private static final CommonCreationService COMMON_CREATION_SERVICE = new CommonCreationService();
 
     public LogicalComponentMapper() {
-        super(LogicalComponent.class, ARCADIA_COMPONENT);
+        super(LogicalComponent.class, ArcadiaNames.COMPONENT);
     }
 
     @Override

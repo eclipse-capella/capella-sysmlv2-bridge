@@ -12,9 +12,6 @@
  *******************************************************************************/
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -28,6 +25,7 @@ import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationInstanceAnalyzer;
 import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
+import org.eclipse.capella.sysmlv2.bridge.mappings.ArcadiaNames;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.CapabilityMapper;
 import org.eclipse.emf.common.util.URI;
@@ -164,7 +162,7 @@ class CapabilityMapperTest {
             mapper.mapFeatures(capability, context);
             assertTrue(context.traceability().isExcluded(involvement), status);
             assertTrue(context.diagnostics().collect().stream().anyMatch(value -> value.severity().name().equals("ERROR")
-                    && value.message().contains("Unable to map " + ARCADIA_INVOLVED_FUNCTIONAL_CHAINS)), status);
+                    && value.message().contains("Unable to map " + ArcadiaNames.INVOLVED_FUNCTIONAL_CHAINS)), status);
             assertTrue(context.diagnostics().collect().stream().noneMatch(value -> value.severity().name().equals("WARNING")), status);
         }
     }
@@ -202,8 +200,8 @@ class CapabilityMapperTest {
         assertEquals("Move Cursor", target.getDeclaredName());
         var query = new CommonQueryService();
         assertEquals("Moves the cursor on screen", query.getArcadiaElementDescription(target));
-        assertTrue(query.getFeatureReferenceValue(target, ARCADIA_INVOLVED_FUNCTIONS).contains(result.traceability().lookupTarget(function).orElseThrow()));
-        assertTrue(query.getFeatureReferenceValue(target, ARCADIA_INVOLVED_COMPONENTS).contains(result.traceability().lookupTarget(component).orElseThrow()));
+        assertTrue(query.getFeatureReferenceValue(target, ArcadiaNames.INVOLVED_FUNCTIONS).contains(result.traceability().lookupTarget(function).orElseThrow()));
+        assertTrue(query.getFeatureReferenceValue(target, CommonQueryService.ARCADIA_INVOLVED_COMPONENTS).contains(result.traceability().lookupTarget(component).orElseThrow()));
         assertTrue(query.getCapabilities(target).contains(target));
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
 
