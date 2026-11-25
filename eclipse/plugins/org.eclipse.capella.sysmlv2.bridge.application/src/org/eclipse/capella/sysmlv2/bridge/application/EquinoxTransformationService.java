@@ -14,6 +14,7 @@ package org.eclipse.capella.sysmlv2.bridge.application;
 
 import static org.obeonetwork.capella.sysmlv2.cli.ExitCodes.TRANSFORMATION_FAILURE;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,11 +53,11 @@ public final class EquinoxTransformationService implements TransformationService
      */
     @Override
     public TransformationSummary transform(TransformationRequest request) {
+        var startedAt = Instant.now();
         try (var model = CapellaModelLoadingUtils.load(request)) {
             var transformation = ModelTransformationUtils.transform(
                     model.root(), model.root().getName());
-            return TransformationReportingUtils.generate(transformation,
-                    request.outputDirectory().toAbsolutePath().normalize());
+            return TransformationReportingUtils.generate(transformation, request, startedAt);
         } catch (TransformationCommandException exception) {
             throw exception;
         } catch (RuntimeException exception) {

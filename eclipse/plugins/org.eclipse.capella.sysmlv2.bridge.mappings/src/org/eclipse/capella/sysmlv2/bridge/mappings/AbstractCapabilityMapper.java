@@ -19,13 +19,10 @@ import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADI
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_ELEMENT_REALIZES;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONAL_CHAINS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INCOMING_CAPABILITY_ALLOCATION;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_FUNCTIONAL_CHAINS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_OUTGOING_CAPABILITY_ALLOCATION;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -36,13 +33,17 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.Feature;
 import org.eclipse.syson.sysml.OccurrenceUsage;
 import org.eclipse.syson.sysml.SysmlPackage;
+import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.polarsys.capella.core.data.capellacore.Involvement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.ctx.SystemAnalysis;
 import org.polarsys.capella.core.data.fa.FunctionalChain;
 import org.polarsys.capella.core.data.interaction.AbstractCapability;
+import org.polarsys.capella.core.data.interaction.InteractionPackage;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.oa.OperationalAnalysis;
 import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
@@ -89,14 +90,20 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
     @Override
     public List<FeatureMapping<S>> getFeatureMappings() {
         var mappings = new ArrayList<FeatureMapping<S>>(FeatureMappingCatalog.getArcadiaElementMappings());
-        mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
-                (source, context) -> mapReferences(source, source.getInvolvedAbstractFunctions(), ARCADIA_INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
-        mappings.add(new FeatureMapping<>(CAPELLA_INVOLVED_FUNCTIONAL_CHAINS, ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
-                (source, context) -> mapReferences(source, source.getInvolvedFunctionalChains(),
+        mappings.add(FeatureMapping.forReferencedElements(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_ABSTRACT_FUNCTION_ABSTRACT_CAPABILITY_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_FUNCTIONS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedAbstractFunctions(), source.getOwnedAbstractFunctionAbstractCapabilityInvolvements(),
+                        ARCADIA_INVOLVED_FUNCTIONS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
+        mappings.add(FeatureMapping.forReferencedElements(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_FUNCTIONAL_CHAIN_ABSTRACT_CAPABILITY_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_FUNCTIONAL_CHAINS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedFunctionalChains(), source.getOwnedFunctionalChainAbstractCapabilityInvolvements(),
                         ARCADIA_INVOLVED_FUNCTIONAL_CHAINS, SysmlPackage.eINSTANCE.getActionUsage(), context)));
-        mappings.add(new FeatureMapping<>(CAPELLA_OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
+        // The outgoing and incoming views map the stored realization traces.
+        mappings.add(new DocumentingMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OWNED_ABSTRACT_CAPABILITY_REALIZATIONS,
+                ARCADIA_ELEMENT_REALIZES));
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__OUTGOING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_REALIZES,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getOutgoingCapabilityAllocation(), context.traceability())));
-        mappings.add(new FeatureMapping<>(CAPELLA_INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
+        mappings.add(new FeatureMapping<>(InteractionPackage.Literals.ABSTRACT_CAPABILITY__INCOMING_CAPABILITY_ALLOCATION, ARCADIA_ELEMENT_IS_REALIZED_BY,
                 (source, context) -> MapperUtils.mapRealizationLinks(source.getIncomingCapabilityAllocation(), context.traceability())));
 
         mappings.add(getConcreteCapabilityMapping());
@@ -104,23 +111,40 @@ public abstract class AbstractCapabilityMapper<S extends AbstractCapability> ext
         return mappings;
     }
 
-    protected static void mapReferences(AbstractCapability source, Collection<? extends EObject> values, String name, EClass type, TransformationContext context) {
-        var targets = new ArrayList<Feature>();
+    protected static void mapInvolvements(AbstractCapability source, Collection<? extends EObject> values, Collection<? extends Involvement> involvements,
+            String name, EClass type, TransformationContext context) {
+        var mappedReferences = writeReferences(source, values, name, type, context);
+        var traceability = context.traceability();
+        involvements.forEach(involvement -> {
+            var involved = involvement.getInvolved();
+            if (mappedReferences.contains(involved)) {
+                traceability.markMapped(involvement);
+            } else if (involved != null && traceability.isSkipped(involved) && values.contains(involved)) {
+                traceability.skip(involvement);
+            } else {
+                traceability.unregister(involvement);
+            }
+        });
+    }
+
+    private static Set<EObject> writeReferences(AbstractCapability source, Collection<? extends EObject> values, String name, EClass type,
+            TransformationContext context) {
+        var mapped = new LinkedHashMap<EObject, Feature>();
         values.stream().distinct().forEach(value -> {
             var target = context.traceability().lookupTarget(value).filter(type::isInstance);
             if (target.isPresent()) {
-                targets.add((Feature) target.get());
+                mapped.put(value, (Feature) target.get());
             } else if (ARCADIA_INVOLVED_FUNCTIONAL_CHAINS.equals(name) && context.traceability().isSkipped(value)) {
                 var functionalChain = (FunctionalChain) value;
-                context.diagnostics().addWarning(source, "Omitting reference from capability '" + source.getName()
-                        + "' (id: " + source.getId() + ")"
-                        + " to intentionally skipped functional chain '" + functionalChain.getName() + "' (id: " + functionalChain.getId() + ")");
+                context.diagnostics().addWarning(source, "Omitting reference from capability to intentionally skipped functional chain "
+                        + EObjectUtils.describe(functionalChain));
             } else {
-                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + value);
+                context.diagnostics().addError(source, "Unable to map " + name + " reference: " + EObjectUtils.describe(value));
             }
         });
         UPDATE_SERVICE.setFeatureReferenceValues(MapperUtils.require(context.traceability(), source, OccurrenceUsage.class),
-                ARCADIA_CAPABILITY, name, targets, type);
+                ARCADIA_CAPABILITY, name, new ArrayList<>(mapped.values()), type);
+        return mapped.keySet();
     }
 
     protected abstract FeatureMapping<S> getConcreteCapabilityMapping();

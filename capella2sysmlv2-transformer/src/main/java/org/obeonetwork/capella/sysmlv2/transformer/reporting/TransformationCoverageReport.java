@@ -14,129 +14,46 @@ package org.obeonetwork.capella.sysmlv2.transformer.reporting;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.obeonetwork.capella.sysmlv2.transformer.mapping.MappingStatus;
+import org.eclipse.emf.ecore.EClass;
 
 /**
  * Immutable report containing all transformation coverage dimensions.
  *
  * @author Raphaël Pagé
  */
-public record TransformationCoverageReport(int packageCount, List<MetaclassCoverage> metaclassCoverages,
-        ArcadiaUtilizationCoverage arcadiaUtilization, List<MetaclassAlignment> alignments) {
+public record TransformationCoverageReport(List<MetaclassCoverage> metaclassCoverages,
+        List<ArcadiaElementCoverage> arcadiaConcepts, List<MetaclassAlignment> alignments) {
 
     public TransformationCoverageReport {
-        if (packageCount < 0) {
-            throw new IllegalArgumentException("packageCount must not be negative");
-        }
         metaclassCoverages = List.copyOf(Objects.requireNonNull(metaclassCoverages, "metaclassCoverages must not be null"));
-        Objects.requireNonNull(arcadiaUtilization, "arcadiaUtilization must not be null");
+        arcadiaConcepts = List.copyOf(arcadiaConcepts);
         alignments = List.copyOf(Objects.requireNonNull(alignments, "alignments must not be null"));
     }
 
-    /**
-     * Returns the number of non-abstract metaclasses.
-     */
-    public long concreteMetaclassCount() {
+    public Set<EClass> implementedTypes() {
         return this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .count();
+                .filter(MetaclassCoverage::implemented)
+                .map(MetaclassCoverage::metaclass)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
-     * Returns the coverage metric for metaclasses having a mapper.
+     * Returns whether a source class is explicitly declared unsupported.
      */
-    public CoverageMetric metaclassesWithMapperMetric() {
-        var concreteMapperClassCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .filter(coverage -> coverage.mapperClass() != null)
-                .count();
-
-        return new CoverageMetric(concreteMapperClassCount, this.concreteMetaclassCount());
+    public boolean isUnsupported(EClass sourceType) {
+        return this.alignments.stream().anyMatch(alignment -> alignment.sourceType() == sourceType
+                && alignment.status() == AlignmentStatus.NO_EQUIVALENT);
     }
 
-    /**
-     * Returns the coverage metric for complete mappers.
-     */
-    public CoverageMetric completeMappersMetric() {
-        var completeMapperCount = this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.MAPPED)
-                .count();
-
-        return new CoverageMetric(completeMapperCount, this.concreteMetaclassCount());
-    }
-
-    /**
-     * Returns the coverage metric for mapped features.
-     */
-    public CoverageMetric mappedFeaturesMetric() {
-        var mappedFeatureCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.mappedFeatures().size())
-                .sum();
-
-        return new CoverageMetric(mappedFeatureCount, this.applicableFeatureCount());
-    }
-
-    /**
-     * Returns the coverage metric for mapped or explicitly ignored features.
-     */
-    public CoverageMetric addressedFeaturesMetric() {
-        var adressedFeaturesCount = this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.mappedFeatures().size() + coverage.ignoredFeatures().size())
-                .sum();
-
-        return new CoverageMetric(adressedFeaturesCount,
-                this.applicableFeatureCount());
-    }
-
-    /**
-     * Returns the coverage metric for confirmed alignments.
-     */
-    public CoverageMetric confirmedAlignmentMetric() {
-        var confirmedCount = this.alignments.stream()
-                .filter(alignment -> alignment.status() == AlignmentStatus.CONFIRMED)
-                .count();
-
-        return new CoverageMetric(confirmedCount, this.concreteMetaclassCount());
-    }
-
-    /**
-     * Returns the number of metaclasses without an assessed alignment.
-     */
-    public long unassessedAlignmentCount() {
-        return this.alignments.stream()
-                .filter(alignment -> alignment.status() == AlignmentStatus.UNASSESSED)
-                .count();
-    }
-
-    public long mappedMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.MAPPED)
-                .count();
-    }
-
-    public long partialMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.PARTIAL)
-                .count();
-    }
-
-    public long unmappedMetaclassCount() {
-        return this.metaclassCoverages.stream()
-                .filter(coverage -> coverage.status() == MappingStatus.UNMAPPED)
-                .count();
-    }
-
-    private long applicableFeatureCount() {
-        return this.metaclassCoverages.stream()
-                .filter(TransformationCoverageReport::isConcrete)
-                .mapToLong(coverage -> coverage.metaclass().getEAllStructuralFeatures().size())
-                .sum();
-    }
-
-    private static boolean isConcrete(MetaclassCoverage coverage) {
-        return coverage.status() != MappingStatus.ABSTRACT;
+    /** Returns the concrete Arcadia concepts declared as mapper targets. */
+    public Set<String> declaredLibraryClasses() {
+        return this.arcadiaConcepts.stream()
+                .filter(ArcadiaElementCoverage::used)
+                .filter(coverage -> coverage.element().concreteDefinition())
+                .map(coverage -> coverage.element().qualifiedName())
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

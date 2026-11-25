@@ -48,7 +48,6 @@
         <slf4j.version>2.0.18</slf4j.version>
         <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
         <emfjson.version>2.5.5-SNAPSHOT</emfjson.version>
-        <arcadia-library.url>https://raw.githubusercontent.com/eclipse-capella/capella-for-syson/main/backend/application/capella-application-configuration/src/main/resources/arcadia/library/arcadia.json</arcadia-library.url>
         <emf.version>2.42.0</emf.version>
         <ecore-xmi.version>2.40.0</ecore-xmi.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>

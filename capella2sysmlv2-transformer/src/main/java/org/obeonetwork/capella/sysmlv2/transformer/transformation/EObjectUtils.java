@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer.transformation;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterators;
@@ -29,6 +30,35 @@ public final class EObjectUtils {
 
     private EObjectUtils() {
         /* Utility class. */
+    }
+
+    /**
+     * Describes an element with its name, ID and containment path for diagnostics.
+     */
+    public static String describe(EObject element) {
+        var path = new ArrayList<String>();
+        var current = element;
+        while (current != null) {
+            var name = stringAttribute(current, "name");
+            if (name.isBlank()) {
+                name = current.eClass().getName();
+            }
+            path.addFirst(name);
+            if (current.eClass().getEAllSuperTypes().stream().anyMatch(type -> "BlockArchitecture".equals(type.getName()))) {
+                current = null;
+            } else {
+                current = current.eContainer();
+            }
+        }
+        return "'" + String.join(" › ", path) + "' (id: " + stringAttribute(element, "id") + ")";
+    }
+
+    private static String stringAttribute(EObject element, String name) {
+        var feature = element.eClass().getEStructuralFeature(name);
+        if (feature != null && element.eGet(feature, false) instanceof String value) {
+            return value;
+        }
+        return "";
     }
 
     /**

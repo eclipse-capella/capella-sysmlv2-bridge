@@ -56,7 +56,8 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
-The Eclipse application build downloads `arcadia.json` from the `main` branch of the Capella for SysON repository into the application bundle.
+The Eclipse application build bundles `arcadia/library/arcadia.json` from the released `org.eclipse.capella:capella-application-configuration` JAR.
+The root POM selects Capella for SysON `2026.9.5` for both the library and the Capella services through `capella-for-syson.version`, alongside SysON `2026.9.6`.
 
 == Repository Structure
 
@@ -79,17 +80,17 @@ Provides reusable test resources and golden-file assertions.
 
 === Equinox and Tycho Modules
 
-`eclipse/target-platform`::
-Defines the Capella 7.0.1 metamodel, EMF, Equinox, and Kitalpha target platform.
+`eclipse/target-platform-<version>`::
+Defines the selected Capella metamodel, EMF, Equinox, and Kitalpha target platform.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.mappings`::
-Contains typed Capella mapper implementations, the curated alignment backlog, and deterministic candidate-source generation.
+Contains typed Capella mapper implementations and the curated alignment backlog.
 
 `eclipse/plugins/org.eclipse.capella.sysmlv2.bridge.application`::
 Implements the Equinox application, typed Capella resource loading, transformation orchestration, bundled Arcadia library loading, and intermediate XMI persistence.
 
 `eclipse/tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests`::
-Tests typed mappings against small EMF models and materializes mapper candidate sources from the installed Capella metamodel.
+Tests typed mappings against small EMF models.
 
 `eclipse/features`::
 Defines the standalone headless product feature.
@@ -178,12 +179,14 @@ This build runs the regular unit, functional, and integration tests without star
 
 === Standalone Products
 
-Build the Equinox bundles and Linux and Windows products with:
+Choose one product profile per build. The release workflow runs `capella-product-7.1.0` and `capella-product-7.0.1` separately.
+
+To package the Capella 7.0.1 products for Linux and Windows, run:
 
 [source,bash]
 ----
 mvn --settings .github/maven-settings.xml \
-  -Pcapella-product \
+  -Pcapella-product-7.0.1 \
   -DskipTests \
   clean package
 ----
@@ -192,18 +195,18 @@ The materialized products are created under:
 
 [source,text]
 ----
-eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/
-  target/products/org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/
-  target/products/org.eclipse.capella.sysmlv2.bridge.product/win32/win32/x86_64/
+eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/linux/gtk/x86_64/
+  target/products/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/win32/win32/x86_64/
 ----
 
 The distributable archives are:
 
 [source,text]
 ----
-eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/
-  org.eclipse.capella.sysmlv2.bridge.product-linux.gtk.x86_64.tar.gz
-  org.eclipse.capella.sysmlv2.bridge.product-win32.win32.x86_64.zip
+eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/target/products/
+  org.eclipse.capella.sysmlv2.bridge.product.7.0.1-linux.gtk.x86_64.tar.gz
+  org.eclipse.capella.sysmlv2.bridge.product.7.0.1-win32.win32.x86_64.zip
 ----
 
 === Product Integration Test
@@ -213,7 +216,7 @@ Run the complete build and standalone IFE product integration test with:
 [source,bash]
 ----
 mvn --settings .github/maven-settings.xml \
-  -Pcapella-product,capella-product-it \
+  -Pcapella-product-7.0.1 \
   clean verify
 ----
 
@@ -235,70 +238,27 @@ Run the materialized Linux product:
 [source,bash]
 ----
 env -u DISPLAY \
-  eclipse/product/org.eclipse.capella.sysmlv2.bridge.product/target/products/\
-org.eclipse.capella.sysmlv2.bridge.product/linux/gtk/x86_64/capella2sysmlv2 \
+  eclipse/product/org.eclipse.capella.sysmlv2.bridge.product.7.0.1/target/products/\
+org.eclipse.capella.sysmlv2.bridge.product.7.0.1/linux/gtk/x86_64/capella2sysmlv2 \
   -vm "$JAVA_HOME/bin/java" \
   /tmp/InFlightEntertainmentSystem.zip \
   /tmp/capella2sysmlv2-output
 ----
 
-The expected transformation result is 23 source `LogicalComponent` elements, 23 mapped `PartUsage` elements, and zero errors.
+Check for `Errors: 0` and compare the CLI coverage summary with `output/.capella2sysmlv2/transformation-instance-report.md`.
 
-=== Mapper Candidate Sources
+=== Registering a Mapper
 
-The Tycho mapping test build inventories all Capella semantic packages contributed through `org.eclipse.emf.ecore.generated_package` and writes one typed Java candidate for every non-abstract metaclass without an implemented mapper.
-For the Capella 7.0.1 baseline, it records 252 non-abstract metaclasses and generates 244 candidates after excluding the eight registered production mappers:
-
-[source,text]
-----
-eclipse/tests/org.eclipse.capella.sysmlv2.bridge.mappings.tests/target/
-  generated-mapper-sources/
-    mapper-skeletons.txt
-    org/eclipse/capella/sysmlv2/bridge/mappings/candidates/<package>/*Mapper.java
-----
-
-These files are deterministic build artifacts and are neither compiled nor registered as production mappers.
-To implement a mapping, move the relevant candidate into the mapping bundle's handwritten source tree, replace the unsupported-operation body, add coverage metadata and focused tests, then register it explicitly in `CapellaMapperCatalog.createMappers()`.
-The curated 17-entry WIP-derived backlog and the complete generated candidate inventory serve different purposes: the former records assessed semantic priorities, while the latter guarantees structural coverage of the installed metamodel.
+Implement the typed mapper in the mappings bundle, declare its feature mappings, add focused tests, and register it in `CapellaMapperCatalog.createMappers()`. The catalog also records assessed candidates such as `Mission` for future work.
 
 === Semantic Mapping Coverage Reports
 
-Every successful product transformation writes deterministic reports to:
+Every successful transformation writes two Markdown reports under `OUTPUT_DIRECTORY/.capella2sysmlv2/`.
 
-[source,text]
-----
-OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.json
-OUTPUT_DIRECTORY/.capella2sysmlv2/mapping-coverage.md
-----
+* `transformation-instance-report.md` records the input model coverage, diagnostics and Arcadia library usage for the run. The CLI prints the same input model coverage and the error count.
+* `transformation-meta-report.md` describes Capella metaclass and feature mappings, alignments and the Arcadia library concept assessment. Each library concept is classified as implemented, a backlog candidate, explicitly not mapped, or unassessed.
 
-Both reports contain these sections:
-
-`Capella Transformation Coverage`::
-Inventories semantic Capella packages contributed through `org.eclipse.emf.ecore.generated_package` whose namespace URI starts with `http://www.polarsys.org/capella/core/` or `http://www.polarsys.org/capella/common/`.
-The application resolves each URI through `EPackage.Registry.INSTANCE` and inventories every `EClass` and its `EAllStructuralFeatures`.
-The current Capella 7.0.1 baseline is 22 packages and 396 EClasses.
-Metaclass metrics use concrete metaclasses as their denominator.
-The report distinguishes metaclasses with any registered mapper from complete mappers, for which every applicable structural feature is explicitly mapped or ignored.
-Mapped-feature coverage counts mapped declarations; addressed-feature coverage counts mapped plus explicitly ignored declarations; both use all applicable structural feature slots on concrete metaclasses as their denominator.
-
-`Arcadia SysML v2 Library Utilization`::
-Inventories named reusable elements reachable from the `Arcadia` `LibraryPackage` only through public `OwningMembership` paths.
-Definitions are eligible concepts and Features are eligible features, deduplicated by model identity and qualified name.
-Arcadia 0.0.3 currently contributes 14 concepts and 28 features.
-Utilization counts the eligible elements explicitly declared by implemented mapper metadata.
-Standard SysML targets such as `SysML::Element::declaredName` are not Arcadia features.
-Every declared Arcadia reference must resolve in the inventory or report generation fails the transformation.
-
-`Arcadia SysML v2 Library Coverage of Capella`::
-Uses an alignment catalog independent from the mapper registry.
-Entries have `CONFIRMED`, `CANDIDATE`, `SYSML_STANDARD`, `NO_EQUIVALENT`, or `UNASSESSED` status.
-The main metric counts only confirmed metaclass alignments over all concrete Capella metaclasses; candidate backlog entries do not count as mappers or confirmed coverage.
-Feature alignments and the unassessed metaclass count are reported separately.
-
-Coverage values are observations only. The build defines no threshold or regression gate.
-`TransformationSummary.arcadiaConcepts()` also partitions the loaded library definitions into implemented concepts, backlog candidates, explicit non-mapping decisions (with reasons), and unassessed concepts.
-The command prints assessed coverage and the four counts, followed by any unassessed concept names.
-Linux and Windows smoke jobs append the Markdown report to the GitHub step summary and upload both formats as qualification evidence.
+Mapper declarations that reference an unknown Arcadia concept or feature cause report generation to fail.
 
 == Release Automation
 
@@ -325,18 +285,22 @@ The workflow performs the following operations:
 . executes the complete Maven, Tycho, and standalone product build with Java 21;
 . materializes the Linux and Windows products;
 . renames the archives to stable public asset names;
-. runs the IFE scenario from the Linux archive without `DISPLAY`;
-. runs the IFE scenario from the Windows archive on a Windows runner;
-. verifies the `23/23/0` summary, Arcadia references, and Java 21 runtime;
+. runs the IFE scenario from the Capella 7.1.0 Linux archive without `DISPLAY`;
+. runs the IFE scenario from the Capella 7.1.0 Windows archive on a Windows runner;
+. verifies input model coverage and the error count, Arcadia references, and Java 21 runtime;
 . uploads diagnostic logs after failures;
 . creates the GitHub Release for tags only and only after every preceding job succeeds.
 
-The complete Java 21 qualification command used by the workflow is:
+The workflow runs both qualification commands with Java 21:
 
 [source,bash]
 ----
 mvn --settings .github/maven-settings.xml \
-  -Pcapella-product,capella-product-it \
+  -Pcapella-product-7.0.1 \
+  clean verify
+
+mvn --settings .github/maven-settings.xml \
+  -Pcapella-product-7.1.0 \
   clean verify
 ----
 
@@ -354,8 +318,10 @@ git push origin v0.1.0
 
 The release publishes these stable assets:
 
-* `capella2sysmlv2-linux-x86_64.tar.gz`;
-* `capella2sysmlv2-windows-x86_64.zip`.
+* `capella2sysmlv2-Capella.7.0.1-linux-x86_64.tar.gz`
+* `capella2sysmlv2-Capella.7.0.1-windows-x86_64.zip`
+* `capella2sysmlv2-Capella.7.1.0-linux-x86_64.tar.gz`
+* `capella2sysmlv2-Capella.7.1.0-windows-x86_64.zip`
 
 The user documentation links to the corresponding `/releases/latest/download/` URLs.
 

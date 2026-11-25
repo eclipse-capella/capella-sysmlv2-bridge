@@ -13,7 +13,6 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_COMPONENT;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_ALLOCATED_ROLES;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +30,7 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.polarsys.capella.core.data.oa.Entity;
+import org.polarsys.capella.core.data.oa.OaPackage;
 
 /**
  * Maps {@link Entity} to {@link PartUsage}.
@@ -85,7 +85,7 @@ public final class EntityMapper extends ElementMapper<Entity, PartUsage> {
 
     @Override
     public Set<String> getIgnoredFeatures() {
-        return Stream.of(List.of(CAPELLA_ALLOCATED_ROLES),
+        return Stream.of(List.of(OaPackage.Literals.ENTITY__ALLOCATED_ROLES.getName()),
                 FeatureMappingCatalog.ARCADIA_ELEMENT_IGNORED_FEATURES,
                 FeatureMappingCatalog.GENERALIZABLE_ELEMENT_IGNORE_FEATURE)
                 .flatMap(Collection::stream)
