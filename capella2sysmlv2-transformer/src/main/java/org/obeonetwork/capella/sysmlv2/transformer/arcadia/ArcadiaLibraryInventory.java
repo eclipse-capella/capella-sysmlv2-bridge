@@ -80,7 +80,7 @@ public final class ArcadiaLibraryInventory {
             var qualifiedName = owner.getQualifiedName() + "::" + membership.getMemberName();
             byQualifiedName.putIfAbsent(qualifiedName,
                     new ArcadiaElementDescriptor(qualifiedName, nullToEmpty(membership.getElementId()),
-                            membership.eClass().getName(), ArcadiaElementKind.FEATURE));
+                            ArcadiaElementKind.FEATURE, false));
         }
     }
 
@@ -99,7 +99,7 @@ public final class ArcadiaLibraryInventory {
                 && qualifiedName != null && !qualifiedName.isBlank()) {
             getKind(member).ifPresent(kind -> {
                 var descriptor = new ArcadiaElementDescriptor(qualifiedName, nullToEmpty(member.getElementId()),
-                        member.eClass().getName(), kind);
+                        kind, member instanceof Definition definition && !definition.isIsAbstract());
                 var previous = byQualifiedName.putIfAbsent(qualifiedName, descriptor);
                 if (previous != null && !previous.elementId().equals(descriptor.elementId())) {
                     throw new IllegalStateException("Duplicate public Arcadia qualified name: " + qualifiedName);
@@ -119,6 +119,6 @@ public final class ArcadiaLibraryInventory {
     }
 
     private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
+        return Optional.ofNullable(value).orElse("");
     }
 }

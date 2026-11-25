@@ -20,104 +20,6 @@ package org.eclipse.capella.sysmlv2.bridge.mappings;
 public final class MapperConstants {
     public static final String SEPARATOR = "::";
 
-    public static final String CAPELLA_NAME = "name";
-
-    public static final String CAPELLA_DESCRIPTION = "description";
-
-    public static final String CAPELLA_KIND = "kind";
-
-    public static final String CAPELLA_CATEGORIES = "categories";
-
-    public static final String CAPELLA_STATUS = "status";
-
-    public static final String CAPELLA_ACTOR = "actor";
-
-    public static final String CAPELLA_HUMAN = "human";
-
-    public static final String CAPELLA_ABSTRACT = "abstract";
-
-    public static final String CAPELLA_SUMMARY = "summary";
-
-    public static final String CAPELLA_VISIBLE_IN_DOC = "visibleInDoc";
-
-    public static final String CAPELLA_VISIBLE_IN_LM = "visibleInLM";
-
-    public static final String CAPELLA_REVIEW = "review";
-
-    public static final String CAPELLA_ALLOCATED_FUNCTIONS = "allocatedFunctions";
-
-    public static final String CAPELLA_INVOLVED_FUNCTIONS = "involvedFunctions";
-
-    public static final String CAPELLA_INVOLVED_FUNCTIONAL_EXCHANGES = "involvedFunctionalExchanges";
-
-    public static final String CAPELLA_OWNED_SEQUENCE_NODES = "ownedSequenceNodes";
-
-    public static final String CAPELLA_OWNED_SEQUENCE_LINKS = "ownedSequenceLinks";
-
-    public static final String CAPELLA_PRE_CONDITION = "preCondition";
-
-    public static final String CAPELLA_POST_CONDITION = "postCondition";
-
-    public static final String CAPELLA_REALIZED_COMPONENTS = "realizedComponents";
-
-    public static final String CAPELLA_REALIZING_COMPONENTS = "realizingComponents";
-
-    public static final String CAPELLA_EXCHANGED_ITEMS = "exchangedItems";
-
-    public static final String CAPELLA_OUT_FUNCTION_REALIZATIONS = "outFunctionRealizations";
-
-    public static final String CAPELLA_IN_FUNCTION_REALIZATIONS = "inFunctionRealizations";
-
-    public static final String CAPELLA_IN_PORT_REALIZATIONS = "incomingPortRealizations";
-
-    public static final String CAPELLA_OUT_PORT_REALIZATIONS = "outgoingPortRealizations";
-
-    public static final String CAPELLA_ORIENTATION = "orientation";
-
-    public static final String CAPELLA_ALLOCATED_FUNCTION_PORTS = "allocatedFunctionPorts";
-
-    public static final String CAPELLA_OUT_FUNCTIONAL_EXCHANGE_REALIZATIONS = "outgoingFunctionalExchangeRealizations";
-
-    public static final String CAPELLA_IN_FUNCTIONAL_EXCHANGE_REALIZATIONS = "incomingFunctionalExchangeRealizations";
-
-    public static final String CAPELLA_SOURCE = "source";
-
-    public static final String CAPELLA_TARGET = "target";
-
-    public static final String CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT = "sourceFunctionOutputPort";
-
-    public static final String CAPELLA_TARGET_FUNCTION_INPUT_PORT = "targetFunctionInputPort";
-
-    public static final String CAPELLA_REALIZED_FUNCTIONAL_CHAINS = "realizedFunctionalChains";
-
-    public static final String CAPELLA_REALIZING_FUNCTIONAL_CHAINS = "realizingFunctionalChains";
-
-    public static final String CAPELLA_REALIZED_EXCHANGE_ITEMS = "realizedExchangeItems";
-
-    public static final String CAPELLA_REALIZING_EXCHANGE_ITEMS = "realizingExchangeItems";
-
-    public static final String CAPELLA_OUTGOING_EXCHANGE = "outgoingExchangeItems";
-
-    public static final String CAPELLA_INCOMING_EXCHANGE = "incomingExchangeItems";
-
-    public static final String CAPELLA_ALLOCATED_FUNCTIONAL_EXCHANGES = "allocatedFunctionalExchanges";
-
-    public static final String CAPELLA_CONVOYED_INFORMATIONS = "convoyedInformations";
-
-    public static final String CAPELLA_IN_COMPONENT_EXCHANGE_REALIZATIONS = "incomingComponentExchangeRealizations";
-
-    public static final String CAPELLA_OUT_COMPONENT_EXCHANGE_REALIZATIONS = "outgoingComponentExchangeRealizations";
-
-    public static final String CAPELLA_SOURCE_PORT = "sourcePort";
-
-    public static final String CAPELLA_TARGET_PORT = "targetPort";
-
-    public static final String CAPELLA_SUPER = "super";
-
-    public static final String CAPELLA_SUB = "sub";
-
-    public static final String CAPELLA_ALLOCATED_ROLES = "allocatedRoles";
-
     public static final String ARCADIA_PREFIX = "Arcadia" + SEPARATOR;
 
     public static final String ARCADIA_CAPABILITY = ARCADIA_PREFIX + "Capability";
@@ -133,7 +35,7 @@ public final class MapperConstants {
     public static final String ARCADIA_COMPONENT_PORT_DIRECTION = ARCADIA_COMPONENT_PORT + SEPARATOR + "portDirection";
 
     public static final String ARCADIA_COMPONENT_PORT_ALLOCATED_FUNCTION_PORTS = ARCADIA_COMPONENT_PORT + SEPARATOR
-            + CAPELLA_ALLOCATED_FUNCTION_PORTS;
+            + "allocatedFunctionPorts";
 
     public static final String ARCADIA_FUNCTIONAL_EXCHANGE = ARCADIA_PREFIX + "FunctionalExchange";
 
@@ -168,7 +70,7 @@ public final class MapperConstants {
 
     public static final String ARCADIA_COMPONENT_IS_HUMAN = ARCADIA_COMPONENT + SEPARATOR + ARCADIA_IS_HUMAN;
 
-    public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + SEPARATOR + CAPELLA_ALLOCATED_FUNCTIONS;
+    public static final String ARCADIA_COMPONENT_ALLOCATED_FUNCTIONS = ARCADIA_COMPONENT + SEPARATOR + "allocatedFunctions";
 
     public static final String ARCADIA_ELEMENT = ARCADIA_PREFIX + "ArcadiaElement";
 
@@ -217,20 +119,6 @@ public final class MapperConstants {
     public static final String SYSML_FEATURE_VALUE = SYSML_PREFIX + "Feature" + SEPARATOR + "value";
 
     public static final String SYSML_FLOWUSAGE_PAYLOAD = SYSML_FLOW_USAGE + SEPARATOR + "payload";
-
-    public static final String CAPELLA_INVOLVED_ABSTRACT_FUNCTIONS = "involvedAbstractFunctions";
-
-    public static final String CAPELLA_INVOLVED_FUNCTIONAL_CHAINS = "involvedFunctionalChains";
-
-    public static final String CAPELLA_INVOLVED_ENTITIES = "involvedEntities";
-
-    public static final String CAPELLA_INVOLVED_COMPONENTS = "involvedComponents";
-
-    public static final String CAPELLA_INVOLVED_SYSTEM_COMPONENTS = "involvedSystemComponents";
-
-    public static final String CAPELLA_OUTGOING_CAPABILITY_ALLOCATION = "outgoingCapabilityAllocation";
-
-    public static final String CAPELLA_INCOMING_CAPABILITY_ALLOCATION = "incomingCapabilityAllocation";
 
     private MapperConstants() {
         // Constant classes : do not instantiate

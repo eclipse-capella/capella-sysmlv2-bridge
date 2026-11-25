@@ -19,11 +19,12 @@ import org.eclipse.emf.ecore.EObject;
 import org.obeonetwork.capella.sysmlv2.transformer.diagnostic.TransformationDiagnostic;
 
 /**
- * Result of a transformation, including diagnostics and traceability.
+ * Result of a transformation, including diagnostics, traceability and generated model size.
  *
  * @author Raphaël Pagé
  */
-public record TransformationResult(EObject root, List<TransformationDiagnostic> diagnostics, Traceability traceability) {
+public record TransformationResult(EObject root, List<TransformationDiagnostic> diagnostics, Traceability traceability,
+        long generatedElementCount, long generatedElementCountExcludingDefaultStructure) {
 
     public TransformationResult {
         Objects.requireNonNull(root, "root must not be null");

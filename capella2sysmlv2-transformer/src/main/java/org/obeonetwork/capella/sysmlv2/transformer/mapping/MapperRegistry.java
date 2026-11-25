@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -50,9 +51,25 @@ public final class MapperRegistry {
      */
     public Optional<BoundMapper<?>> get(EObject source) {
         Objects.requireNonNull(source);
-        return mappers.stream()
-                .filter(mapper -> mapper.getSourceClass().isInstance(source))
-                .findFirst()
+        return findMapper(source.getClass(), mapperSource -> true)
                 .map(mapper -> new BoundMapper<>(mapper, source));
+    }
+
+    /**
+     * Returns the first compatible mapper, in registration order, whose declared source type is eligible.
+     *
+     * @param sourceType
+     *            Java type of the source to resolve
+     * @param eligibleMapperSource
+     *            filter on the mapper's declared Java source type
+     * @return the selected mapper, if any
+     */
+    public Optional<ElementMapper<?, ?>> findMapper(Class<?> sourceType, Predicate<Class<?>> eligibleMapperSource) {
+        Objects.requireNonNull(sourceType);
+        Objects.requireNonNull(eligibleMapperSource);
+        return this.mappers.stream()
+                .filter(mapper -> mapper.getSourceClass().isAssignableFrom(sourceType)
+                        && eligibleMapperSource.test(mapper.getSourceClass()))
+                .findFirst();
     }
 }

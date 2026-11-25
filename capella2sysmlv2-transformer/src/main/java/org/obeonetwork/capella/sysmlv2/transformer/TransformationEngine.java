@@ -24,6 +24,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.BoundMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
@@ -92,6 +93,7 @@ public final class TransformationEngine {
         var targetResource = new ResourceImpl(URI.createURI("transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
         this.resourceSet.getResources().add(targetResource);
         targetResource.getContents().add(modelStructure.root());
+        var defaultStructureElementCount = EObjectUtils.toStream(EcoreUtil.getAllProperContents(targetResource, false)).count();
         var context = new TransformationContext(modelStructure);
 
         var construction = new Construction(sources, context);
@@ -101,7 +103,9 @@ public final class TransformationEngine {
         construction.completed.forEach(mapper -> mapper.mapFeatures(context));
         LOGGER.info("Done!");
 
-        return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability());
+        var generatedElementCount = EObjectUtils.toStream(EcoreUtil.getAllProperContents(targetResource, false)).count();
+        return new TransformationResult(modelStructure.root(), context.diagnostics().collect(), context.traceability(),
+                generatedElementCount, generatedElementCount - defaultStructureElementCount);
     }
 
     private enum State {
@@ -145,21 +149,21 @@ public final class TransformationEngine {
                 return false;
             }
             if (context.traceability().isExcluded(source)) {
-                return fail(source, "Creation prerequisite is excluded: " + source);
+                return fail(source, "Creation prerequisite is excluded");
             }
             if (state == State.READY) {
                 return true;
             }
             if (state == State.CONSTRUCTING) {
                 var cycle = buildCyclePath(source);
-                return fail(source, "Creation dependency cycle: " + cycle + " -> " + source);
+                return fail(source, "Creation dependency cycle: " + cycle + " -> " + EObjectUtils.describe(source));
             }
             states.put(source, State.CONSTRUCTING);
             path.add(source);
             try {
                 for (var dependency : mapper.getCreationDependencies()) {
                     if (!resolve(dependency)) {
-                        return fail(source, "Unable to construct source; unavailable creation prerequisite: " + dependency);
+                        return fail(source, "Unable to construct source; unavailable creation prerequisite: " + EObjectUtils.describe(dependency));
                     }
                 }
                 mapper.createAndRegister(context);
@@ -183,7 +187,7 @@ public final class TransformationEngine {
         private String buildCyclePath(EObject source) {
             return path.stream()
                     .dropWhile(element -> element != source)
-                    .map(Object::toString)
+                    .map(EObjectUtils::describe)
                     .collect(Collectors.joining(" -> "));
         }
 

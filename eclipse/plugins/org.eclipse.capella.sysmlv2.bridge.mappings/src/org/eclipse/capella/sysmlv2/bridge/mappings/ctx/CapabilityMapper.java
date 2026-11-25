@@ -14,12 +14,12 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.ctx;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_SYSTEM_COMPONENTS;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.AbstractCapabilityMapper;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.polarsys.capella.core.data.ctx.Capability;
+import org.polarsys.capella.core.data.ctx.CtxPackage;
 
 /**
  * Maps System Analysis capabilities to Arcadia capability occurrences.
@@ -33,8 +33,8 @@ public final class CapabilityMapper extends AbstractCapabilityMapper<Capability>
 
     @Override
     protected FeatureMapping<Capability> getConcreteCapabilityMapping() {
-        return new FeatureMapping<>(CAPELLA_INVOLVED_SYSTEM_COMPONENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
-                (source, context) -> mapReferences(source, source.getInvolvedSystemComponents(),
+        return FeatureMapping.forReferencedElements(CtxPackage.Literals.CAPABILITY__OWNED_CAPABILITY_INVOLVEMENTS, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedSystemComponents(), source.getOwnedCapabilityInvolvements(),
                         ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }

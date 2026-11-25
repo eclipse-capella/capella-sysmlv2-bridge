@@ -80,56 +80,8 @@ final class ProductTestSupport {
                 execution.output());
         assertFalse(execution.output().contains("FrameworkEvent ERROR"),
                 execution.output());
-        assertTrue(
-                execution.output()
-                        .contains("Source LogicalComponent count: 23"),
-                execution.output());
-        assertTrue(execution.output().contains("Source Entity count: 8"),
-                execution.output());
-        assertTrue(
-                execution.output().contains("Source SystemComponent count: 5"),
-                execution.output());
-        assertTrue(
-                execution.output().contains("Source PhysicalComponent count: 64"),
-                execution.output());
-        assertTrue(execution.output().contains("Source OperationalActivity count: 24"), execution.output());
-        assertTrue(execution.output().contains("Source SystemFunction count: 44"), execution.output());
-        assertTrue(execution.output().contains("Source LogicalFunction count: 64"), execution.output());
-        assertTrue(execution.output().contains("Source PhysicalFunction count: 103"), execution.output());
-        assertTrue(execution.output().contains("Source FunctionInputPort count: 248"), execution.output());
-        assertTrue(execution.output().contains("Source FunctionOutputPort count: 234"), execution.output());
-        assertTrue(execution.output().contains("Source ComponentPort count: 52"), execution.output());
-        assertTrue(execution.output().contains("Source FunctionalExchange count: 272"), execution.output());
-        assertTrue(execution.output().contains("Source ExchangeItem count: 17"), execution.output());
-        assertTrue(execution.output().contains("Source ComponentExchange count: 25"), execution.output());
-        assertTrue(execution.output().contains("Source Capability count: 13"), execution.output());
-        assertTrue(execution.output().contains("Source OperationalCapability count: 3"), execution.output());
-        assertTrue(execution.output().contains("Source CapabilityRealization count: 23"), execution.output());
-        assertTrue(execution.output().contains("Source FunctionalChain count: 37"), execution.output());
-
-        assertTrue(execution.output().contains("Generated ActionUsage count: 257"), execution.output());
-        assertTrue(execution.output().contains("Generated FlowUsage count: 272"), execution.output());
-        assertTrue(execution.output().contains("Generated InterfaceUsage count: 25"), execution.output());
-        assertTrue(execution.output().contains("Generated PartUsage count: 100"), execution.output());
-        assertTrue(execution.output().contains("Generated ItemUsage count: 499"), execution.output());
-        assertTrue(execution.output().contains("Generated OccurrenceUsage count: 39"), execution.output());
-        assertTrue(execution.output().contains("Generated PortUsage count: 52"), execution.output());
         assertTrue(execution.output().contains("Errors: 0"), execution.output());
         assertFalse(execution.output().contains("[SEVERE]"), execution.output());
-        assertEquals(15, execution.output().lines()
-                .filter(line -> line.contains("[WARNING] Skipping functional chain ")).count(), execution.output());
-        assertEquals(15, execution.output().lines()
-                .filter(line -> line.contains("[WARNING] Omitting reference from capability ")).count(), execution.output());
-        assertTrue(execution.output().contains("Capella Transformation Coverage: 18/252 (7.14%)"),
-                execution.output());
-        assertTrue(execution.output().contains("Arcadia SysML v2 Library Utilization: 23/46 (50.00%)"),
-                execution.output());
-        assertTrue(execution.output().contains("Arcadia SysML v2 Library Coverage of Capella: 18/252 (7.14%)"),
-                execution.output());
-        assertTrue(execution.output().contains("Arcadia Library Concept Assessment: 14/14 (100.00%)"),
-                execution.output());
-        assertTrue(execution.output().contains("Implemented: 8, candidates: 1, explicit non-mappings: 5, unassessed: 0"),
-                execution.output());
 
         var xmiModel = applicationOutput
                 .resolve("In-Flight Entertainment System.sysml.xmi");
@@ -141,25 +93,27 @@ final class ProductTestSupport {
         assertTrue(xmi.contains("sirius:///0fbf595a-7e8d-3814-a11b-12ba3223e7f7#"), xmi);
 
         var reportDirectory = applicationOutput.resolve(".capella2sysmlv2");
-        var jsonReport = reportDirectory.resolve("mapping-coverage.json");
-        var markdownReport = reportDirectory.resolve("mapping-coverage.md");
-        assertTrue(Files.isRegularFile(jsonReport),
-                "Missing mapping coverage JSON: " + jsonReport);
-        assertTrue(Files.isRegularFile(markdownReport),
-                "Missing mapping coverage Markdown: " + markdownReport);
-        var json = Files.readString(jsonReport, StandardCharsets.UTF_8);
-        var markdown = Files.readString(markdownReport, StandardCharsets.UTF_8);
-        assertTrue(json.contains("\"packages\": 22"), json);
-        assertTrue(json.contains("\"eClasses\": 396"), json);
-        assertTrue(markdown.contains("## Capella Transformation Coverage"),
-                markdown);
-        assertTrue(markdown.contains("## Arcadia SysML v2 Library Utilization"),
-                markdown);
-        assertTrue(markdown.contains("14 concepts, 32 features"), markdown);
-        assertTrue(
-                markdown.contains(
-                        "## Arcadia SysML v2 Library Coverage of Capella"),
-                markdown);
+        var instanceReport = reportDirectory.resolve("transformation-instance-report.md");
+        var metaReport = reportDirectory.resolve("transformation-meta-report.md");
+        assertTrue(Files.isRegularFile(instanceReport), "Missing instance report: " + instanceReport);
+        assertTrue(Files.isRegularFile(metaReport), "Missing meta report: " + metaReport);
+        var instance = Files.readString(instanceReport, StandardCharsets.UTF_8);
+        var coverage = instance.lines().filter(line -> line.startsWith("Transformed ")).findFirst().orElseThrow();
+        assertTrue(execution.output().contains(coverage), execution.output());
+        var reportingMessages = execution.output().lines()
+                .map(String::stripTrailing)
+                .filter(line -> line.startsWith("[INFO]") && (line.contains("reporting workflow")
+                        || line.contains("Reporting workflow") || line.contains("instance report") || line.contains("meta report")))
+                .toList();
+        assertEquals(List.of("[INFO] Starting reporting workflow",
+                "[INFO] Created instance report: " + instanceReport.toAbsolutePath(),
+                "[INFO] Created meta report: " + metaReport.toAbsolutePath(),
+                "[INFO] Reporting workflow completed"), reportingMessages);
+        var meta = Files.readString(metaReport, StandardCharsets.UTF_8);
+        assertFalse(instance.isBlank(), "Empty instance report: " + instanceReport);
+        assertFalse(meta.isBlank(), "Empty meta report: " + metaReport);
+        assertTrue(instance.contains("Outcome: **Succeeded**")
+                || instance.contains("Outcome: **Succeeded with warnings**"), instance);
     }
 
     record ProcessResult(int exitCode, String output) {

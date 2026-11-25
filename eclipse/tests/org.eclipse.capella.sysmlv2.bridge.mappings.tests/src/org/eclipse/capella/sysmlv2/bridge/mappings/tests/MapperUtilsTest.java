@@ -6,6 +6,7 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.la.LaFactory;
@@ -52,7 +54,14 @@ class MapperUtilsTest {
             realization.setTargetElement(target);
             var traces = List.of(realization);
             MapperUtils.mapRealizationLinks(traces, traceability);
+            MapperUtils.mapRealizationLinks(traces, traceability);
+            assertTrue(traceability.isMapped(realization));
+            assertTrue(traceability.lookupTarget(realization).isEmpty());
         }
+        var missingEndpoint = FaFactory.eINSTANCE.createFunctionRealization();
+        missingEndpoint.setSourceElement(source);
+        MapperUtils.mapRealizationLinks(List.of(missingEndpoint), traceability);
+        assertFalse(traceability.isMapped(missingEndpoint));
         var query = new CommonQueryService();
         assertEquals(2, query.getRealizes(mappedSource).size());
         assertTrue(query.getRealizes(mappedSource).containsAll(List.of(first, second)));
@@ -91,7 +100,7 @@ class MapperUtilsTest {
 
         assertTrue(result.traceability().isExcluded(child));
         assertTrue(result.traceability().lookupTarget(child).isEmpty());
-        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains(parent.toString())));
+        assertTrue(result.diagnostics().stream().anyMatch(diagnostic -> diagnostic.message().contains(EObjectUtils.describe(parent))));
     }
 
     @Test

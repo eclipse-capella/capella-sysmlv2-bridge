@@ -45,7 +45,10 @@ import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.FeatureAlignment;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.MetaclassAlignment;
+import org.polarsys.capella.common.libraries.LibrariesPackage;
+import org.polarsys.capella.core.data.capellamodeller.CapellamodellerPackage;
 import org.polarsys.capella.core.data.ctx.CtxPackage;
+import org.polarsys.capella.core.data.epbs.EpbsPackage;
 import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.information.InformationPackage;
 import org.polarsys.capella.core.data.la.LaPackage;
@@ -115,21 +118,26 @@ public final class CapellaMapperCatalog {
     }
 
     /**
-     * Returns the alignment catalog for supported and candidate Capella concepts.
+     * Returns the alignment catalog for assessed Capella concepts.
      *
      * @return the alignment catalog
      */
     public static List<MetaclassAlignment> getAlignmentCatalog() {
         var result = new ArrayList<MetaclassAlignment>();
         createMappers().stream().map(CapellaMapperCatalog::alignment).forEach(result::add);
-        result.addAll(List.of(
-                candidate(CtxPackage.Literals.MISSION, ARCADIA_MISSION)));
+        result.add(candidate(CtxPackage.Literals.MISSION, ARCADIA_MISSION));
+        for (var sourceType : List.of(CapellamodellerPackage.Literals.PROJECT, LibrariesPackage.Literals.MODEL_INFORMATION,
+                OaPackage.Literals.OPERATIONAL_ANALYSIS,
+                CtxPackage.Literals.SYSTEM_ANALYSIS, LaPackage.Literals.LOGICAL_ARCHITECTURE,
+                PaPackage.Literals.PHYSICAL_ARCHITECTURE, EpbsPackage.Literals.EPBS_ARCHITECTURE)) {
+            result.add(new MetaclassAlignment(sourceType, null, AlignmentStatus.NO_EQUIVALENT, List.of()));
+        }
         return List.copyOf(result);
     }
 
     private static MetaclassAlignment alignment(ElementMapper<?, ?> mapper) {
         var features = mapper.getFeatureMappings().stream()
-                .sorted(java.util.Comparator.comparing(FeatureMapping::getCapellaFeature))
+                .sorted(java.util.Comparator.comparing(feature -> feature.getCapellaFeature().getName()))
                 .map(feature -> {
                     AlignmentStatus alignment;
                     if (feature.getSysmlFeature().startsWith(ARCADIA_PREFIX)) {
@@ -137,7 +145,7 @@ public final class CapellaMapperCatalog {
                     } else {
                         alignment = AlignmentStatus.SYSML_STANDARD;
                     }
-                    return new FeatureAlignment(feature.getCapellaFeature(), feature.getSysmlFeature(), alignment);
+                    return new FeatureAlignment(feature.getCapellaFeature().getName(), feature.getSysmlFeature(), alignment);
                 })
                 .toList();
         return new MetaclassAlignment(findCorrespondingEClass(mapper.getSourceClass()), mapper.getTargetQualifiedName(), AlignmentStatus.CONFIRMED, features);
