@@ -14,11 +14,11 @@ package org.eclipse.capella.sysmlv2.bridge.mappings.oa;
 
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_CAPABILITY_INVOLVED_COMPONENTS;
 import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.ARCADIA_INVOLVED_COMPONENTS;
-import static org.eclipse.capella.sysmlv2.bridge.mappings.MapperConstants.CAPELLA_INVOLVED_ENTITIES;
 
 import org.eclipse.capella.sysmlv2.bridge.mappings.AbstractCapabilityMapper;
 import org.eclipse.syson.sysml.SysmlPackage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.polarsys.capella.core.data.oa.OaPackage;
 import org.polarsys.capella.core.data.oa.OperationalCapability;
 
 /**
@@ -33,8 +33,9 @@ public final class OperationalCapabilityMapper extends AbstractCapabilityMapper<
 
     @Override
     protected FeatureMapping<OperationalCapability> getConcreteCapabilityMapping() {
-        return new FeatureMapping<>(CAPELLA_INVOLVED_ENTITIES, ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
-                (source, context) -> mapReferences(source, source.getInvolvedEntities(),
+        return FeatureMapping.forReferencedElements(OaPackage.Literals.OPERATIONAL_CAPABILITY__OWNED_ENTITY_OPERATIONAL_CAPABILITY_INVOLVEMENTS,
+                ARCADIA_CAPABILITY_INVOLVED_COMPONENTS,
+                (source, context) -> mapInvolvements(source, source.getInvolvedEntities(), source.getOwnedEntityOperationalCapabilityInvolvements(),
                         ARCADIA_INVOLVED_COMPONENTS, SysmlPackage.eINSTANCE.getPartUsage(), context));
     }
 }

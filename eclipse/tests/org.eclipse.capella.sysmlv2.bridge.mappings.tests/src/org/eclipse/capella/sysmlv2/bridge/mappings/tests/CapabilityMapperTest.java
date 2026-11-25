@@ -26,6 +26,8 @@ import java.util.List;
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
+import org.eclipse.capella.sysmlv2.bridge.application.reporting.TransformationInstanceAnalyzer;
+import org.eclipse.capella.sysmlv2.bridge.application.transformation.ModelTransformationUtils;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
 import org.eclipse.capella.sysmlv2.bridge.mappings.ctx.CapabilityMapper;
 import org.eclipse.emf.common.util.URI;
@@ -37,17 +39,23 @@ import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementMappingOutcome;
+import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementOutcome;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationResult;
 import org.polarsys.capella.core.data.capellacommon.CapellacommonFactory;
+import org.polarsys.capella.core.data.capellacore.Involvement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.ctx.CtxFactory;
+import org.polarsys.capella.core.data.ctx.CtxPackage;
 import org.polarsys.capella.core.data.fa.AbstractFunction;
 import org.polarsys.capella.core.data.fa.FaFactory;
 import org.polarsys.capella.core.data.interaction.AbstractCapability;
 import org.polarsys.capella.core.data.interaction.InteractionFactory;
+import org.polarsys.capella.core.data.interaction.InteractionPackage;
 import org.polarsys.capella.core.data.la.LaFactory;
 import org.polarsys.capella.core.data.oa.OaFactory;
 import org.polarsys.capella.core.data.pa.PaFactory;
@@ -98,6 +106,8 @@ class CapabilityMapperTest {
             assertEquals(List.of(functionTarget), query.getFeatureReferenceValue(target, "involvedFunctions"));
             assertEquals(List.of(componentTarget), query.getFeatureReferenceValue(target, "involvedComponents"));
             assertEquals(List.of(chainTarget), query.getFeatureReferenceValue(target, "involvedFunctionalChains"));
+            assertTrue(fixture.capability().getOwnedFunctionalChainAbstractCapabilityInvolvements().stream()
+                    .allMatch(context.traceability()::isMapped));
             assertTrue(context.diagnostics().collect().isEmpty(), context.diagnostics().collect().toString());
 
             var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
@@ -109,8 +119,13 @@ class CapabilityMapperTest {
                     query.getFeatureReferenceValue(occurrence, "involvedFunctions"));
             assertEquals(List.of(result.traceability().lookupTarget(fixture.component()).orElseThrow()),
                     query.getFeatureReferenceValue(occurrence, "involvedComponents"));
+            assertTrue(fixture.capability().getOwnedAbstractFunctionAbstractCapabilityInvolvements().stream()
+                    .allMatch(result.traceability()::isMapped));
+            assertTrue(result.traceability().isMapped(fixture.componentInvolvement()));
             assertTrue(query.getFeatureReferenceValue(occurrence, "involvedFunctionalChains").isEmpty());
             assertTrue(result.traceability().isSkipped(chain));
+            assertTrue(fixture.capability().getOwnedFunctionalChainAbstractCapabilityInvolvements().stream()
+                    .allMatch(result.traceability()::isSkipped));
             assertEquals(2, result.diagnostics().size(), result.diagnostics().toString());
             assertTrue(result.diagnostics().stream().allMatch(value -> value.severity().name().equals("WARNING")), result.diagnostics().toString());
         }
@@ -147,6 +162,7 @@ class CapabilityMapperTest {
             var mapper = new CapabilityMapper();
             mapper.createAndRegister(capability, context);
             mapper.mapFeatures(capability, context);
+            assertTrue(context.traceability().isExcluded(involvement), status);
             assertTrue(context.diagnostics().collect().stream().anyMatch(value -> value.severity().name().equals("ERROR")
                     && value.message().contains("Unable to map " + ARCADIA_INVOLVED_FUNCTIONAL_CHAINS)), status);
             assertTrue(context.diagnostics().collect().stream().noneMatch(value -> value.severity().name().equals("WARNING")), status);
@@ -178,7 +194,10 @@ class CapabilityMapperTest {
         var componentInvolvement = CtxFactory.eINSTANCE.createCapabilityInvolvement();
         componentInvolvement.setInvolved(component);
         capability.getOwnedCapabilityInvolvements().add(componentInvolvement);
-        var result = transform(architecture);
+        var resource = new ResourceImpl(URI.createURI("test:/capability.capella"));
+        resource.getContents().add(architecture);
+        var transformation = ModelTransformationUtils.transform(architecture, "IFE");
+        var result = transformation.result();
         var target = assertInstanceOf(OccurrenceUsage.class, result.traceability().lookupTarget(capability).orElseThrow());
         assertEquals("Move Cursor", target.getDeclaredName());
         var query = new CommonQueryService();
@@ -187,6 +206,13 @@ class CapabilityMapperTest {
         assertTrue(query.getFeatureReferenceValue(target, ARCADIA_INVOLVED_COMPONENTS).contains(result.traceability().lookupTarget(component).orElseThrow()));
         assertTrue(query.getCapabilities(target).contains(target));
         assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+
+        var meta = TransformationCoverageAnalyzer.analyze(List.of(CtxPackage.eINSTANCE, InteractionPackage.eINSTANCE),
+                List.of(new CapabilityMapper()), List.of(), List.of(), null);
+        var report = TransformationInstanceAnalyzer.analyze(transformation, meta);
+        assertEquals(List.of(ElementMappingOutcome.MAPPED, ElementMappingOutcome.MAPPED),
+                report.elements().stream().filter(element -> List.of(involvement.eClass(), componentInvolvement.eClass()).contains(element.sourceType()))
+                        .map(ElementOutcome::status).toList());
     }
 
     @Test
@@ -210,7 +236,7 @@ class CapabilityMapperTest {
             var involvement = OaFactory.eINSTANCE.createEntityOperationalCapabilityInvolvement();
             involvement.setInvolved(entity);
             capability.getOwnedEntityOperationalCapabilityInvolvements().add(involvement);
-            return new Fixture(architecture, capability, OaFactory.eINSTANCE.createOperationalActivity(), entity);
+            return new Fixture(architecture, capability, OaFactory.eINSTANCE.createOperationalActivity(), entity, involvement);
         }
         BlockArchitecture architecture = perspective.equals("Logical")
                 ? LaFactory.eINSTANCE.createLogicalArchitecture()
@@ -230,10 +256,11 @@ class CapabilityMapperTest {
         AbstractFunction function = perspective.equals("Logical")
                 ? LaFactory.eINSTANCE.createLogicalFunction()
                 : PaFactory.eINSTANCE.createPhysicalFunction();
-        return new Fixture(architecture, capability, function, component);
+        return new Fixture(architecture, capability, function, component, involvement);
     }
 
-    private record Fixture(BlockArchitecture architecture, AbstractCapability capability, AbstractFunction function, Component component) {
+    private record Fixture(BlockArchitecture architecture, AbstractCapability capability, AbstractFunction function, Component component,
+            Involvement componentInvolvement) {
     }
 
     private static TransformationResult transform(EObject source) {

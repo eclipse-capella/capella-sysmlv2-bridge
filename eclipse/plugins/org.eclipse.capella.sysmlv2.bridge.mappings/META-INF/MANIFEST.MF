@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.eclipse.capella.sysmlv2.bridge.mappings
 Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.emf.ecore,
+ org.polarsys.capella.common.libraries.gen,
  org.polarsys.capella.core.data.gen
 Import-Package: org.apache.commons.logging
 Export-Package: org.eclipse.capella.model.transverse.services,

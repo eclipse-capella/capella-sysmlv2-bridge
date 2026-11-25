@@ -21,6 +21,7 @@ import org.eclipse.capella.model.transverse.services.CommonUpdateService;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.Usage;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
 import org.polarsys.capella.common.data.modellingcore.AbstractTrace;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
@@ -43,22 +44,31 @@ public class MapperUtils {
     }
 
     /**
-     * Map the Capella function allocations to Sysml perform actions.
+     * Maps owned function allocations to SysML perform actions and records their outcomes.
      * 
      * @param source
      *            Capella element owning the allocations
      * @param target
      *            The transformed source
-     * @param context
-     *            T
+     * @param traceability
+     *            source-to-target correspondences and allocation outcomes
      */
     public static void addFunctionAllocation(Component source, Usage target, Traceability traceability) {
-        source.getOwnedFunctionalAllocation()
-                .forEach(allocation -> {
-                    var truc = require(traceability, allocation.getTargetElement(), ActionUsage.class);
-                    COMMON_UPDATE_SERVICE.setPerformAction(target, truc);
-                });
-
+        source.getOwnedFunctionalAllocation().forEach(allocation -> {
+            var resolvedFunction = Optional.ofNullable(allocation.getTargetElement())
+                    .filter(function -> !function.eIsProxy());
+            if (resolvedFunction.filter(traceability::isSkipped).isPresent()) {
+                traceability.skip(allocation);
+                return;
+            }
+            resolvedFunction.flatMap(traceability::lookupTarget)
+                    .filter(ActionUsage.class::isInstance)
+                    .map(ActionUsage.class::cast)
+                    .ifPresentOrElse(action -> {
+                        COMMON_UPDATE_SERVICE.setPerformAction(target, action);
+                        traceability.markMapped(allocation);
+                    }, () -> traceability.unregister(allocation));
+        });
     }
 
     /**
@@ -71,10 +81,23 @@ public class MapperUtils {
      */
     public static void mapRealizationLinks(Collection<? extends AbstractTrace> realizations, Traceability traceability) {
         realizations.forEach(realization -> {
-            var source = traceability.lookupTarget(realization.getSourceElement()).filter(Usage.class::isInstance).map(Usage.class::cast);
-            var target = traceability.lookupTarget(realization.getTargetElement()).filter(Usage.class::isInstance);
+            var sourceElement = realization.getSourceElement();
+            var targetElement = realization.getTargetElement();
+            if (sourceElement == null || targetElement == null || sourceElement.eIsProxy() || targetElement.eIsProxy()) {
+                traceability.unregister(realization);
+                return;
+            }
+            if (traceability.isSkipped(sourceElement) || traceability.isSkipped(targetElement)) {
+                traceability.skip(realization);
+                return;
+            }
+            var source = traceability.lookupTarget(sourceElement).filter(Usage.class::isInstance).map(Usage.class::cast);
+            var target = traceability.lookupTarget(targetElement).filter(Usage.class::isInstance);
             if (source.isPresent() && target.isPresent()) {
                 COMMON_UPDATE_SERVICE.setRealizes(source.get(), target.get());
+                traceability.markMapped(realization);
+            } else {
+                traceability.unregister(realization);
             }
         });
     }
@@ -95,13 +118,13 @@ public class MapperUtils {
     public static <T extends EObject> T require(Traceability traceability, EObject source, Class<T> expectedType) {
         var target = traceability.lookupTarget(source)
                 .orElseThrow(() -> new IllegalStateException(
-                        "No mapped target for " + source.eClass().getName()));
+                        "No mapped target for " + source.eClass().getName() + " " + EObjectUtils.describe(source)));
 
         if (!expectedType.isInstance(target)) {
             throw new IllegalStateException(
                     "Expected target " + expectedType.getSimpleName() + " for "
                             + source.eClass().getName() + " but was "
-                            + target.eClass().getName());
+                            + target.eClass().getName() + " (source: " + EObjectUtils.describe(source) + ")");
         }
         return expectedType.cast(target);
     }

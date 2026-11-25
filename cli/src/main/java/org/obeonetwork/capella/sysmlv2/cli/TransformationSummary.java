@@ -12,27 +12,16 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.cli;
 
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 
-public record TransformationSummary(List<ElementCount> sourceElementCounts,
-        List<ElementCount> generatedElementCounts, int errorCount,
-        Path outputModel, MappingCoverageSummary mappingCoverage, ArcadiaConceptSummary arcadiaConcepts) {
+public record TransformationSummary(String inputModelCoverage, int errorCount,
+        long generatedElementCount, long generatedElementCountExcludingDefaultStructure) {
 
     public TransformationSummary {
-        sourceElementCounts = List.copyOf(Objects.requireNonNull(
-                sourceElementCounts, "sourceElementCounts must not be null"));
-        generatedElementCounts = List
-                .copyOf(Objects.requireNonNull(generatedElementCounts,
-                        "generatedElementCounts must not be null"));
+        Objects.requireNonNull(inputModelCoverage, "inputModelCoverage must not be null");
         if (errorCount < 0) {
             throw new IllegalArgumentException(
                     "transformation counts must not be negative");
         }
-        Objects.requireNonNull(outputModel, "outputModel must not be null");
-        Objects.requireNonNull(mappingCoverage,
-                "mappingCoverage must not be null");
-        Objects.requireNonNull(arcadiaConcepts, "arcadiaConcepts must not be null");
     }
 }

@@ -74,7 +74,7 @@ class ProgressStatusMappingTest {
     @Test
     void declaresStatusMappingForEverySupportedMapper() {
         for (var mapper : CapellaMapperCatalog.createMappers()) {
-            assertTrue(mapper.getFeatureMappings().stream().anyMatch(mapping -> mapping.getCapellaFeature().equals("status")
+            assertTrue(mapper.getFeatureMappings().stream().anyMatch(mapping -> mapping.getCapellaFeature().getName().equals("status")
                     && mapping.getSysmlFeature().equals("ModelingMetadata::StatusInfo::status")), mapper.getClass().getName());
         }
     }

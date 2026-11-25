@@ -30,7 +30,10 @@ import org.eclipse.syson.sysml.ItemUsage;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.DocumentingMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
+import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
+import org.polarsys.capella.common.data.activity.ActivityPackage;
+import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.fa.FunctionInputPort;
 import org.polarsys.capella.core.data.fa.FunctionOutputPort;
 import org.polarsys.capella.core.data.fa.FunctionPort;
@@ -93,15 +96,15 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
     @Override
     public List<FeatureMapping<FunctionalExchange>> getFeatureMappings() {
         List<FeatureMapping<FunctionalExchange>> endpoints = List.of(
-                new DocumentingMapping<>(MapperConstants.CAPELLA_SOURCE, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
-                new DocumentingMapping<>(MapperConstants.CAPELLA_SOURCE_FUNCTION_OUTPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
-                new DocumentingMapping<>(MapperConstants.CAPELLA_TARGET, MapperConstants.SYSML_FLOW_USAGE_TARGET),
-                new DocumentingMapping<>(MapperConstants.CAPELLA_TARGET_FUNCTION_INPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_TARGET),
-                new FeatureMapping<>(MapperConstants.CAPELLA_OUT_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
+                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__SOURCE, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__SOURCE_FUNCTION_OUTPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_SOURCE),
+                new DocumentingMapping<>(ActivityPackage.Literals.ACTIVITY_EDGE__TARGET, MapperConstants.SYSML_FLOW_USAGE_TARGET),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__TARGET_FUNCTION_INPUT_PORT, MapperConstants.SYSML_FLOW_USAGE_TARGET),
+                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OWNED_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES,
                         (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
-                new FeatureMapping<>(MapperConstants.CAPELLA_IN_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY,
-                        (source, context) -> MapperUtils.mapRealizationLinks(source.getOwnedFunctionalExchangeRealizations(), context.traceability())),
-                new FeatureMapping<>(MapperConstants.CAPELLA_EXCHANGED_ITEMS, MapperConstants.SYSML_FLOWUSAGE_PAYLOAD, this::mapExchangedItems));
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__OUTGOING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_REALIZES),
+                new DocumentingMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__INCOMING_FUNCTIONAL_EXCHANGE_REALIZATIONS, MapperConstants.ARCADIA_ELEMENT_IS_REALIZED_BY),
+                new FeatureMapping<>(FaPackage.Literals.FUNCTIONAL_EXCHANGE__EXCHANGED_ITEMS, MapperConstants.SYSML_FLOWUSAGE_PAYLOAD, this::mapExchangedItems));
         List<FeatureMapping<FunctionalExchange>> arcadiaElementMappings = FeatureMappingCatalog.getArcadiaElementMappings();
         return Stream.concat(arcadiaElementMappings.stream(), endpoints.stream()).toList();
     }
@@ -118,7 +121,7 @@ public final class FunctionalExchangeMapper extends ElementMapper<FunctionalExch
                         .map(ItemUsage.class::cast)
                         .orElseGet(() -> {
                             context.diagnostics().addError(source,
-                                    "Unable to map exchanged item " + item.getName());
+                                    "Unable to map exchanged item " + EObjectUtils.describe(item));
                             return null;
                         }))
                 .filter(java.util.Objects::nonNull)
