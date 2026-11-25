@@ -15,6 +15,7 @@ package org.eclipse.capella.sysmlv2.bridge.application.reporting;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -81,8 +82,6 @@ public final class TransformationReportingUtils {
     public static TransformationSummary generate(ModelTransformation transformation, TransformationRequest request, Instant startedAt) {
         LOGGER.info("Starting reporting workflow");
         var outputDirectory = request.outputDirectory().toAbsolutePath().normalize();
-        var outputModel = outputDirectory
-                .resolve(transformation.modelName() + ".sysml.xmi");
         var report = TransformationCoverageAnalyzer.analyze(
                 CapellaSemanticPackageDiscoveryUtils.discover(),
                 transformation.mappers(), transformation.targetModel().getArcadiaLibrary(),
@@ -94,6 +93,7 @@ public final class TransformationReportingUtils {
         Optional<RuntimeException> exportFailure = Optional.empty();
         if (instance.diagnostics().stream().noneMatch(diagnostic -> diagnostic.severity() == DiagnosticSeverity.ERROR)) {
             try {
+                var outputModel = resolveOutputModel(outputDirectory, transformation.modelName());
                 persistAndValidate(transformation.result(), transformation.targetModel(), outputModel);
                 outputChecksum = Optional.of(checksum(outputModel));
             } catch (RuntimeException exception) {
@@ -118,6 +118,26 @@ public final class TransformationReportingUtils {
                 instance.generatedElementCount(), instance.generatedElementCountExcludingDefaultStructure());
         LOGGER.info("Reporting workflow completed");
         return summary;
+    }
+
+    private static Path resolveOutputModel(Path outputDirectory, String modelName) {
+        var invalidName = "Invalid Capella model name for the SysML XMI output filename";
+        var driveQualified = modelName.length() >= 2 && modelName.substring(0, 2).matches("[A-Za-z]:");
+        if (modelName.isBlank() || modelName.equals(".") || modelName.equals("..")
+                || modelName.indexOf('/') >= 0 || modelName.indexOf('\\') >= 0 || driveQualified) {
+            throw new IllegalArgumentException(invalidName + ". Expected a single filename component.");
+        }
+
+        Path outputModel;
+        try {
+            outputModel = outputDirectory.resolve(modelName + ".sysml.xmi").normalize();
+        } catch (InvalidPathException exception) {
+            throw new IllegalArgumentException(invalidName + ". " + exception.getReason(), exception);
+        }
+        if (!outputDirectory.equals(outputModel.getParent())) {
+            throw new IllegalArgumentException(invalidName + ". Expected a file directly inside the output directory.");
+        }
+        return outputModel;
     }
 
     private static Map<String, AlignmentStatus> assessArcadiaConcepts(TransformationCoverageReport report) {
