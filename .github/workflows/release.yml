@@ -38,7 +38,7 @@ jobs:
             echo "Release tag must reference a commit from main" >&2
             exit 1
           fi
-          
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -56,14 +56,27 @@ jobs:
           tar -xzf apache-maven-3.9.16-bin.tar.gz
           echo "$RUNNER_TEMP/apache-maven-3.9.16/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/apache-maven-3.9.16/bin/mvn" --version
-                
+
+      - name: Configure package registries
+        run: |
+          cat > ~/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server><id>github</id><username>${{ github.actor }}</username><password>${{ github.token }}</password></server>
+              <server><id>github-sirius-emfjson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-sirius-web</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-syson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+              <server><id>github-capella-for-syson</id><username>x-access-token</username><password>${{ github.token }}</password></server>
+            </servers>
+          </settings>
+          EOF
+
       - name: Qualify build and Linux and Windows products for Capella 7.1.0
         run: >-
           mvn --batch-mode --no-transfer-progress
-          --settings .github/maven-settings.xml
           -Pcapella-product-7.1.0
           clean verify
-          
+
       - name: Upload build qualification evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,7 +104,6 @@ jobs:
       - name: Qualify build and Linux and Windows products for Capella 7.0.1
         run: >-
           mvn --batch-mode --no-transfer-progress
-          --settings .github/maven-settings.xml
           -Pcapella-product-7.0.1
           clean verify
 
@@ -122,7 +134,6 @@ jobs:
       # - name: Qualify build and Linux and Windows products for Capella 6.1.0
       #   run: >-
       #     mvn --batch-mode --no-transfer-progress
-      #     --settings .github/maven-settings.xml
       #     -Pcapella-product-6.1.0
       #     clean verify
 
