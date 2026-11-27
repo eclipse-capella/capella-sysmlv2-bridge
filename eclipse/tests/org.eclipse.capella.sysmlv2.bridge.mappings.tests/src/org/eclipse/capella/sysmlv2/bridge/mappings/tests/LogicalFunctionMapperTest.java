@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
@@ -45,8 +47,9 @@ class LogicalFunctionMapperTest {
         root.setName("Root Function");
         functionPackage.getOwnedLogicalFunctions().add(root);
         root.getOwnedFunctions().add(source);
+        var model = new CapellaForSysonResourceSet("IFE");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(java.util.List.of(child, source, root), "IFE");
+                model.getResourceSet()).transformAll(List.of(child, source, root), model.getDefaultStructure());
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Process data", target.getDeclaredName());

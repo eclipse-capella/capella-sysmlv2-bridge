@@ -43,7 +43,7 @@ import org.polarsys.capella.core.data.information.InformationPackage;
 class CapellaMapperCatalogTest {
     @Test
     void everyLibraryConceptHasAMapperBacklogCandidateOrExplicitNonMappingDecision() {
-        var library = new CapellaForSysonResourceSet().getArcadiaLibrary();
+        var library = new CapellaForSysonResourceSet("Model").getArcadiaLibrary();
         var inventory = new ArcadiaLibraryInventory().inspect(library);
         var concepts = inventory.stream()
                 .filter(element -> element.kind() == ArcadiaElementKind.CONCEPT).toList();

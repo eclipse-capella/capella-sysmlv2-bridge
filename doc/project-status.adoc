@@ -130,8 +130,8 @@ There is no separate dispatcher or deferred reference resolver.
 
 Creation services receive mapped source parents where available and determine final containment. Architecture roots reuse the pre-created targets; ports require mapped owners. Cross-reference feature mappings remain outside the construction graph.
 
-`transform(root, rootName)` traverses the root and its descendants. `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>` without modifying it. No containment-depth sorting or relocation phase remains.
-The concrete `TransformationContext` owns the model structure, identity-based `Traceability` (including exclusion state), and `DiagnosticsCollector`. The engine accepts a `rootName` string to name the generated model root; there is no transformation options object or deferred reference resolver.
+`transform(root, structure)` traverses the root and its descendants. `transformAll(sources, structure)` accepts a `Collection<? extends EObject>` without modifying it. No containment-depth sorting or relocation phase remains.
+The concrete `TransformationContext` owns the model structure, identity-based `Traceability` (including exclusion state), and `DiagnosticsCollector`. The application names the model root when it loads the bundled default structure and passes that structure to the engine.
 
 === Arcadia Library
 

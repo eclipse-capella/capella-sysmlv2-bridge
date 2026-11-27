@@ -35,7 +35,6 @@ import org.eclipse.syson.sysml.OccurrenceUsage;
 import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationInstanceReport.ElementMappingOutcome;
@@ -65,8 +64,8 @@ class CapabilityMapperTest {
             var fixture = fixture(perspective);
             fixture.capability().setName("Move Cursor");
             fixture.capability().setDescription("Moves the cursor on screen");
-            var model = new CapellaForSysonResourceSet();
-            var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Test", model.getResourceSet()));
+            var model = new CapellaForSysonResourceSet("Test");
+            var context = new TransformationContext(model.getDefaultStructure());
             var structure = context.modelStructure();
             var output = new ResourceImpl(URI.createURI("test:/capabilities.sysml"));
             model.getResourceSet().getResources().add(output);
@@ -111,7 +110,7 @@ class CapabilityMapperTest {
             var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
             sources.addAll(List.of(fixture.function(), fixture.component(), chain));
             var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), model.getResourceSet())
-                    .transformAll(sources, "Test");
+                    .transformAll(sources, model.getDefaultStructure());
             var occurrence = assertInstanceOf(OccurrenceUsage.class, result.traceability().lookupTarget(fixture.capability()).orElseThrow());
             assertEquals(List.of(result.traceability().lookupTarget(fixture.function()).orElseThrow()),
                     query.getFeatureReferenceValue(occurrence, "involvedFunctions"));
@@ -150,8 +149,7 @@ class CapabilityMapperTest {
             var involvement = InteractionFactory.eINSTANCE.createFunctionalChainAbstractCapabilityInvolvement();
             involvement.setInvolved(chain);
             capability.getOwnedFunctionalChainAbstractCapabilityInvolvements().add(involvement);
-            var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Test",
-                    new CapellaForSysonResourceSet().getResourceSet()));
+            var context = new TransformationContext(new CapellaForSysonResourceSet("Test").getDefaultStructure());
             if (status.equals("failed")) {
                 context.traceability().unregister(chain);
             } else if (status.equals("wrong type")) {
@@ -264,7 +262,7 @@ class CapabilityMapperTest {
     private static TransformationResult transform(EObject source) {
         var resource = new ResourceImpl(URI.createURI("test:/capability.capella"));
         resource.getContents().add(source);
-        var model = new CapellaForSysonResourceSet();
-        return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), model.getResourceSet()).transform(source, "IFE");
+        var model = new CapellaForSysonResourceSet("IFE");
+        return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), model.getResourceSet()).transform(source, model.getDefaultStructure());
     }
 }

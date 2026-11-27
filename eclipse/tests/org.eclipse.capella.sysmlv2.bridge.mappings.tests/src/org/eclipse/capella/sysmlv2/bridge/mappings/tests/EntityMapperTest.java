@@ -21,9 +21,10 @@ class EntityMapperTest {
         var child = org.polarsys.capella.core.data.oa.OaFactory.eINSTANCE.createEntity();
         parent.getOwnedEntities().add(child);
         child.setName("Crew");
+        var model = new CapellaForSysonResourceSet("Entities");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet())
-                        .transformAll(java.util.List.of(child, parent), "Entities");
+                model.getResourceSet())
+                        .transformAll(java.util.List.of(child, parent), model.getDefaultStructure());
         var target = org.junit.jupiter.api.Assertions.assertInstanceOf(org.eclipse.syson.sysml.PartUsage.class,
                 result.traceability().lookupTarget(child).orElseThrow());
         org.junit.jupiter.api.Assertions.assertSame(result.traceability().lookupTarget(parent).orElseThrow(), target.getOwner());
@@ -38,11 +39,12 @@ class EntityMapperTest {
         source.setDescription("The pilot operating the aircraft");
         source.setActor(true);
         source.setHuman(true);
+        var model = new CapellaForSysonResourceSet("IFE");
         var engine = new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet());
+                model.getResourceSet());
 
-        var result = engine.transform(source, "IFE");
+        var result = engine.transform(source, model.getDefaultStructure());
 
         assertTrue(result.traceability().lookupTarget(source).isPresent());
         assertTrue(result.diagnostics().isEmpty());

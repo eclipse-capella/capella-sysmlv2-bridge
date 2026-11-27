@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
@@ -75,13 +77,13 @@ class FunctionPortMapperTest {
         var sourceResource = new ResourceImpl(URI.createURI("test:/function-port.capella"));
         sourceResource.getContents().add(function);
 
-        var targetModel = new CapellaForSysonResourceSet();
+        var targetModel = new CapellaForSysonResourceSet("IFE");
         var resourceSet = targetModel.getResourceSet();
         var engine = new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 resourceSet);
 
-        var result = engine.transformAll(java.util.List.of(output, input, function, input), "IFE");
+        var result = engine.transformAll(List.of(output, input, function, input), targetModel.getDefaultStructure());
 
         ActionUsage functionTarget = assertInstanceOf(ActionUsage.class,
                 result.traceability().lookupTarget(function).orElseThrow());

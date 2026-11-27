@@ -95,7 +95,7 @@
 	                                <groupId>org.eclipse.capella</groupId>
 	                                <artifactId>capella-application-configuration</artifactId>
 	                                <version>${capella-for-syson.version}</version>
-	                                <includes>arcadia/library/arcadia.json</includes>
+	                                <includes>arcadia/library/arcadia.json,arcadia/structure/arcadiaDefaultStructure.json</includes>
 	                                <outputDirectory>${project.build.directory}/arcadia-library</outputDirectory>
 	                            </artifactItem>
 	                        </artifactItems>

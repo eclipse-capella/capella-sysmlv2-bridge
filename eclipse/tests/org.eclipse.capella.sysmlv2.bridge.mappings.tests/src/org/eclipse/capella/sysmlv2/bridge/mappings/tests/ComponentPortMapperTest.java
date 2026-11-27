@@ -76,11 +76,11 @@ class ComponentPortMapperTest {
         componentPort.setOrientation(OrientationPortKind.OUT);
         component.getOwnedFeatures().add(componentPort);
 
-        var targetModel = new CapellaForSysonResourceSet();
+        var targetModel = new CapellaForSysonResourceSet("IFE");
         var engine = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 targetModel.getResourceSet());
 
-        var result = engine.transformAll(java.util.List.of(componentPort, component, rootComponent), "IFE");
+        var result = engine.transformAll(java.util.List.of(componentPort, component, rootComponent), targetModel.getDefaultStructure());
 
         var componentTarget = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(component).orElseThrow());
@@ -122,11 +122,11 @@ class ComponentPortMapperTest {
         addAllocation(componentPort, FaFactory.eINSTANCE.createComponentPort());
 
         withEditingDomain(architecture, () -> {
-            var targetModel = new CapellaForSysonResourceSet();
+            var targetModel = new CapellaForSysonResourceSet("Port allocations");
             var sources = EObjectUtils.allContents(architecture);
             List<ElementMapper<?, ?>> mappers = List.of(new LogicalComponentMapper(), new LogicalFunctionMapper(),
                     new ComponentPortMapper(), new FunctionInputPortMapper(), new FunctionOutputPortMapper());
-            var result = new TransformationEngine(new MapperRegistry(mappers), targetModel.getResourceSet()).transformAll(sources, "Port allocations");
+            var result = new TransformationEngine(new MapperRegistry(mappers), targetModel.getResourceSet()).transformAll(sources, targetModel.getDefaultStructure());
             var transformation = new ModelTransformation("Port allocations", sources, targetModel, mappers, result, 0);
             var meta = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, InformationPackage.eINSTANCE, LaPackage.eINSTANCE),
                     mappers, List.of(), List.of(), ModellingcorePackage.Literals.ABSTRACT_TRACE);

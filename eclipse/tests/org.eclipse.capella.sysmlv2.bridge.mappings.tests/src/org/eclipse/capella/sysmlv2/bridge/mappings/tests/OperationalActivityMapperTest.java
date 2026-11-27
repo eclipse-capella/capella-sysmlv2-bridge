@@ -43,11 +43,12 @@ class OperationalActivityMapperTest {
         var functionPackage = OaFactory.eINSTANCE.createOperationalActivityPkg();
         architecture.setOwnedFunctionPkg(functionPackage);
         var root = OaFactory.eINSTANCE.createOperationalActivity();
-        root.setName("Root Function");
         functionPackage.getOwnedOperationalActivities().add(root);
         root.getOwnedFunctions().add(source);
+        var model = new CapellaForSysonResourceSet("IFE");
+        var structure = model.getDefaultStructure();
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(java.util.List.of(child, source, root), "IFE");
+                model.getResourceSet()).transformAll(java.util.List.of(child, source, root), structure);
         var target = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(source).orElseThrow());
         var childTarget = assertInstanceOf(ActionUsage.class, result.traceability().lookupTarget(child).orElseThrow());
         assertEquals("Capture movement", target.getDeclaredName());
@@ -57,7 +58,6 @@ class OperationalActivityMapperTest {
         var rootFunction = assertInstanceOf(ActionUsage.class,
                 assertInstanceOf(OwningMembership.class, target.eContainer()).eContainer());
         assertSame(result.traceability().lookupTarget(root).orElseThrow(), rootFunction);
-        assertEquals("Root Function", rootFunction.getDeclaredName());
         assertEquals("Functions", assertInstanceOf(Package.class,
                 assertInstanceOf(OwningMembership.class, rootFunction.eContainer()).eContainer()).getDeclaredName());
         assertTrue(result.diagnostics().isEmpty());

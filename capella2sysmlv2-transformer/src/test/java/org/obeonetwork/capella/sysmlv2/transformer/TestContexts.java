@@ -12,7 +12,11 @@
  *******************************************************************************/
 package org.obeonetwork.capella.sysmlv2.transformer;
 
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import java.util.Optional;
+
+import org.eclipse.syson.sysml.SysmlFactory;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaPerspectiveStructure;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 final class TestContexts {
@@ -20,9 +24,17 @@ final class TestContexts {
     private TestContexts() {
     }
 
+    static ArcadiaModelStructure structure(String name) {
+        var factory = SysmlFactory.eINSTANCE;
+        var root = factory.createOccurrenceDefinition();
+        root.setDeclaredName(name);
+        var pkg = factory.createPackage();
+        var perspective = new ArcadiaPerspectiveStructure(pkg, pkg, pkg, pkg, pkg, pkg, pkg,
+                factory.createActionUsage(), Optional.empty());
+        return new ArcadiaModelStructure(root, perspective, perspective, perspective, perspective, perspective);
+    }
+
     static TransformationContext create() {
-        var library = TestSysONModels.arcadiaLibrary();
-        var structure = new ArcadiaModelStructureBuilder().build(ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME, library.resourceSet());
-        return new TransformationContext(structure);
+        return new TransformationContext(structure("Model"));
     }
 }

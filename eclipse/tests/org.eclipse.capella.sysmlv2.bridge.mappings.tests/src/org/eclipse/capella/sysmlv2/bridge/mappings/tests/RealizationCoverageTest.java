@@ -21,8 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-
 import java.util.Set;
+
 import org.eclipse.capella.model.transverse.services.CommonCreationService;
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
@@ -33,7 +33,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageWriter.RunMetadata;
@@ -225,10 +224,10 @@ class RealizationCoverageTest {
             assertTrue(((List<?>) target.eGet(targetType.getEStructuralFeature(inverse))).contains(
                     inverse.equals("incomingPortRealizations") ? trace : source), inverse);
         }
-        var resourceSet = new CapellaForSysonResourceSet().getResourceSet();
-        var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Realizations", resourceSet));
+        var model = new CapellaForSysonResourceSet("Realizations");
+        var context = new TransformationContext(model.getDefaultStructure());
         var output = new ResourceImpl(URI.createURI("memory:/realizations.sysml"));
-        resourceSet.getResources().add(output);
+        model.getResourceSet().getResources().add(output);
         output.getContents().add(context.modelStructure().root());
         // Eligible usages isolate trace routing from the service's candidate validation.
         var creation = new CommonCreationService();

@@ -13,11 +13,12 @@
 package org.eclipse.capella.sysmlv2.bridge.mappings.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
 
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
@@ -52,13 +53,13 @@ class LogicalComponentMapperTest {
         source.setDescription(sourceDescription);
         source.setAbstract(true);
         root.getOwnedLogicalComponents().add(source);
-        var targetModel = new CapellaForSysonResourceSet();
+        var targetModel = new CapellaForSysonResourceSet("IFE");
         var resourceSet = targetModel.getResourceSet();
         var engine = new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
                 resourceSet);
 
-        var result = engine.transformAll(java.util.List.of(source, root), "IFE");
+        var result = engine.transformAll(List.of(source, root), targetModel.getDefaultStructure());
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

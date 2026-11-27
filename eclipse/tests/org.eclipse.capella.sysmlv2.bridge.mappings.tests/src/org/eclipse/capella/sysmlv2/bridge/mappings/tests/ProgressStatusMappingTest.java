@@ -41,8 +41,9 @@ class ProgressStatusMappingTest {
             component.setStatus(status);
             function.setStatus(status);
 
+            var model = new CapellaForSysonResourceSet("Statuses");
             var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                    new CapellaForSysonResourceSet().getResourceSet()).transformAll(List.of(component, function), "Statuses");
+                    model.getResourceSet()).transformAll(List.of(component, function), model.getDefaultStructure());
 
             for (var source : List.of(component, function)) {
                 var target = (Feature) result.traceability().lookupTarget(source).orElseThrow();
@@ -60,8 +61,9 @@ class ProgressStatusMappingTest {
         status.setName("CUSTOM REVIEW");
         custom.setStatus(status);
 
+        var model = new CapellaForSysonResourceSet("Statuses");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(List.of(missing, custom), "Statuses");
+                model.getResourceSet()).transformAll(List.of(missing, custom), model.getDefaultStructure());
 
         for (var source : List.of(missing, custom)) {
             assertNull(QUERY.getStatus((Feature) result.traceability().lookupTarget(source).orElseThrow()));

@@ -227,7 +227,8 @@ class FunctionalExchangeMapperTest {
     }
 
     private static TransformationResult transform(List<EObject> sources, List<? extends ElementMapper<?, ?>> mappers) {
-        return new TransformationEngine(new MapperRegistry(mappers), new CapellaForSysonResourceSet().getResourceSet())
-                .transformAll(sources, "IFE");
+        var model = new CapellaForSysonResourceSet("IFE");
+        return new TransformationEngine(new MapperRegistry(mappers), model.getResourceSet())
+                .transformAll(sources, model.getDefaultStructure());
     }
 }

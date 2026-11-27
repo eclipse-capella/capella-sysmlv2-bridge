@@ -15,15 +15,13 @@ package org.obeonetwork.capella.sysmlv2.transformer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.TransformationContext;
 
 class TransformationContextTest {
 
     @Test
     void wiresSharedRuntimeServices() {
-        var library = TestSysONModels.arcadiaLibrary();
-        var structure = new ArcadiaModelStructureBuilder().build(ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME, library.resourceSet());
+        var structure = TestContexts.structure("Model");
         var context = new TransformationContext(structure);
 
         assertThat(context.modelStructure()).isSameAs(structure);

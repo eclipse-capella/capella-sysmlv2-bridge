@@ -19,10 +19,10 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.ElementMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.FeatureMapping;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
@@ -48,8 +48,8 @@ class TransformationEngineTest {
                 return null;
             }
         };
-        var result = new TransformationEngine(new MapperRegistry(List.of(mapper)), TestSysONModels.arcadiaLibrary().resourceSet())
-                .transform(source, ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
+        var result = new TransformationEngine(new MapperRegistry(List.of(mapper)), new ResourceSetImpl())
+                .transform(source, TestContexts.structure("Model"));
 
         assertThat(result.root()).isNotNull();
         assertThat(result.diagnostics()).filteredOn(diagnostic -> diagnostic.message().equals("test diagnostic")).singleElement()
@@ -115,8 +115,8 @@ class TransformationEngineTest {
         var sources = new ArrayList<EPackage>(List.of(grandchild, second, root, first, grandchild, root));
 
         new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(sources,
-                        ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
+                new ResourceSetImpl()).transformAll(sources,
+                        TestContexts.structure("Model"));
 
         var completionOrder = List.of("root", "second", "grandchild", "first");
         assertThat(executions).containsExactlyElementsOf(phaseExecutions(completionOrder, "create", "features"));
@@ -147,8 +147,8 @@ class TransformationEngineTest {
         };
 
         new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(List.of(deep, shallow),
-                        ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
+                new ResourceSetImpl()).transformAll(List.of(deep, shallow),
+                        TestContexts.structure("Model"));
 
         assertThat(transformed).containsExactly("deep", "shallow");
     }
@@ -216,7 +216,7 @@ class TransformationEngineTest {
             }
             inputs.addAll(List.of(dependent, unrelated, unrelated));
             var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                    TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(inputs, "Failures");
+                    new ResourceSetImpl()).transformAll(inputs, TestContexts.structure("Failures"));
 
             assertThat(creations).doesNotContain(dependent);
             assertThat(creations.stream().filter(source -> source == prerequisite).count()).isLessThanOrEqualTo(1L);
@@ -264,7 +264,7 @@ class TransformationEngineTest {
                 inputs.add(dependent);
             }
             var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                    TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(inputs, "Skips");
+                    new ResourceSetImpl()).transformAll(inputs, TestContexts.structure("Skips"));
             assertThat(creations).containsExactly(skipped, unrelated);
             assertThat(features).containsExactly(unrelated);
             assertThat(result.traceability().isSkipped(skipped)).isTrue();
@@ -310,8 +310,8 @@ class TransformationEngineTest {
                 }
             };
             var result = new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                    TestSysONModels.arcadiaLibrary().resourceSet())
-                            .transformAll(List.of(dependent, first, second, first, unrelated), "Cycles");
+                    new ResourceSetImpl())
+                            .transformAll(List.of(dependent, first, second, first, unrelated), TestContexts.structure("Cycles"));
             assertThat(creations).containsExactly(unrelated);
             assertThat(result.traceability().isExcluded(first)).isTrue();
             assertThat(result.traceability().isExcluded(second)).isTrue();
@@ -363,8 +363,8 @@ class TransformationEngineTest {
         };
 
         new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                TestSysONModels.arcadiaLibrary().resourceSet()).transformAll(List.of(first, second),
-                        ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
+                new ResourceSetImpl()).transformAll(List.of(first, second),
+                        TestContexts.structure("Model"));
 
         assertThat(featureExecutions).hasSize(2);
         assertThat(missingTargets).isEmpty();
@@ -410,7 +410,7 @@ class TransformationEngineTest {
         };
 
         new TransformationEngine(new MapperRegistry(List.of(mapper)),
-                TestSysONModels.arcadiaLibrary().resourceSet()).transform(container, ArcadiaModelStructureBuilder.MODEL_DEFAULT_NAME);
+                new ResourceSetImpl()).transform(container, TestContexts.structure("Model"));
 
         assertThat(transformed).containsExactly(container, child);
     }

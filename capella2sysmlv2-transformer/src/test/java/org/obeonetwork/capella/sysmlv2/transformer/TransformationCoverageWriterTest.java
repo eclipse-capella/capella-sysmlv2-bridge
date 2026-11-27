@@ -58,7 +58,9 @@ class TransformationCoverageWriterTest {
         List.of("Component", "Function", "Candidate", "ExplicitNonMapping", "Unassessed").forEach(name -> {
             var definition = SysmlFactory.eINSTANCE.createPartDefinition();
             definition.setDeclaredName(name);
-            TestSysONModels.addOwnedElement(library, definition);
+            var membership = SysmlFactory.eINSTANCE.createOwningMembership();
+            membership.getOwnedRelatedElement().add(definition);
+            library.getOwnedRelationship().add(membership);
         });
 
         var mapper = new ElementMapper<TestMetamodels.LogicalComponent, EObject>(

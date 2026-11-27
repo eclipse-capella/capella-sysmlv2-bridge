@@ -98,10 +98,11 @@ class TransformationInstanceAnalyzerTest {
         var meta = TransformationCoverageAnalyzer.analyze(List.of(LaPackage.eINSTANCE), List.of(mapper), List.of(),
                 List.of(new MetaclassAlignment(LaPackage.Literals.LOGICAL_FUNCTION, null, AlignmentStatus.NO_EQUIVALENT, List.of())),
                 ModellingcorePackage.Literals.ABSTRACT_TRACE);
+        String modelName = "Outcomes";
         var transformation = new ModelTransformation("Outcomes",
                 List.of(root, mapped, skipped, unsupported, unimplemented, missingTarget, mappedWithError,
                         skippedWithError, mappedUnsupported, skippedUnsupported, excluded, root, mapped, missingTarget),
-                new CapellaForSysonResourceSet(), List.of(mapper), new TransformationResult(target, diagnostics, traceability, 1, 1), 2);
+                new CapellaForSysonResourceSet(modelName), List.of(mapper), new TransformationResult(target, diagnostics, traceability, 1, 1), 2);
 
         var report = TransformationInstanceAnalyzer.analyze(transformation, meta);
 
@@ -128,8 +129,9 @@ class TransformationInstanceAnalyzerTest {
         var meta = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, OaPackage.eINSTANCE),
                 mappers, List.of(), List.of(), null);
         var target = SysmlFactory.eINSTANCE.createPackage();
-        var transformation = new ModelTransformation("Outcomes", List.of(source),
-                new CapellaForSysonResourceSet(), List.copyOf(mappers),
+        String modelName = "Outcomes";
+        var transformation = new ModelTransformation(modelName, List.of(source),
+                new CapellaForSysonResourceSet(modelName), List.copyOf(mappers),
                 new TransformationResult(target, List.of(), new Traceability(), 1, 1), 0);
 
         var report = TransformationInstanceAnalyzer.analyze(transformation, meta);
@@ -171,9 +173,10 @@ class TransformationInstanceAnalyzerTest {
         var meta = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, LaPackage.eINSTANCE, InformationPackage.eINSTANCE),
                 mappers, List.of(), List.of(),
                 ModellingcorePackage.Literals.ABSTRACT_TRACE);
+        var modelName = "Realizations";
         var transformation = new ModelTransformation("Realizations",
                 List.of(mapped, mapped, skipped, failed, skippedOwner, skippedWithOwner, missingEndpoint, otherEndpoint, dataClass, dataRealization),
-                new CapellaForSysonResourceSet(), mappers, new TransformationResult(target, List.of(diagnostic), traceability, 1, 1), 1);
+                new CapellaForSysonResourceSet(modelName), mappers, new TransformationResult(target, List.of(diagnostic), traceability, 1, 1), 1);
 
         var report = TransformationInstanceAnalyzer.analyze(transformation, meta);
 
@@ -207,9 +210,9 @@ class TransformationInstanceAnalyzerTest {
 
         List<EObject> sources = List.of(component, firstFunction, secondFunction, firstAllocation, invalidAllocation, secondAllocation);
         List<ElementMapper<?, ?>> mappers = List.of(new LogicalComponentMapper(), new LogicalFunctionMapper());
-        var targetModel = new CapellaForSysonResourceSet();
+        var targetModel = new CapellaForSysonResourceSet("Function allocations");
         var result = new TransformationEngine(new MapperRegistry(mappers), targetModel.getResourceSet())
-                .transformAll(sources, "Function allocations");
+                .transformAll(sources, targetModel.getDefaultStructure());
         var transformation = new ModelTransformation("Function allocations", sources, targetModel, mappers, result, 0);
         var meta = TransformationCoverageAnalyzer.analyze(List.of(FaPackage.eINSTANCE, LaPackage.eINSTANCE), mappers,
                 List.of(), List.of(), ModellingcorePackage.Literals.ABSTRACT_TRACE);
@@ -280,7 +283,8 @@ class TransformationInstanceAnalyzerTest {
                 .map(concept -> new ArcadiaElementCoverage(concept, mapperTargets.contains(concept.qualifiedName())))
                 .toList();
         var meta = new TransformationCoverageReport(List.of(), concepts, List.of());
-        var transformation = new ModelTransformation("Groups", sources, new CapellaForSysonResourceSet(), List.of(),
+        var modelNames = "Groups";
+        var transformation = new ModelTransformation(modelNames, sources, new CapellaForSysonResourceSet(modelNames), List.of(),
                 new TransformationResult(target, List.of(), new Traceability(), 16, 16), 0);
 
         var report = TransformationInstanceAnalyzer.analyze(transformation, meta);

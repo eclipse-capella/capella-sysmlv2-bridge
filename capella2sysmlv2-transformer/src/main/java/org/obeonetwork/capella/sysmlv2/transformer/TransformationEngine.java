@@ -25,7 +25,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
+import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructure;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.BoundMapper;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
@@ -62,14 +62,14 @@ public final class TransformationEngine {
      *
      * @param capellaRoot
      *            root of the Capella model to transform
-     * @param rootName
-     *            name of the root element
+     * @param modelStructure
+     *            fresh model structure to populate
      * @return the generated model and transformation metadata
      */
-    public TransformationResult transform(EObject capellaRoot, String rootName) {
+    public TransformationResult transform(EObject capellaRoot, ArcadiaModelStructure modelStructure) {
         Objects.requireNonNull(capellaRoot, "capellaRoot must not be null");
 
-        return this.transformAll(EObjectUtils.allContents(capellaRoot), rootName);
+        return this.transformAll(EObjectUtils.allContents(capellaRoot), modelStructure);
     }
 
     /**
@@ -80,16 +80,15 @@ public final class TransformationEngine {
      *
      * @param sources
      *            source elements to transform
-     * @param rootName
-     *            name of the root element
+     * @param modelStructure
+     *            fresh model structure to populate
      * @return the generated model and transformation metadata
      */
-    public TransformationResult transformAll(Collection<? extends EObject> sources, String rootName) {
+    public TransformationResult transformAll(Collection<? extends EObject> sources, ArcadiaModelStructure modelStructure) {
         Objects.requireNonNull(sources, "sources must not be null");
-        Objects.requireNonNull(rootName, "rootName must not be null");
+        Objects.requireNonNull(modelStructure, "modelStructure must not be null");
 
         LOGGER.info("Computing model elements dependencies ...");
-        var modelStructure = new ArcadiaModelStructureBuilder().build(rootName, this.resourceSet);
         var targetResource = new ResourceImpl(URI.createURI("transformation:/generated-" + this.resourceSet.getResources().size() + ".sysml"));
         this.resourceSet.getResources().add(targetResource);
         targetResource.getContents().add(modelStructure.root());

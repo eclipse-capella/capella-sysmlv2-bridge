@@ -56,7 +56,7 @@ If equivalent servers are already configured in `~/.m2/settings.xml`, the explic
 
 Never commit a token or a generated settings file containing a token.
 
-The Eclipse application build bundles `arcadia/library/arcadia.json` from the released `org.eclipse.capella:capella-application-configuration` JAR.
+The Eclipse application build bundles `arcadia/library/arcadia.json` and `arcadia/structure/arcadiaDefaultStructure.json` from the released `org.eclipse.capella:capella-application-configuration` JAR.
 The root POM selects Capella for SysON `2026.9.5` for both the library and the Capella services through `capella-for-syson.version`, alongside SysON `2026.9.6`.
 
 == Repository Structure
@@ -134,7 +134,7 @@ Intermediate XMI persistence and reload validation
 ----
 
 The transformation layer does not initialize Equinox, load projects, or serialize textual SysML.
-The engine resolves the definitions required by the generated model structure from the shared `ResourceSet`.
+The application resolves project-template references against the Arcadia and SysML libraries in the shared `ResourceSet`.
 It attaches the generated root to that same `ResourceSet` before creating targets, allowing SysON services to discover Arcadia concepts through `SysONEContentAdapter`.
 
 `MapperRegistry` resolves the first compatible mapper in registration order and rejects duplicate source classes.
@@ -142,13 +142,13 @@ The registry uses the mapper's typed Java source class.
 
 === Dependency-driven construction
 
-`TransformationEngine.transform(root, rootName)` traverses the root and its descendants; `transformAll(sources, rootName)` accepts a `Collection<? extends EObject>` of explicit sources. Both methods invoke mappers only for sources supported by the registry. The `rootName` string names the generated model root.
+`TransformationEngine.transform(root, structure)` traverses the root and its descendants; `transformAll(sources, structure)` accepts a `Collection<? extends EObject>` of explicit sources. Both methods invoke mappers only for sources supported by the registry. The application loads a fresh Arcadia structure from the bundled Capella for SysON project template and names it before transformation.
 
 Sources are indexed by object identity and duplicates are ignored. Independent sources retain encounter order. Each mapper declares its creation prerequisites through `getCreationDependencies(source)`, using read-only source inspection without traceability. Only prerequisites in the supplied scope can be constructed.
 
 The engine recursively resolves dependencies with `CONSTRUCTING`, `READY`, and `FAILED` states. It creates and registers each successful target once. Missing, unsupported, excluded, failed, or out-of-scope prerequisites prevent dependent creation and produce a diagnostic identifying the prerequisite. Cycles report their active source path and fail the affected chain while unrelated sources continue. Discovery and creation exceptions, and null results, exclude the source without retries or placeholders.
 
-Functions and components select the nearest compatible source ancestor within their perspective, traversing unmapped packages. Architecture roots reuse the targets provided by `ArcadiaModelStructureBuilder` without a parent dependency. Other elements pass the selected mapped ancestor to their existing creation service; only absence of a compatible source ancestor permits the existing perspective fallback. Ports require their mapped owners and set direction during creation. Creation services own containment: their results are never relocated to reproduce the Capella hierarchy.
+Functions and components select the nearest compatible source ancestor within their perspective, traversing unmapped packages. Architecture roots reuse the targets from the loaded project template without a parent dependency. Other elements pass the selected mapped ancestor to their existing creation service; only absence of a compatible source ancestor permits the existing perspective fallback. Ports require their mapped owners and set direction during creation. Creation services own containment: their results are never relocated to reproduce the Capella hierarchy.
 
 After every construction attempt finishes, successful targets receive their feature mappings once, in construction-completion order. Names, descriptions, allocations, and realizations remain feature mappings. Cross-reference feature mappings do not contribute construction dependencies. Feature failures produce diagnostics while subsequent mappings continue.
 

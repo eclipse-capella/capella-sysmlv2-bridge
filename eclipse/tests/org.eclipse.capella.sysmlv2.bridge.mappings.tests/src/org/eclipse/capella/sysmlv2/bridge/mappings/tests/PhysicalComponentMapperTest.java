@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
@@ -26,6 +28,7 @@ import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.polarsys.capella.core.data.pa.PaFactory;
 
 class PhysicalComponentMapperTest {
 
@@ -33,24 +36,25 @@ class PhysicalComponentMapperTest {
 
     @Test
     void mapsThePhysicalArchitectureRootToTheExistingSystemAndMapsItsChildren() {
-        var architecture = org.polarsys.capella.core.data.pa.PaFactory.eINSTANCE.createPhysicalArchitecture();
-        var componentPackage = org.polarsys.capella.core.data.pa.PaFactory.eINSTANCE.createPhysicalComponentPkg();
+        var architecture = PaFactory.eINSTANCE.createPhysicalArchitecture();
+        var componentPackage = PaFactory.eINSTANCE.createPhysicalComponentPkg();
         architecture.setOwnedPhysicalComponentPkg(componentPackage);
-        var root = org.polarsys.capella.core.data.pa.PaFactory.eINSTANCE.createPhysicalComponent();
+        var root = PaFactory.eINSTANCE.createPhysicalComponent();
         root.setName("In-Flight Entertainment System");
         root.setDescription("The physical system root");
         componentPackage.getOwnedPhysicalComponents().add(root);
-        var source = org.polarsys.capella.core.data.pa.PaFactory.eINSTANCE.createPhysicalComponent();
+        var source = PaFactory.eINSTANCE.createPhysicalComponent();
         source.setName("Navigation Computer");
         source.setDescription("The physical navigation computer");
         source.setActor(false);
         source.setHuman(false);
         root.getOwnedPhysicalComponents().add(source);
+        var model = new CapellaForSysonResourceSet("IFE");
         var engine = new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet());
+                model.getResourceSet());
 
-        var result = engine.transformAll(java.util.List.of(source, root), "IFE");
+        var result = engine.transformAll(List.of(source, root), model.getDefaultStructure());
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

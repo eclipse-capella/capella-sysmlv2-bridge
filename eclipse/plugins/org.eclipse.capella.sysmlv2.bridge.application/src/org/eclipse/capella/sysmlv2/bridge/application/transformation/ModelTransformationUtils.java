@@ -47,11 +47,13 @@ public final class ModelTransformationUtils {
      *             if the Arcadia library cannot be loaded
      */
     public static ModelTransformation transform(EObject root, String modelName) {
+        LOGGER.info("Starting loading Arcadia default resources ...");
         var sources = EObjectUtils.allContents(root);
-        var targetModel = loadCapellaForSysonResourceSet();
+        var targetModel = loadCapellaForSysonResourceSet(modelName);
+        LOGGER.info("Done !");
         var mappers = CapellaMapperCatalog.createMappers();
         var engine = new TransformationEngine(new MapperRegistry(mappers), targetModel.getResourceSet());
-        var result = engine.transform(root, modelName);
+        var result = engine.transform(root, targetModel.getDefaultStructure());
         result.diagnostics().stream()
                 .filter(diagnostic -> diagnostic.severity() == DiagnosticSeverity.WARNING)
                 .forEach(diagnostic -> LOGGER.warning(diagnostic.formattedMessage()));
@@ -63,9 +65,9 @@ public final class ModelTransformationUtils {
         return new ModelTransformation(modelName, sources, targetModel, mappers, result, errorCount);
     }
 
-    private static CapellaForSysonResourceSet loadCapellaForSysonResourceSet() {
+    private static CapellaForSysonResourceSet loadCapellaForSysonResourceSet(String modelName) {
         try {
-            return new CapellaForSysonResourceSet();
+            return new CapellaForSysonResourceSet(modelName);
         } catch (RuntimeException exception) {
             throw new TransformationCommandException(
                     ARCADIA_LIBRARY_LOADING_FAILURE,

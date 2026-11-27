@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.eclipse.capella.model.transverse.services.CommonQueryService;
 import org.eclipse.capella.sysmlv2.bridge.application.CapellaForSysonResourceSet;
 import org.eclipse.capella.sysmlv2.bridge.mappings.CapellaMapperCatalog;
@@ -24,6 +26,7 @@ import org.eclipse.syson.sysml.PartUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
+import org.polarsys.capella.core.data.ctx.CtxFactory;
 
 class SystemComponentMapperTest {
 
@@ -31,7 +34,7 @@ class SystemComponentMapperTest {
 
     @Test
     void retainsServiceSelectedActorContainmentWhenSourceParentIsTheSystem() {
-        var factory = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE;
+        var factory = CtxFactory.eINSTANCE;
         var architecture = factory.createSystemAnalysis();
         var pkg = factory.createSystemComponentPkg();
         architecture.setOwnedSystemComponentPkg(pkg);
@@ -41,9 +44,10 @@ class SystemComponentMapperTest {
         actor.setActor(true);
         root.getOwnedSystemComponents().add(actor);
 
+        var model = new CapellaForSysonResourceSet("Service containment");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet())
-                        .transformAll(java.util.List.of(actor, root), "Service containment");
+                model.getResourceSet())
+                        .transformAll(List.of(actor, root), model.getDefaultStructure());
         var system = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(root).orElseThrow());
         var target = assertInstanceOf(PartUsage.class, result.traceability().lookupTarget(actor).orElseThrow());
         org.junit.jupiter.api.Assertions.assertSame(system.getOwner(), target.getOwner());
@@ -53,24 +57,25 @@ class SystemComponentMapperTest {
 
     @Test
     void mapsTheSystemRootAndRetainsActorWithoutMappedAncestor() {
-        var architecture = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemAnalysis();
-        var componentPackage = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemComponentPkg();
+        var architecture = CtxFactory.eINSTANCE.createSystemAnalysis();
+        var componentPackage = CtxFactory.eINSTANCE.createSystemComponentPkg();
         architecture.setOwnedSystemComponentPkg(componentPackage);
-        var root = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemComponent();
+        var root = CtxFactory.eINSTANCE.createSystemComponent();
         root.setName("In-Flight Entertainment System");
         root.setDescription("The system root");
         componentPackage.getOwnedSystemComponents().add(root);
-        var actor = org.polarsys.capella.core.data.ctx.CtxFactory.eINSTANCE.createSystemComponent();
+        var actor = CtxFactory.eINSTANCE.createSystemComponent();
         actor.setName("Navigation Computer");
         actor.setDescription("The system navigation computer");
         actor.setActor(true);
         actor.setHuman(false);
         componentPackage.getOwnedSystemComponents().add(actor);
+        var model = new CapellaForSysonResourceSet("IFE");
         var engine = new TransformationEngine(
                 new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet());
+                model.getResourceSet());
 
-        var result = engine.transform(architecture, "IFE");
+        var result = engine.transform(architecture, model.getDefaultStructure());
 
         var system = assertInstanceOf(PartUsage.class,
                 result.traceability().lookupTarget(root).orElseThrow());

@@ -22,7 +22,6 @@ import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.syson.sysml.ActionUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.EObjectUtils;
 import org.obeonetwork.capella.sysmlv2.transformer.transformation.Traceability;
@@ -33,10 +32,10 @@ import org.polarsys.capella.core.data.la.LogicalFunction;
 class MapperUtilsTest {
     @Test
     void realizationServiceMaintainsBothDirectionsAndRejectsIneligibleTargets() {
-        var resourceSet = new CapellaForSysonResourceSet().getResourceSet();
-        var structure = new ArcadiaModelStructureBuilder().build("Realizations", resourceSet);
+        var model = new CapellaForSysonResourceSet("Realizations");
+        var structure = model.getDefaultStructure();
         var resource = new ResourceImpl();
-        resourceSet.getResources().add(resource);
+        model.getResourceSet().getResources().add(resource);
         resource.getContents().add(structure.root());
         var creation = new CommonCreationService();
         var source = LaFactory.eINSTANCE.createLogicalFunction();
@@ -82,8 +81,9 @@ class MapperUtilsTest {
 
         assertSame(parent, MapperUtils.creationParent(child, LogicalFunction.class).orElseThrow());
         assertEquals(List.of(parent), new LogicalFunctionMapper().getCreationDependencies(child));
+        var model = new CapellaForSysonResourceSet("Parents");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(List.of(child, parent, outer), "Parents");
+                model.getResourceSet()).transformAll(List.of(child, parent, outer), model.getDefaultStructure());
         var target = (ActionUsage) result.traceability().lookupTarget(child).orElseThrow();
         assertSame(result.traceability().lookupTarget(parent).orElseThrow(), target.getOwner());
         assertSame(pkg, child.eContainer());
@@ -95,8 +95,9 @@ class MapperUtilsTest {
         var parent = LaFactory.eINSTANCE.createLogicalFunction();
         var child = LaFactory.eINSTANCE.createLogicalFunction();
         parent.getOwnedFunctions().add(child);
+        var model = new CapellaForSysonResourceSet("Missing parent");
         var result = new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(List.of(child), "Missing parent");
+                model.getResourceSet()).transformAll(List.of(child), model.getDefaultStructure());
 
         assertTrue(result.traceability().isExcluded(child));
         assertTrue(result.traceability().lookupTarget(child).isEmpty());

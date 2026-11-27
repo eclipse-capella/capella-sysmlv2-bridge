@@ -117,8 +117,8 @@ class ExchangeItemMapperTest {
             EObject source) {
         var sourceResource = new ResourceImpl(URI.createURI("test:/exchange-item.capella"));
         sourceResource.getContents().add(source);
-        var targetModel = new CapellaForSysonResourceSet();
+        var targetModel = new CapellaForSysonResourceSet("IFE");
         return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                targetModel.getResourceSet()).transform(source, "IFE");
+                targetModel.getResourceSet()).transform(source, targetModel.getDefaultStructure());
     }
 }

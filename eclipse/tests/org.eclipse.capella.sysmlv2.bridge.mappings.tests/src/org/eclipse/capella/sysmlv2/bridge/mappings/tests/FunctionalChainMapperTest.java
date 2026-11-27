@@ -34,7 +34,6 @@ import org.eclipse.syson.sysml.ActionUsage;
 import org.eclipse.syson.sysml.OccurrenceUsage;
 import org.junit.jupiter.api.Test;
 import org.obeonetwork.capella.sysmlv2.transformer.TransformationEngine;
-import org.obeonetwork.capella.sysmlv2.transformer.arcadia.ArcadiaModelStructureBuilder;
 import org.obeonetwork.capella.sysmlv2.transformer.mapping.MapperRegistry;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.AlignmentStatus;
 import org.obeonetwork.capella.sysmlv2.transformer.reporting.TransformationCoverageAnalyzer;
@@ -261,7 +260,7 @@ class FunctionalChainMapperTest {
     void featureMappingPreservesServiceCreatedExchangeReferences() {
         var fixture = fixture("Logical");
         var involvement = involveExchange(fixture.chain(), fixture.exchange());
-        var context = new TransformationContext(new ArcadiaModelStructureBuilder().build("Test", new CapellaForSysonResourceSet().getResourceSet()));
+        var context = new TransformationContext(new CapellaForSysonResourceSet("Test").getDefaultStructure());
         var mapper = new FunctionalChainMapper();
         var sources = new ArrayList<>(EObjectUtils.allContents(fixture.architecture()));
         sources.remove(fixture.chain());
@@ -388,8 +387,9 @@ class FunctionalChainMapperTest {
     }
 
     private static TransformationResult transform(List<? extends EObject> sources) {
-        return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), new CapellaForSysonResourceSet().getResourceSet())
-                .transformAll(sources, "Test");
+        var model = new CapellaForSysonResourceSet("Test");
+        return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()), model.getResourceSet())
+                .transformAll(sources, model.getDefaultStructure());
     }
 
     private static Fixture fixture(String perspective) {

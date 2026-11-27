@@ -241,7 +241,8 @@ class ComponentExchangeMapperTest {
             inputs.remove(fixture.exchange());
             inputs.addFirst(fixture.exchange());
         }
+        var model = new CapellaForSysonResourceSet("Exchanges");
         return new TransformationEngine(new MapperRegistry(CapellaMapperCatalog.createMappers()),
-                new CapellaForSysonResourceSet().getResourceSet()).transformAll(inputs, "Exchanges");
+                model.getResourceSet()).transformAll(inputs, model.getDefaultStructure());
     }
 }
